@@ -1,0 +1,52 @@
+pre-commit:
+  commands:
+    verify-signing-config:
+      run: |
+        if [[ "$(git config commit.gpgsign)" != "true" ]]; then
+          echo "Error: Commit signing has been disabled"
+          echo "Run: git config commit.gpgsign true"
+          exit 1
+        fi
+        
+        if [[ ! -f ".git/allowed_signers" ]]; then
+          echo "Error: Allowed signers file missing"
+          echo "Run: task setup"
+          exit 1
+        fi
+        
+        CURRENT_EMAIL=$(git config user.email)
+        if ! grep -q "^$CURRENT_EMAIL " .git/allowed_signers; then
+          echo "Error: Git email has changed. Run: task setup"
+          exit 1
+        fi
+      tags: security
+
+commit-msg:
+  commands:
+    lint-commit-message:
+      run: cog verify --file {1}
+
+    verify-commit-author:
+      run: |
+        AUTHOR_EMAIL=$(git config user.email)
+        ALLOWED_DOMAINS="@pistachiohq.com"
+        
+        VALID_DOMAIN=false
+        for domain in $ALLOWED_DOMAINS; do
+          if [[ "$AUTHOR_EMAIL" == *"$domain" ]]; then
+            VALID_DOMAIN=true
+            break
+          fi
+        done
+        
+        if [[ "$VALID_DOMAIN" != "true" ]]; then
+          echo "Error: Commit author email '$AUTHOR_EMAIL' is not from an authorized domain"
+          echo "Allowed domains: $ALLOWED_DOMAINS"
+          echo "Run: git config --global user.email your-email@pistachiohq.com"
+          exit 1
+        fi
+        
+        if [[ "$(git config commit.gpgsign)" != "true" ]]; then
+          echo "Error: This commit must be signed, but \`git config commit.gpgsign\` is set to false"
+          exit 1
+        fi
