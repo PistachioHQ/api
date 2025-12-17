@@ -59,6 +59,7 @@ tasks:
       - task: setup:vacuum
       - task: setup:openapi-generator
       - task: setup:hooks
+      - task: setup:tools
 
   setup:cocogitto:
     desc: "Setup cocogitto"
@@ -201,6 +202,32 @@ tasks:
       - lefthook install
     status:
       - test -f .git/hooks/prepare-commit-msg || test -f .git/hooks/lefthook-run
+
+  setup:tools:
+    desc: "Check required tools are installed"
+    cmds:
+      - |
+        MISSING=""
+
+        if ! command -v cargo-audit >/dev/null 2>&1; then
+          MISSING="${MISSING}cargo-audit (cargo install cargo-audit)\n"
+        fi
+
+        if ! command -v cargo-deny >/dev/null 2>&1; then
+          MISSING="${MISSING}cargo-deny (cargo install cargo-deny)\n"
+        fi
+
+        if ! command -v cross >/dev/null 2>&1; then
+          MISSING="${MISSING}cross (cargo install cross)\n"
+        fi
+
+        if [ -n "$MISSING" ]; then
+          echo "Missing tools:"
+          echo -e "$MISSING"
+        else
+          echo "All tools installed"
+        fi
+    silent: true
 
   # ============================================================================
   # Changelog tasks
@@ -443,6 +470,36 @@ tasks:
       - cd rust && cargo +nightly test
       - cd gen/rust && cargo +nightly test
 
+  rust:build:release:
+    desc: "Build in release mode"
+    cmds:
+      - cd rust && cargo build --release
+      - cd gen/rust && cargo build --release
+
+  rust:build:msrv:
+    desc: "Build with MSRV (1.86) toolchain"
+    cmds:
+      - cd rust && rm -f Cargo.lock && cargo +1.86 build
+      - cd gen/rust && rm -f Cargo.lock && cargo +1.86 build
+
+  rust:test:msrv:
+    desc: "Run tests with MSRV (1.86) toolchain"
+    cmds:
+      - cd rust && rm -f Cargo.lock && cargo +1.86 test
+      - cd gen/rust && rm -f Cargo.lock && cargo +1.86 test
+
+  rust:build:msrv:minimal-versions:
+    desc: "Build with MSRV (1.86) using minimal dependency versions"
+    cmds:
+      - cd rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions && cargo +1.86 build
+      - cd gen/rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions && cargo +1.86 build
+
+  rust:test:msrv:minimal-versions:
+    desc: "Run tests with MSRV (1.86) using minimal dependency versions"
+    cmds:
+      - cd rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions && cargo +1.86 test
+      - cd gen/rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions && cargo +1.86 test
+
   # ============================================================================
   # CI tasks
   # ============================================================================
@@ -453,7 +510,86 @@ tasks:
       - task: buf:lint
       - cd gen/rust && cargo clippy -- -D warnings
 
+  ci:fmt:
+    desc: "Format check for CI"
+    cmds:
+      - task: buf:format:check
+      - cd rust && cargo fmt --check
+      - cd gen/rust && cargo fmt --check
+
   ci:build:
     desc: "Build all generated code for CI"
     cmds:
       - task: gen
+
+  ci:test:
+    desc: "Test for CI"
+    cmds:
+      - cd rust && cargo test
+      - cd gen/rust && cargo test
+
+  ci:security:
+    desc: "Security checks for CI"
+    cmds:
+      - cd rust && cargo audit --deny warnings
+      - cd gen/rust && cargo audit --deny warnings
+      - cd rust && cargo deny --all-features check --deny warnings
+      - cd gen/rust && cargo deny --all-features check --deny warnings
+
+  # ============================================================================
+  # Cross-compilation tasks
+  # ============================================================================
+
+  cross:build:
+    desc: "Cross-compile for all Linux targets"
+    cmds:
+      - task: cross:build:x86_64
+      - task: cross:build:aarch64
+
+  cross:build:release:
+    desc: "Cross-compile release builds for all Linux targets"
+    cmds:
+      - task: cross:build:x86_64:release
+      - task: cross:build:aarch64:release
+
+  cross:build:x86_64:
+    desc: "Cross-compile for x86_64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross build --target x86_64-unknown-linux-gnu
+      - cd gen/rust && cross build --target x86_64-unknown-linux-gnu
+
+  cross:build:x86_64:release:
+    desc: "Cross-compile release for x86_64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross build --release --target x86_64-unknown-linux-gnu
+      - cd gen/rust && cross build --release --target x86_64-unknown-linux-gnu
+
+  cross:build:aarch64:
+    desc: "Cross-compile for aarch64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross build --target aarch64-unknown-linux-gnu
+      - cd gen/rust && cross build --target aarch64-unknown-linux-gnu
+
+  cross:build:aarch64:release:
+    desc: "Cross-compile release for aarch64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross build --release --target aarch64-unknown-linux-gnu
+      - cd gen/rust && cross build --release --target aarch64-unknown-linux-gnu
+
+  cross:test:
+    desc: "Run tests via cross for all Linux targets"
+    cmds:
+      - task: cross:test:x86_64
+      - task: cross:test:aarch64
+
+  cross:test:x86_64:
+    desc: "Run tests via cross for x86_64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross test --target x86_64-unknown-linux-gnu
+      - cd gen/rust && cross test --target x86_64-unknown-linux-gnu
+
+  cross:test:aarch64:
+    desc: "Run tests via cross for aarch64-unknown-linux-gnu"
+    cmds:
+      - cd rust && cross test --target aarch64-unknown-linux-gnu
+      - cd gen/rust && cross test --target aarch64-unknown-linux-gnu

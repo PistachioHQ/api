@@ -12,6 +12,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Adam Walz <adam@pistachiohq.com>"]
 repository = "https://github.com/PistachioHQ/api"
+rust-version = "1.86"
 
 [workspace.dependencies]
 pistachio-api = { path = "../gen/rust" }
@@ -20,8 +21,8 @@ pistachio-api-common = { path = "pistachio-api-common" }
 libgn = { git = "https://github.com/PistachioHQ/greennut-rs", branch = "main" }
 
 async-trait = "0.1.21"
-thiserror = "2"
-tracing = "0.1"
+thiserror = ">=1.0.2,<3"
+tracing = "0.1.28"
 
 # gRPC stack
 tonic = "0.14"
