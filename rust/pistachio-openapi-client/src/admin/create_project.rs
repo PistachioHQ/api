@@ -1,6 +1,6 @@
 use pistachio_api_common::admin::project::{
-    CreateProjectError, CreateProjectRequest, CreateProjectResponse, Project, ProjectResources,
-    ProjectState,
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse, Project, ProjectId,
+    ProjectResources, ProjectState,
 };
 use pistachio_api_common::error::ValidationError;
 use tracing::{debug, error};
@@ -93,10 +93,15 @@ impl FromJson<CreateProject200ResponseProject> for Project {
             .map(|r| ProjectResources::from_json(*r))
             .transpose()?;
 
+        let pistachio_id_str = json
+            .pistachio_id
+            .ok_or(ValidationError::MissingField("pistachio_id"))?;
+        let pistachio_id = ProjectId::parse(&pistachio_id_str)?;
+
         Ok(Self {
             project_id: json.project_id.unwrap_or_default(),
             name: json.name.unwrap_or_default(),
-            pistachio_id: json.pistachio_id.unwrap_or_default(),
+            pistachio_id,
             display_name: json.display_name.unwrap_or_default(),
             state,
             resources,

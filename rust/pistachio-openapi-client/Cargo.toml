@@ -13,13 +13,17 @@ readme = "README.md"
 # See: https://github.com/oxidecomputer/progenitor/issues/762
 
 [features]
+default = ["default-tls"]
+default-tls = ["reqwest/default-tls"]
+rustls = ["reqwest/rustls-tls"]
 single-threaded = ["pistachio-api-common/single-threaded"]
 
 [dependencies]
 pistachio-api-common = { workspace = true }
 
 async-trait = { workspace = true }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+cfg-if = "1.0"
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
 serde = { version = "1.0.69", features = ["derive"] }
 serde_json = "1"
 serde_repr = "0.1.5"

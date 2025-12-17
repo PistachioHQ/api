@@ -14,4 +14,6 @@ pub enum ValidationError {
     MissingField(&'static str),
     #[error("Invalid field value: {0}")]
     InvalidValue(&'static str),
+    #[error("Invalid project ID: {0}")]
+    InvalidProjectId(#[from] libgn::pistachio_id::ProjectIdError),
 }

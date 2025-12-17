@@ -1,3 +1,5 @@
+pub use libgn::pistachio_id::{ProjectId, ProjectIdError};
+
 use crate::error::{PistachioApiClientError, ValidationError};
 
 /// Project is the top-level container for apps, users, and resources.
@@ -8,7 +10,7 @@ pub struct Project {
     /// Resource name in the format "projects/{project_id}".
     pub name: String,
     /// Internal project identifier (pistachio_id).
-    pub pistachio_id: String,
+    pub pistachio_id: ProjectId,
     /// Human-readable display name for the project.
     pub display_name: String,
     /// Current state of the project.

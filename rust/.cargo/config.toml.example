@@ -9,3 +9,6 @@
 #   # Edit paths to match your local checkout locations
 #
 # Note: .cargo/config.toml is gitignored
+
+[patch."https://github.com/PistachioHQ/greennut-rs"]
+libgn = { path = "../../greennut-rs" }

@@ -160,12 +160,55 @@ allow = [
     #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason it is allowed" },
 ]
 # List of crates to deny
+#
+# Low-level cryptographic primitives are banned from direct use.
+# All crypto operations must go through libgn-crypto, which provides high-level
+# misuse-resistant APIs. This enforces the "pit of success" design pattern.
+#
+# NOTE: The `wrappers` field lists crates that are allowed to DIRECTLY depend
+# on the banned crate. This includes libgn-crypto-internal (which wraps primitives)
+# and other crypto crates that have internal dependencies (e.g., chacha20poly1305 -> chacha20).
 deny = [
-    #"ansi_term@0.11.0",
-    #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason it is banned" },
-    # Wrapper crates can optionally be specified to allow the crate when it
-    # is a direct dependency of the otherwise banned crate
-    #{ crate = "ansi_term@0.11.0", wrappers = ["this-crate-directly-depends-on-ansi_term"] },
+    # Block ciphers and modes
+    { crate = "aes", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for AES operations" },
+    { crate = "cbc", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for CBC mode" },
+    { crate = "ctr", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for CTR mode" },
+    # cipher is a foundational trait crate used by many crypto crates internally
+    { crate = "cipher", wrappers = ["libgn-crypto-internal", "aes", "cbc", "ctr", "chacha20", "chacha20poly1305"], reason = "Use libgn-crypto for cipher traits" },
+
+    # ChaCha20/Poly1305 AEAD
+    { crate = "chacha20", wrappers = ["libgn-crypto-internal", "chacha20poly1305"], reason = "Use libgn-crypto for ChaCha20" },
+    { crate = "chacha20poly1305", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for ChaCha20Poly1305 AEAD" },
+    { crate = "poly1305", wrappers = ["chacha20poly1305"], reason = "Use chacha20poly1305 for Poly1305 MAC" },
+
+    # Key derivation
+    { crate = "argon2", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for Argon2 key derivation" },
+
+    # Hash functions - digest is a foundational trait used by many hash implementations
+    { crate = "sha2", wrappers = ["libgn-crypto-internal", "ed25519-dalek"], reason = "Use libgn-crypto for SHA-2 hashing" },
+    { crate = "sha3", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for SHA-3 hashing" },
+    { crate = "digest", wrappers = ["sha2", "sha3", "hmac", "blake2", "curve25519-dalek"], reason = "Digest traits used by hash implementations" },
+
+    # MACs
+    { crate = "hmac", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for HMAC" },
+
+    # Elliptic curve cryptography
+    { crate = "ed25519-dalek", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for Ed25519 signatures" },
+    { crate = "x25519-dalek", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for X25519 key exchange" },
+
+    # Post-quantum cryptography
+    { crate = "pqcrypto-traits", wrappers = ["libgn-crypto-internal", "pqcrypto-mlkem"], reason = "Use libgn-crypto for PQ crypto traits" },
+    { crate = "pqcrypto-mlkem", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for ML-KEM" },
+
+    # Low-level crypto utilities - crypto-common is a foundational crate
+    { crate = "crypto-common", wrappers = ["libgn-crypto-internal", "cipher", "digest", "aead", "universal-hash"], reason = "Use libgn-crypto for crypto-common traits" },
+    { crate = "ring", wrappers = ["libgn-crypto-internal", "rustls", "rustls-webpki"], reason = "Use libgn-crypto for ring primitives" },
+
+    # Random number generation - enforce all randomness through internal crate
+    { crate = "rand", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for secure random bytes" },
+
+    # Low-level crypto internal crate - only libgn-crypto should use this
+    { crate = "libgn-crypto-internal", wrappers = ["libgn-crypto"], reason = "Use libgn-crypto high-level API, not internal crate" },
 ]
 
 # List of features to allow/deny
@@ -193,8 +236,14 @@ deny = [
 
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    # Transitive dependency version mismatches from reqwest/rustls ecosystem
-    { crate = "getrandom", reason = "ring uses 0.2.x, tempfile uses 0.3.x" },
+    # PERMANENT: ed25519-dalek 2.x and x25519-dalek 2.x require rand_core 0.6 for
+    # key generation (SigningKey::generate() and StaticSecret::random_from_rng()).
+    # rand 0.9 uses rand_core 0.9, which is incompatible. We explicitly depend on
+    # rand_core 0.6 (as rand_core_0_6) for these APIs only.
+    # See: https://github.com/dalek-cryptography/curve25519-dalek/issues/706
+    # DO NOT REMOVE these skips until ed25519-dalek and x25519-dalek support rand_core 0.9.
+    { crate = "rand_core", reason = "PERMANENT: ed25519-dalek/x25519-dalek require rand_core 0.6 for key generation" },
+    { crate = "getrandom", reason = "PERMANENT: follows rand_core version split for dalek crate compatibility" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
@@ -224,7 +273,7 @@ allow-git = []
 
 [sources.allow-org]
 # github.com organizations to allow git sources for
-github = []
+github = ["PistachioHQ"]
 # gitlab.com organizations to allow git sources for
 gitlab = []
 # bitbucket.org organizations to allow git sources for

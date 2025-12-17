@@ -17,6 +17,8 @@ repository = "https://github.com/PistachioHQ/api"
 pistachio-api = { path = "../gen/rust" }
 pistachio-api-common = { path = "pistachio-api-common" }
 
+libgn = { git = "https://github.com/PistachioHQ/greennut-rs", branch = "main" }
+
 async-trait = "0.1.21"
 thiserror = "2"
 tracing = "0.1"

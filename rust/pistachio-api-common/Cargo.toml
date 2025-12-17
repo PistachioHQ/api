@@ -13,6 +13,7 @@ single-threaded = []
 
 [dependencies]
 async-trait = { workspace = true }
+libgn = { workspace = true }
 thiserror = { workspace = true }
 
 [package.metadata.docs.rs]

@@ -1,6 +1,6 @@
 use pistachio_api_common::admin::project::{
-    CreateProjectError, CreateProjectRequest, CreateProjectResponse, Project, ProjectResources,
-    ProjectState,
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse, Project, ProjectId,
+    ProjectResources, ProjectState,
 };
 use pistachio_api_common::error::ValidationError;
 use tonic::Code;
@@ -91,11 +91,12 @@ impl FromProto<pistachio_api::pistachio::types::v1::Project> for Project {
             .resources
             .map(ProjectResources::from_proto)
             .transpose()?;
+        let pistachio_id = ProjectId::parse(&proto.pistachio_id)?;
 
         Ok(Self {
             project_id: proto.project_id,
             name: proto.name,
-            pistachio_id: proto.pistachio_id,
+            pistachio_id,
             display_name: proto.display_name,
             state,
             resources,
