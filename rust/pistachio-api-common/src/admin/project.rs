@@ -1,4 +1,5 @@
-pub use libgn::pistachio_id::{ProjectId, ProjectIdError};
+pub use libgn::pistachio_id::{ProjectId as PistachioProjectId, ProjectIdError};
+pub use libgn::project::{ProjectDisplayName, ProjectId, ProjectName};
 
 use crate::error::{PistachioApiClientError, ValidationError};
 
@@ -6,13 +7,13 @@ use crate::error::{PistachioApiClientError, ValidationError};
 #[derive(Debug, Clone)]
 pub struct Project {
     /// Unique project identifier.
-    pub project_id: String,
+    pub project_id: ProjectId,
     /// Resource name in the format "projects/{project_id}".
-    pub name: String,
+    pub name: ProjectName,
     /// Internal project identifier (pistachio_id).
-    pub pistachio_id: ProjectId,
+    pub pistachio_id: PistachioProjectId,
     /// Human-readable display name for the project.
-    pub display_name: String,
+    pub display_name: ProjectDisplayName,
     /// Current state of the project.
     pub state: ProjectState,
     /// Default resources provisioned for this project.

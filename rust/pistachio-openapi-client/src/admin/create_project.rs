@@ -1,6 +1,6 @@
 use pistachio_api_common::admin::project::{
-    CreateProjectError, CreateProjectRequest, CreateProjectResponse, Project, ProjectId,
-    ProjectResources, ProjectState,
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse, PistachioProjectId, Project,
+    ProjectDisplayName, ProjectId, ProjectName, ProjectResources, ProjectState,
 };
 use pistachio_api_common::error::ValidationError;
 use tracing::{debug, error};
@@ -96,13 +96,29 @@ impl FromJson<CreateProject200ResponseProject> for Project {
         let pistachio_id_str = json
             .pistachio_id
             .ok_or(ValidationError::MissingField("pistachio_id"))?;
-        let pistachio_id = ProjectId::parse(&pistachio_id_str)?;
+        let pistachio_id = PistachioProjectId::parse(&pistachio_id_str)?;
+
+        let project_id_str = json
+            .project_id
+            .ok_or(ValidationError::MissingField("project_id"))?;
+        let project_id = ProjectId::parse(&project_id_str)
+            .map_err(|_| ValidationError::InvalidValue("project_id"))?;
+
+        let name_str = json.name.ok_or(ValidationError::MissingField("name"))?;
+        let name =
+            ProjectName::parse(&name_str).map_err(|_| ValidationError::InvalidValue("name"))?;
+
+        let display_name_str = json
+            .display_name
+            .ok_or(ValidationError::MissingField("display_name"))?;
+        let display_name = ProjectDisplayName::parse(&display_name_str)
+            .map_err(|_| ValidationError::InvalidValue("display_name"))?;
 
         Ok(Self {
-            project_id: json.project_id.unwrap_or_default(),
-            name: json.name.unwrap_or_default(),
+            project_id,
+            name,
             pistachio_id,
-            display_name: json.display_name.unwrap_or_default(),
+            display_name,
             state,
             resources,
         })

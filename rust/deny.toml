@@ -265,6 +265,9 @@ unknown-registry = "warn"
 # Lint level for what to happen when a crate from a git repository that is not
 # in the allow list is encountered
 unknown-git = "warn"
+# Allow unmatched organizations - libgn is resolved as a path dependency locally
+# but as a git dependency in CI, so the org check only triggers in CI
+unmatched-organization = "allow"
 # List of URLs for allowed crate registries. Defaults to the crates.io index
 # if not specified. If it is specified but empty, no registries are allowed.
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
