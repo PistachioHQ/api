@@ -48,3 +48,7 @@ api/
 │   └── proto-deps/     # Vendored buf dependencies
 └── rust/               # Rust client libraries
 ```
+
+## License
+
+MIT OR Apache-2.0
