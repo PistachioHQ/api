@@ -11,7 +11,7 @@ pre-commit:
 
     rust-fmt:
       glob: "*.rs"
-      run: task fmt:check
+      run: task rust:fmt:check
 
     rust-clippy:
       glob: "*.rs"
