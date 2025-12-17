@@ -407,6 +407,42 @@ tasks:
       - cd rust && cargo deny --all-features check --deny warnings
       - cd gen/rust && cargo deny --all-features check --deny warnings
 
+  rust:update:
+    desc: "Update dependencies to latest compatible versions"
+    cmds:
+      - cd rust && cargo update
+      - cd gen/rust && cargo update
+
+  rust:update:nightly:
+    desc: "Update dependencies with nightly toolchain"
+    cmds:
+      - cd rust && cargo +nightly update
+      - cd gen/rust && cargo +nightly update
+
+  rust:update:nightly:minimal-versions:
+    desc: "Update dependencies to minimal versions (nightly only)"
+    cmds:
+      - cd rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions
+      - cd gen/rust && rm -f Cargo.lock && cargo +nightly update -Z minimal-versions
+
+  rust:build:nightly:
+    desc: "Build with nightly toolchain"
+    cmds:
+      - cd rust && cargo +nightly build
+      - cd gen/rust && cargo +nightly build
+
+  rust:build:nightly:minimal-versions:
+    desc: "Build with minimal dependency versions (nightly only)"
+    cmds:
+      - cd rust && cargo +nightly update -Z minimal-versions && cargo +nightly build
+      - cd gen/rust && cargo +nightly update -Z minimal-versions && cargo +nightly build
+
+  rust:test:nightly:
+    desc: "Run tests with nightly toolchain"
+    cmds:
+      - cd rust && cargo +nightly test
+      - cd gen/rust && cargo +nightly test
+
   # ============================================================================
   # CI tasks
   # ============================================================================

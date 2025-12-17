@@ -10,15 +10,19 @@ members = [
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
+authors = ["Adam Walz <adam@pistachiohq.com>"]
 repository = "https://github.com/PistachioHQ/api"
 
 [workspace.dependencies]
 pistachio-api = { path = "../gen/rust" }
 pistachio-api-common = { path = "pistachio-api-common" }
 
-async-trait = "0.1"
+async-trait = "0.1.21"
 thiserror = "2"
 tracing = "0.1"
 
 # gRPC stack
 tonic = "0.14"
+
+# Transitive dependency minimum versions
+anyhow = "1.0.69"
