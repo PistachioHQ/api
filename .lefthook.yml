@@ -17,6 +17,13 @@ pre-commit:
       glob: "*.rs"
       run: task rust:clippy
 
+    verify-license:
+      run: |
+        if [[ ! -f "LICENSE" ]]; then
+          echo "Error: LICENSE file is missing"
+          exit 1
+        fi
+
     verify-signing-config:
       run: |
         if [[ "$(git config commit.gpgsign)" != "true" ]]; then
@@ -24,7 +31,7 @@ pre-commit:
           echo "Run: git config commit.gpgsign true"
           exit 1
         fi
-        
+
         if [[ ! -f ".git/allowed_signers" ]]; then
           echo "Error: Allowed signers file missing"
           echo "Run: task setup"
