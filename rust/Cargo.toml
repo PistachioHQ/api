@@ -1,0 +1,15 @@
+[workspace]
+resolver = "3"
+members = [
+  "pistachio-api-common",
+  "pistachio-grpc-client",
+  "pistachio-openapi-client",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/PistachioHQ/api"
+
+[workspace.dependencies]

@@ -1,0 +1,11 @@
+[package]
+name = "pistachio-openapi-client"
+description = "OpenAPI HTTP client for Pistachio REST API"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+
+[dependencies]

@@ -1,0 +1,177 @@
+name: PR Commit Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  verify-commits:
+    name: Verify Commit Requirements
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Install cocogitto
+        run: |
+          curl -L -o cog.tar.gz https://github.com/cocogitto/cocogitto/releases/download/6.5.0/cocogitto-6.5.0-x86_64-unknown-linux-musl.tar.gz
+          tar -xzf cog.tar.gz
+          sudo mv x86_64-unknown-linux-musl/cog /usr/local/bin/
+          rm -rf cog.tar.gz x86_64-unknown-linux-musl/
+          
+      - name: Get PR commits
+        id: get-commits
+        run: |
+          # Get the base and head SHA for the PR
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          
+          # Get all commits in the PR
+          COMMITS=$(git rev-list --reverse $BASE_SHA..$HEAD_SHA)
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Verify commit authorship and signatures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          
+          ALLOWED_DOMAIN="@pistachiohq.com"
+          FAILED=false
+          
+          # Read commits from previous step
+          COMMITS="${{ steps.get-commits.outputs.commits }}"
+          
+          echo "Checking commits in this PR..."
+          echo "================================"
+          
+          for commit in $COMMITS; do
+            echo "Checking commit: $commit"
+            
+            # Get commit details
+            AUTHOR_EMAIL=$(git show -s --format='%ae' $commit)
+            COMMITTER_EMAIL=$(git show -s --format='%ce' $commit)
+            COMMIT_MESSAGE=$(git show -s --format='%s' $commit)
+            
+            echo "  Author: $AUTHOR_EMAIL"
+            echo "  Committer: $COMMITTER_EMAIL"
+            echo "  Message: $COMMIT_MESSAGE"
+            
+            # Check author email domain
+            if [[ ! "$AUTHOR_EMAIL" == *"$ALLOWED_DOMAIN" ]]; then
+              echo "  ❌ ERROR: Author email '$AUTHOR_EMAIL' is not from $ALLOWED_DOMAIN"
+              FAILED=true
+            else
+              echo "  ✓ Author email is from $ALLOWED_DOMAIN"
+            fi
+            
+            # Check committer email domain
+            if [[ ! "$COMMITTER_EMAIL" == *"$ALLOWED_DOMAIN" ]]; then
+              echo "  ❌ ERROR: Committer email '$COMMITTER_EMAIL' is not from $ALLOWED_DOMAIN"
+              FAILED=true
+            else
+              echo "  ✓ Committer email is from $ALLOWED_DOMAIN"
+            fi
+            
+            # Check if commit is signed using GitHub API
+            # GitHub verifies SSH signatures against the user's uploaded SSH keys
+            VERIFICATION_STATUS=$(gh api repos/${{ github.repository }}/commits/$commit --jq '.commit.verification.verified')
+            VERIFICATION_REASON=$(gh api repos/${{ github.repository }}/commits/$commit --jq '.commit.verification.reason')
+            
+            if [[ "$VERIFICATION_STATUS" == "true" ]]; then
+              echo "  ✓ Commit is signed and verified by GitHub"
+              
+              # Get the email associated with the signature from GitHub
+              SIGNATURE_EMAIL=$(gh api repos/${{ github.repository }}/commits/$commit --jq '.commit.verification.payload' | grep -oP '(?<=email )[^>]+@[^>]+' || echo "")
+              
+              if [[ -n "$SIGNATURE_EMAIL" ]]; then
+                if [[ "$SIGNATURE_EMAIL" == *"$ALLOWED_DOMAIN" ]]; then
+                  echo "  ✓ Signature is from $SIGNATURE_EMAIL"
+                else
+                  echo "  ❌ ERROR: Signature email '$SIGNATURE_EMAIL' is not from $ALLOWED_DOMAIN"
+                  FAILED=true
+                fi
+              else
+                # For SSH signatures, check the author email matches since GitHub verified the signature
+                echo "  ✓ Signature verified by GitHub (SSH signature from author)"
+              fi
+            else
+              echo "  ❌ ERROR: Commit is not signed or verified (reason: $VERIFICATION_REASON)"
+              FAILED=true
+            fi
+            
+            echo ""
+          done
+          
+          if [ "$FAILED" = true ]; then
+            echo "❌ Some commits do not meet the requirements"
+            exit 1
+          else
+            echo "✅ All commits meet authorship and signature requirements"
+          fi
+          
+      - name: Verify conventional commits
+        run: |
+          set -e
+          
+          # Configure git user for cocogitto (required even for verification)
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Read commits from previous step
+          COMMITS="${{ steps.get-commits.outputs.commits }}"
+          
+          FAILED=false
+          
+          echo "Checking conventional commit format..."
+          echo "====================================="
+          
+          for commit in $COMMITS; do
+            echo "Checking commit: $commit"
+            
+            # Get commit message
+            COMMIT_MESSAGE=$(git log --format=%B -n 1 $commit)
+            
+            # Check with cocogitto - pass message as argument
+            if cog verify "$COMMIT_MESSAGE"; then
+              echo "  ✓ Commit follows conventional commits format"
+            else
+              echo "  ❌ ERROR: Commit does not follow conventional commits format"
+              echo "  Message: $(git log --format=%s -n 1 $commit)"
+              FAILED=true
+            fi
+            
+            echo ""
+          done
+          
+          if [ "$FAILED" = true ]; then
+            echo "❌ Some commits do not follow conventional commits format"
+            echo ""
+            echo "Expected format: <type>(<scope>): <description>"
+            echo "Valid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+            echo "Valid scopes: auth, api, ui, docs, deps"
+            exit 1
+          else
+            echo "✅ All commits follow conventional commits format"
+          fi
+          
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Commit Requirements Summary"
+          echo ""
+          echo "This PR must meet the following requirements:"
+          echo "1. ✉️  All commits must be authored by @pistachiohq.com email addresses"
+          echo "2. ✉️  All commits must be committed by @pistachiohq.com email addresses"
+          echo "3. 🔐 All commits must be signed by @pistachiohq.com email address"
+          echo "4. 📝 All commits must follow conventional commits format"
+          echo ""
+          echo "For more information, see the repository's contribution guidelines."

@@ -1,0 +1,4 @@
+target/
+
+# Ignored for libraries; downstream consumers control dependency versions
+Cargo.lock

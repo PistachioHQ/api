@@ -1,0 +1,286 @@
+version: '3'
+
+tasks:
+  # ============================================================================
+  # Top-level tasks
+  # ============================================================================
+
+  default:
+    desc: "Run all checks"
+    cmds:
+      - task: check
+
+  lint:
+    desc: "Run all linters"
+    cmds:
+      - task: buf:lint
+      - task: rust:clippy
+
+  fmt:
+    desc: "Format all code"
+    cmds:
+      - task: buf:format
+      - task: rust:fmt
+
+  fmt:check:
+    desc: "Check formatting without modifying files"
+    cmds:
+      - task: buf:format:check
+      - task: rust:fmt:check
+
+  build:
+    desc: "Build all code"
+    cmds:
+      - task: gen
+      - task: rust:build
+
+  test:
+    desc: "Run all tests"
+    cmds:
+      - task: rust:test
+
+  check:
+    desc: "Run all checks (fmt, lint, audit, deny)"
+    cmds:
+      - task: fmt:check
+      - task: lint
+      - task: rust:audit
+      - task: rust:deny
+
+  # ============================================================================
+  # Setup tasks
+  # ============================================================================
+
+  setup:
+    desc: "Setup development environment"
+    cmds:
+      - task: setup:signing
+      - task: check:cocogitto
+      - task: setup:cocogitto-config
+      - task: setup:hooks
+    
+  setup:signing:
+    desc: "Configure SSH commit signing"
+    cmds:
+      - |
+        echo "Configuring commit signing..."
+        
+        ALLOWED_DOMAINS="@pistachiohq.com"
+        
+        git config commit.gpgsign true
+        git config gpg.format ssh
+        
+        EMAIL=$(git config user.email)
+        SIGNING_KEY=$(git config user.signingkey)
+        
+        if [[ -z "$EMAIL" ]] || [[ -z "$SIGNING_KEY" ]]; then
+          echo "Error: Missing configuration"
+          echo "Run: git config user.email your-email@pistachiohq.com"
+          echo "Run: git config user.signingkey ~/.ssh/id_ed25519.pub"
+          exit 1
+        fi
+        
+        VALID_DOMAIN=false
+        for domain in $ALLOWED_DOMAINS; do
+          if [[ "$EMAIL" == *"$domain" ]]; then
+            VALID_DOMAIN=true
+            break
+          fi
+        done
+        
+        if [[ "$VALID_DOMAIN" != "true" ]]; then
+          echo "Error: Email '$EMAIL' is not from an authorized domain"
+          echo "Allowed domains: $ALLOWED_DOMAINS"
+          echo "Run: git config user.email your-email@pistachiohq.com"
+          exit 1
+        fi
+        
+        mkdir -p .git
+
+        if [[ -f "$SIGNING_KEY" ]]; then
+          echo "$EMAIL $(cat $SIGNING_KEY)" > .git/allowed_signers
+        else
+          echo "$EMAIL $SIGNING_KEY" > .git/allowed_signers
+        fi
+        
+        git config gpg.ssh.allowedSignersFile .git/allowed_signers
+        
+        echo "✓ SSH signing configured for $EMAIL"
+    status:
+      - test -f .git/allowed_signers
+      - git config --get gpg.ssh.allowedSignersFile | grep -q ".git/allowed_signers"
+    
+  check:cocogitto:
+    desc: "Check if cocogitto is installed"
+    cmds:
+      - |
+        if ! command -v cog >/dev/null 2>&1; then
+          echo "⚠️  cocogitto not found"
+          echo "Please install: brew install cocogitto"
+          echo "Or: cargo install cocogitto"
+        fi
+    silent: true
+    
+  setup:cocogitto-config:
+    desc: "Setup cocogitto configuration"
+    cmds:
+      - |
+        echo '# Cocogitto configuration
+        # https://docs.cocogitto.io/config
+
+        [commit_types]
+        build = { changelog_title = "Build System" }
+        chore = { changelog_title = "Chores" }
+        ci = { changelog_title = "Continuous Integration" }
+        docs = { changelog_title = "Documentation" }
+        feat = { changelog_title = "Features" }
+        fix = { changelog_title = "Bug Fixes" }
+        perf = { changelog_title = "Performance" }
+        refactor = { changelog_title = "Refactoring" }
+        revert = { changelog_title = "Reverts" }
+        style = { changelog_title = "Styles" }
+        test = { changelog_title = "Tests" }
+        
+        [commit_scopes]
+        auth = {}
+        api = {}
+        ui = {}
+        docs = {}
+        deps = {}
+        
+        [changelog]
+        path = "CHANGELOG.md"
+        template = "default"
+        
+        [bump_profiles]
+        default = { build = "patch", chore = "patch" }
+        ' > cog.toml
+    status:
+      - test -f cog.toml
+
+  setup:hooks:
+    desc: "Install git hooks via lefthook"
+    cmds:
+      - lefthook install
+    status:
+      - test -f .git/hooks/prepare-commit-msg || test -f .git/hooks/lefthook-run
+
+  # ============================================================================
+  # Buf / Protobuf tasks
+  # ============================================================================
+
+  buf:lint:
+    desc: "Lint protobuf files with buf"
+    cmds:
+      - buf lint
+
+  buf:format:
+    desc: "Format protobuf files with buf"
+    cmds:
+      - buf format -w
+
+  buf:format:check:
+    desc: "Check protobuf formatting without modifying files"
+    cmds:
+      - buf format --diff --exit-code
+
+  buf:breaking:
+    desc: "Check for breaking changes against main branch"
+    cmds:
+      - buf breaking --against '.git#branch=main'
+
+  buf:deps:
+    desc: "Update and export buf dependencies"
+    cmds:
+      - buf dep update
+      - rm -rf gen/proto-deps
+      - buf export buf.build/bufbuild/protovalidate --output gen/proto-deps
+    sources:
+      - buf.yaml
+      - buf.lock
+    generates:
+      - gen/proto-deps/**/*.proto
+
+  # ============================================================================
+  # Code generation tasks
+  # ============================================================================
+
+  gen:rust:
+    desc: "Generate Rust code from protobuf definitions"
+    dir: gen/rust
+    cmds:
+      - cargo build
+    sources:
+      - ../../proto/**/*.proto
+      - ../../gen/proto-deps/**/*.proto
+      - build.rs
+      - Cargo.toml
+    generates:
+      - target/debug/build/pistachio-api-*/out/*.rs
+
+  gen:
+    desc: "Generate all code from protobuf definitions"
+    cmds:
+      - task: buf:deps
+      - task: gen:rust
+
+  # ============================================================================
+  # Rust tasks
+  # ============================================================================
+
+  rust:build:
+    desc: "Build all Rust code"
+    cmds:
+      - cd rust && cargo build
+      - cd gen/rust && cargo build
+
+  rust:test:
+    desc: "Run Rust tests"
+    cmds:
+      - cd rust && cargo test
+      - cd gen/rust && cargo test
+
+  rust:clippy:
+    desc: "Run clippy on Rust code"
+    cmds:
+      - cd rust && cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - cd gen/rust && cargo clippy --all-targets --all-features -- -D warnings
+
+  rust:fmt:
+    desc: "Format Rust code"
+    cmds:
+      - cd rust && cargo fmt
+      - cd gen/rust && cargo fmt
+
+  rust:fmt:check:
+    desc: "Check Rust formatting without modifying files"
+    cmds:
+      - cd rust && cargo fmt --check
+      - cd gen/rust && cargo fmt --check
+
+  rust:audit:
+    desc: "Check for security vulnerabilities in dependencies"
+    cmds:
+      - cd rust && cargo audit --deny warnings
+      - cd gen/rust && cargo audit --deny warnings
+
+  rust:deny:
+    desc: "Check dependencies against policy (licenses, bans, advisories)"
+    cmds:
+      - cd rust && cargo deny --all-features check --deny warnings
+      - cd gen/rust && cargo deny --all-features check --deny warnings
+
+  # ============================================================================
+  # CI tasks
+  # ============================================================================
+
+  ci:lint:
+    desc: "Run all linting checks for CI"
+    cmds:
+      - task: buf:lint
+      - cd gen/rust && cargo clippy -- -D warnings
+
+  ci:build:
+    desc: "Build all generated code for CI"
+    cmds:
+      - task: gen

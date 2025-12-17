@@ -1,0 +1,18 @@
+[package]
+name = "pistachio-api"
+description = "Generated Rust types for Pistachio public API"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/PistachioHQ/api"
+
+[dependencies]
+
+# === GRPC STACK (coordinated) ===
+prost = "0.14"
+prost-types = "0.14"
+tonic = "0.14"
+tonic-prost = "0.14"
+
+[build-dependencies]
+tonic-prost-build = "0.14"

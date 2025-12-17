@@ -1,0 +1,11 @@
+[package]
+name = "pistachio-grpc-client"
+description = "gRPC client for Pistachio API"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+
+[dependencies]

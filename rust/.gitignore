@@ -1,0 +1,5 @@
+target/
+.cargo/config.toml
+
+# Ignored for libraries; downstream consumers control dependency versions
+Cargo.lock
