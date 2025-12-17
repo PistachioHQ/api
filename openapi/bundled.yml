@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+    title: Pistachio API
+    description: |
+        API for end-to-end encrypted applications.
+    version: 0.1.0
+    contact:
+        name: Pistachio Team
+servers:
+    - url: https://api.pistachiohq.com/v1
+      description: Production server
+    - url: https://api.staging.pistachiohq.com/v1
+      description: Staging server
+tags:
+    - name: Health
+      description: Service health checks
+    - name: Auth
+      description: Authentication validation endpoints
+paths:
+    /health:
+        get:
+            operationId: checkHealth
+            summary: Check service health
+            description: Returns the health status of the service.
+            tags:
+                - Health
+            parameters:
+                - name: service
+                  in: query
+                  required: false
+                  description: The service name to check. If empty, checks overall service health.
+                  schema:
+                    type: string
+                    maxLength: 256
+            responses:
+                '200':
+                    description: Health check response
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Health check response
+                                properties:
+                                    status:
+                                        type: string
+                                        description: Represents the health state of a service
+                                        example: SERVING_STATUS_SERVING
+                                        enum:
+                                            - SERVING_STATUS_UNSPECIFIED
+                                            - SERVING_STATUS_SERVING
+                                            - SERVING_STATUS_NOT_SERVING
+                                required:
+                                    - status
+                            example:
+                                status: SERVING_STATUS_SERVING
+    /auth/validate-key:
+        get:
+            operationId: validateApiKey
+            summary: Validate API key
+            description: Validates that the provided API key is valid.
+            tags:
+                - Auth
+            security:
+                - ApiKeyAuth: []
+            responses:
+                '200':
+                    description: API key is valid
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response indicating whether credentials are valid
+                                properties:
+                                    valid:
+                                        type: boolean
+                                        description: Whether the provided credentials are valid
+                                        example: true
+                                required:
+                                    - valid
+                            example:
+                                valid: true
+                '401':
+                    description: Invalid or missing API key
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                            example:
+                                code: UNAUTHENTICATED
+                                message: Invalid or missing API key
+    /auth/validate-token:
+        get:
+            operationId: validateToken
+            summary: Validate bearer token
+            description: Validates that the provided bearer token is valid.
+            tags:
+                - Auth
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Token is valid
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response indicating whether credentials are valid
+                                properties:
+                                    valid:
+                                        type: boolean
+                                        description: Whether the provided credentials are valid
+                                        example: true
+                                required:
+                                    - valid
+                            example:
+                                valid: true
+                '401':
+                    description: Invalid or missing token
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                            example:
+                                code: UNAUTHENTICATED
+                                message: Invalid or missing token
+    /auth/validate-service-account:
+        get:
+            operationId: validateServiceAccount
+            summary: Validate service account
+            description: Validates that the provided service account credential is valid.
+            tags:
+                - Auth
+            security:
+                - ServiceAccountAuth: []
+            responses:
+                '200':
+                    description: Service account credential is valid
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response indicating whether credentials are valid
+                                properties:
+                                    valid:
+                                        type: boolean
+                                        description: Whether the provided credentials are valid
+                                        example: true
+                                required:
+                                    - valid
+                            example:
+                                valid: true
+                '401':
+                    description: Invalid or missing service account credential
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                            example:
+                                code: UNAUTHENTICATED
+                                message: Invalid or missing service account credential
+components:
+    securitySchemes:
+        ApiKeyAuth:
+            type: apiKey
+            in: query
+            name: key
+            description: |
+                API key for client SDK operations.
+                API keys are auto-generated per app and identify the project.
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: |
+                ID token (JWT) for authenticated operations.
+                Obtained via sign-in and must be included in the Authorization header.
+                Format: "Authorization: Bearer {id_token}"
+        ServiceAccountAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: |
+                Service account credential for admin operations.

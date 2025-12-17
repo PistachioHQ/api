@@ -1,0 +1,24 @@
+health:
+  get:
+    operationId: checkHealth
+    summary: Check service health
+    description: Returns the health status of the service.
+    tags:
+      - Health
+    parameters:
+      - name: service
+        in: query
+        required: false
+        description: The service name to check. If empty, checks overall service health.
+        schema:
+          type: string
+          maxLength: 256
+    responses:
+      '200':
+        description: Health check response
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/health.yml#/CheckResponse'
+            example:
+              status: SERVING_STATUS_SERVING

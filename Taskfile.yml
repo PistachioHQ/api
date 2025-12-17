@@ -55,10 +55,37 @@ tasks:
     desc: "Setup development environment"
     cmds:
       - task: setup:signing
-      - task: check:cocogitto
-      - task: setup:cocogitto-config
+      - task: setup:cocogitto
+      - task: setup:vacuum
+      - task: setup:openapi-generator
       - task: setup:hooks
-    
+
+  setup:cocogitto:
+    desc: "Setup cocogitto"
+    cmds:
+      - task: setup:cocogitto:check
+      - task: setup:cocogitto:config
+
+  setup:vacuum:
+    desc: "Setup vacuum"
+    cmds:
+      - task: setup:vacuum:check
+
+  setup:openapi-generator:
+    desc: "Setup openapi-generator"
+    cmds:
+      - task: setup:openapi-generator:check
+
+  setup:openapi-generator:check:
+    desc: "Check if openapi-generator is installed"
+    cmds:
+      - |
+        if ! command -v openapi-generator >/dev/null 2>&1; then
+          echo "⚠️  openapi-generator not found"
+          echo "Please install: brew install openapi-generator"
+        fi
+    silent: true
+
   setup:signing:
     desc: "Configure SSH commit signing"
     cmds:
@@ -110,7 +137,7 @@ tasks:
       - test -f .git/allowed_signers
       - git config --get gpg.ssh.allowedSignersFile | grep -q ".git/allowed_signers"
     
-  check:cocogitto:
+  setup:cocogitto:check:
     desc: "Check if cocogitto is installed"
     cmds:
       - |
@@ -120,8 +147,18 @@ tasks:
           echo "Or: cargo install cocogitto"
         fi
     silent: true
-    
-  setup:cocogitto-config:
+
+  setup:vacuum:check:
+    desc: "Check if vacuum is installed"
+    cmds:
+      - |
+        if ! command -v vacuum >/dev/null 2>&1; then
+          echo "⚠️  vacuum not found"
+          echo "Please install: brew install daveshanley/vacuum/vacuum"
+        fi
+    silent: true
+
+  setup:cocogitto:config:
     desc: "Setup cocogitto configuration"
     cmds:
       - |
@@ -200,6 +237,35 @@ tasks:
       - buf.lock
     generates:
       - gen/proto-deps/**/*.proto
+
+  # ============================================================================
+  # OpenAPI tasks
+  # ============================================================================
+
+  openapi:lint:
+    desc: "Lint OpenAPI spec (lints bundled output to properly resolve all references)"
+    dir: openapi
+    deps: [openapi:bundle]
+    cmds:
+      - vacuum lint bundled.yml
+
+  openapi:lint:details:
+    desc: "Lint OpenAPI spec with detailed output"
+    dir: openapi
+    deps: [openapi:bundle]
+    cmds:
+      - vacuum lint bundled.yml --details
+
+  openapi:bundle:
+    desc: "Bundle OpenAPI spec into a single file"
+    dir: openapi
+    cmds:
+      - vacuum bundle pistachio-api.yml bundled.yml
+    sources:
+      - ./**/*.yml
+    generates:
+      - bundled.yml
+
 
   # ============================================================================
   # Code generation tasks

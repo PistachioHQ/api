@@ -1,0 +1,17 @@
+CheckResponse:
+  type: object
+  description: Health check response
+  properties:
+    status:
+      $ref: '#/ServingStatus'
+  required:
+    - status
+
+ServingStatus:
+  type: string
+  description: Represents the health state of a service
+  example: SERVING_STATUS_SERVING
+  enum:
+    - SERVING_STATUS_UNSPECIFIED
+    - SERVING_STATUS_SERVING
+    - SERVING_STATUS_NOT_SERVING

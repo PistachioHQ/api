@@ -1,0 +1,10 @@
+ValidateResponse:
+  type: object
+  description: Response indicating whether credentials are valid
+  properties:
+    valid:
+      type: boolean
+      description: Whether the provided credentials are valid
+      example: true
+  required:
+    - valid

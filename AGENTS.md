@@ -1,5 +1,34 @@
 # Pistachio API Agent Guidelines
 
+## Taskfile Commands
+
+**Always use `task` commands instead of running tools directly.** This ensures consistent flags, proper dependencies, and correct working directories.
+
+### Common Tasks
+
+| Instead of | Use |
+|------------|-----|
+| `buf lint` | `task buf:lint` |
+| `buf format -w` | `task buf:format` |
+| `buf format --diff --exit-code` | `task buf:format:check` |
+| `vacuum lint pistachio-api.yml` | `task openapi:lint` |
+| `vacuum lint bundled.yml --details` | `task openapi:lint:details` |
+| `vacuum bundle pistachio-api.yml bundled.yml` | `task openapi:bundle` |
+| `cargo clippy ...` | `task rust:clippy` |
+| `cargo fmt` | `task rust:fmt` |
+| `cargo test` | `task rust:test` |
+
+### Listing Available Tasks
+
+Run `task --list` to see all available tasks with descriptions.
+
+### Why This Matters
+
+- Tasks handle directory changes (`dir:` directive)
+- Tasks include proper flags and options
+- Tasks declare dependencies (`deps:`) that run automatically
+- Tasks use `sources:` and `generates:` for incremental builds
+
 ## Protobuf Conventions
 
 ### Proto3 Syntax Rules (proto3.12+)

@@ -1,0 +1,83 @@
+validate-key:
+  get:
+    operationId: validateApiKey
+    summary: Validate API key
+    description: Validates that the provided API key is valid.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    responses:
+      '200':
+        description: API key is valid
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yml#/ValidateResponse'
+            example:
+              valid: true
+      '401':
+        description: Invalid or missing API key
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/Error'
+            example:
+              code: UNAUTHENTICATED
+              message: Invalid or missing API key
+
+validate-token:
+  get:
+    operationId: validateToken
+    summary: Validate bearer token
+    description: Validates that the provided bearer token is valid.
+    tags:
+      - Auth
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Token is valid
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yml#/ValidateResponse'
+            example:
+              valid: true
+      '401':
+        description: Invalid or missing token
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/Error'
+            example:
+              code: UNAUTHENTICATED
+              message: Invalid or missing token
+
+validate-service-account:
+  get:
+    operationId: validateServiceAccount
+    summary: Validate service account
+    description: Validates that the provided service account credential is valid.
+    tags:
+      - Auth
+    security:
+      - ServiceAccountAuth: []
+    responses:
+      '200':
+        description: Service account credential is valid
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth.yml#/ValidateResponse'
+            example:
+              valid: true
+      '401':
+        description: Invalid or missing service account credential
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/Error'
+            example:
+              code: UNAUTHENTICATED
+              message: Invalid or missing service account credential

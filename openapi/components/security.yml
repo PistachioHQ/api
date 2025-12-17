@@ -1,0 +1,25 @@
+# Security Schemes for Pistachio API
+
+ApiKeyAuth:
+  type: apiKey
+  in: query
+  name: key
+  description: |
+    API key for client SDK operations.
+    API keys are auto-generated per app and identify the project.
+
+BearerAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: |
+    ID token (JWT) for authenticated operations.
+    Obtained via sign-in and must be included in the Authorization header.
+    Format: "Authorization: Bearer {id_token}"
+
+ServiceAccountAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: |
+    Service account credential for admin operations.

@@ -2,32 +2,29 @@ syntax = "proto3";
 
 package pistachio.v1;
 
-import "buf/validate/validate.proto";
+import "pistachio/v1/auth.proto";
+import "pistachio/v1/health.proto";
+
+// =============================================================================
+// Authentication Service
+// =============================================================================
+//
+// Authentication provides client authentication and user identity endpoints
+// Path: /v1/accounts:*
+// Requires API key
+service AuthService {
+  // ValidateApiKey validates that the provided API key is valid.
+  rpc ValidateApiKey(ValidateApiKeyRequest) returns (ValidateApiKeyResponse);
+
+  // ValidateToken validates that the provided bearer token is valid.
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // ValidateServiceAccount validates that the provided service account credential is valid.
+  rpc ValidateServiceAccount(ValidateServiceAccountRequest) returns (ValidateServiceAccountResponse);
+}
 
 // HealthService provides health check endpoints for the Pistachio API.
 service HealthService {
   // Check returns the health status of the service.
   rpc Check(CheckRequest) returns (CheckResponse);
-}
-
-// CheckRequest is the request message for health checks.
-message CheckRequest {
-  // The service name to check. If empty, checks the overall service health.
-  string service = 1 [(buf.validate.field).string.max_len = 256];
-}
-
-// CheckResponse contains the result of a health check.
-message CheckResponse {
-  // ServingStatus indicates whether the service is healthy.
-  ServingStatus status = 1;
-}
-
-// ServingStatus represents the health state of a service.
-enum ServingStatus {
-  // SERVING_STATUS_UNSPECIFIED indicates the status is unknown.
-  SERVING_STATUS_UNSPECIFIED = 0;
-  // SERVING_STATUS_SERVING indicates the service is healthy and serving.
-  SERVING_STATUS_SERVING = 1;
-  // SERVING_STATUS_NOT_SERVING indicates the service is unhealthy.
-  SERVING_STATUS_NOT_SERVING = 2;
 }
