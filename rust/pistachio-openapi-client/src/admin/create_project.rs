@@ -34,8 +34,8 @@ pub(crate) async fn handle_create_project(
     debug!("Creating OpenAPI request");
 
     let request = GenCreateProjectRequest {
-        project_id: req.project_id,
-        display_name: req.display_name,
+        project_id: req.project_id.map(|id| id.to_string()),
+        display_name: req.display_name.map(|name| name.to_string()),
     };
 
     debug!(?request, "Sending create_project request");

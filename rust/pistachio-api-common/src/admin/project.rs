@@ -74,10 +74,10 @@ pub struct CreateProjectRequest {
     /// Desired project ID.
     /// If not provided, a unique ID will be generated.
     /// Must be 6-30 characters, lowercase alphanumeric with hyphens.
-    pub project_id: Option<String>,
+    pub project_id: Option<ProjectId>,
     /// Human-readable display name for the project.
     /// If not provided, project_id will be used as the display name.
-    pub display_name: Option<String>,
+    pub display_name: Option<ProjectDisplayName>,
 }
 
 impl CreateProjectRequest {
@@ -87,14 +87,14 @@ impl CreateProjectRequest {
     }
 
     /// Sets the project ID.
-    pub fn with_project_id(mut self, project_id: impl Into<String>) -> Self {
-        self.project_id = Some(project_id.into());
+    pub fn with_project_id(mut self, project_id: ProjectId) -> Self {
+        self.project_id = Some(project_id);
         self
     }
 
     /// Sets the display name.
-    pub fn with_display_name(mut self, display_name: impl Into<String>) -> Self {
-        self.display_name = Some(display_name.into());
+    pub fn with_display_name(mut self, display_name: ProjectDisplayName) -> Self {
+        self.display_name = Some(display_name);
         self
     }
 }

@@ -56,8 +56,11 @@ pub(crate) async fn handle_create_project<I: Interceptor>(
 impl IntoProto<pistachio_api::pistachio::admin::v1::CreateProjectRequest> for CreateProjectRequest {
     fn into_proto(self) -> pistachio_api::pistachio::admin::v1::CreateProjectRequest {
         pistachio_api::pistachio::admin::v1::CreateProjectRequest {
-            project_id: self.project_id.unwrap_or_default(),
-            display_name: self.display_name.unwrap_or_default(),
+            project_id: self.project_id.map(|id| id.to_string()).unwrap_or_default(),
+            display_name: self
+                .display_name
+                .map(|name| name.to_string())
+                .unwrap_or_default(),
         }
     }
 }
