@@ -25,3 +25,7 @@ tracing-core = "0.1.28"
 
 [build-dependencies]
 tonic-prost-build = "0.14"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
