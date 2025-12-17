@@ -1,6 +1,6 @@
 # https://docs.cocogitto.io/config
 
-scopes = ["auth", "api", "ui", "docs", "deps"]
+scopes = ["grpc", "openapi", "admin", "docs", "deps"]
 
 from_latest_tag = true
 ignore_merge_commits = true

@@ -38,6 +38,11 @@ pre-commit:
         fi
       tags: security
 
+pre-push:
+  commands:
+    buf-breaking:
+      run: task bump:check
+
 commit-msg:
   commands:
     lint-commit-message:

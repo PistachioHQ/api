@@ -203,6 +203,73 @@ tasks:
       - test -f .git/hooks/prepare-commit-msg || test -f .git/hooks/lefthook-run
 
   # ============================================================================
+  # Changelog tasks
+  # ============================================================================
+
+  changelog:
+    desc: "Generate changelog from conventional commits"
+    cmds:
+      - cog changelog
+
+  changelog:check:
+    desc: "Verify all commits follow conventional commit format"
+    cmds:
+      - cog check
+
+  bump:check:
+    desc: "Check for breaking proto changes without matching BREAKING CHANGE commits"
+    cmds:
+      - |
+        # Check for breaking proto changes
+        if buf breaking --against '.git#branch=main' 2>/dev/null; then
+          echo "✓ No breaking proto changes detected"
+          exit 0
+        fi
+
+        # Breaking changes detected - check for BREAKING CHANGE commits
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [[ -z "$LAST_TAG" ]]; then
+          COMMIT_RANGE="HEAD"
+        else
+          COMMIT_RANGE="${LAST_TAG}..HEAD"
+        fi
+
+        # Look for BREAKING CHANGE in commit bodies or footers
+        if git log "$COMMIT_RANGE" --format="%B" | grep -q "BREAKING CHANGE"; then
+          echo "✓ Breaking proto changes detected with matching BREAKING CHANGE commit(s)"
+          exit 0
+        fi
+
+        # Also check for commits with ! after type (e.g., feat!: or fix(scope)!:)
+        if git log "$COMMIT_RANGE" --format="%s" | grep -qE "^[a-z]+(\([^)]+\))?!:"; then
+          echo "✓ Breaking proto changes detected with matching breaking commit(s)"
+          exit 0
+        fi
+
+        echo "⚠️  ERROR: Breaking proto changes detected but no BREAKING CHANGE commits found"
+        echo ""
+        echo "Breaking changes were detected by 'buf breaking'. To proceed, you must:"
+        echo "1. Add a commit with 'BREAKING CHANGE:' in the footer, or"
+        echo "2. Use '!' after the type (e.g., 'feat!: remove deprecated field')"
+        echo ""
+        echo "Run 'buf breaking --against .git#branch=main' to see the breaking changes."
+        exit 1
+    silent: true
+
+  bump:
+    desc: "Bump version and update changelog"
+    deps: [bump:check]
+    cmds:
+      - cog bump --auto
+
+  bump:dry-run:
+    desc: "Preview version bump without making changes"
+    deps: [bump:check]
+    cmds:
+      - cog bump --auto --dry-run
+
+  # ============================================================================
   # Buf / Protobuf tasks
   # ============================================================================
 
