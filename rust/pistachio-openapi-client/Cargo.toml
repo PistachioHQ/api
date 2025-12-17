@@ -11,12 +11,17 @@ repository.workspace = true
 # See: https://github.com/oxidecomputer/progenitor/issues/762
 
 [features]
+single-threaded = ["pistachio-api-common/single-threaded"]
 
 [dependencies]
+pistachio-api-common = { workspace = true }
+
+async-trait = { workspace = true }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
+tracing = { workspace = true }
 url = "2.5"
 uuid = { version = "1.11", features = ["serde"] }
 

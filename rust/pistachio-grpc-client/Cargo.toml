@@ -7,5 +7,14 @@ license.workspace = true
 repository.workspace = true
 
 [features]
+single-threaded = ["pistachio-api-common/single-threaded"]
 
 [dependencies]
+pistachio-api = { workspace = true }
+pistachio-api-common = { workspace = true }
+
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+tonic = "0.14"

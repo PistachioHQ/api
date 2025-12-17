@@ -4,14 +4,28 @@
 //! See: <https://github.com/oxidecomputer/progenitor/issues/762>
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() {
     let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let openapi_spec = manifest_dir.join("../../openapi/bundled.yml");
-    let generated_dir = manifest_dir.join("src/generated");
 
+    // Generate public API client
+    generate_openapi_client(
+        &manifest_dir.join("../../openapi/bundled.yml"),
+        &manifest_dir.join("src/generated"),
+        "crate::generated",
+    );
+
+    // Generate admin API client
+    generate_openapi_client(
+        &manifest_dir.join("../../openapi/admin-bundled.yml"),
+        &manifest_dir.join("src/generated_admin"),
+        "crate::generated_admin",
+    );
+}
+
+fn generate_openapi_client(openapi_spec: &Path, generated_dir: &Path, crate_prefix: &str) {
     println!("cargo:rerun-if-changed={}", openapi_spec.display());
 
     let temp_dir = tempfile::tempdir().unwrap();
@@ -34,7 +48,10 @@ fn main() {
         .expect("Failed to execute openapi-generator");
 
     if !status.success() {
-        panic!("Failed to generate OpenAPI client");
+        panic!(
+            "Failed to generate OpenAPI client for {}",
+            openapi_spec.display()
+        );
     }
 
     let apis_out = generated_dir.join("apis");
@@ -42,22 +59,24 @@ fn main() {
     fs::create_dir_all(&apis_out).unwrap();
     fs::create_dir_all(&models_out).unwrap();
 
+    let models_replacement = format!("{}::models", crate_prefix);
     let models_dir = temp_dir.path().join("src/models");
     for entry in fs::read_dir(models_dir).unwrap() {
         let entry = entry.unwrap();
         let content = fs::read_to_string(entry.path())
             .unwrap()
-            .replace("crate::models", "crate::generated::models");
+            .replace("crate::models", &models_replacement);
 
         fs::write(models_out.join(entry.file_name()), content).unwrap();
     }
 
+    let crate_replacement = format!("{}::", crate_prefix);
     let apis_dir = temp_dir.path().join("src/apis");
     for entry in fs::read_dir(apis_dir).unwrap() {
         let entry = entry.unwrap();
         let content = fs::read_to_string(entry.path())
             .unwrap()
-            .replace("crate::", "crate::generated::");
+            .replace("crate::", &crate_replacement);
 
         fs::write(apis_out.join(entry.file_name()), content).unwrap();
     }
@@ -66,10 +85,10 @@ fn main() {
     fs::write(generated_dir.join("mod.rs"), lib_content).unwrap();
 
     // Format all generated Rust files with rustfmt
-    format_generated_files(&generated_dir);
+    format_generated_files(generated_dir);
 }
 
-fn format_generated_files(dir: &PathBuf) {
+fn format_generated_files(dir: &Path) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();

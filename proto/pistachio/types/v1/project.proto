@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+// Project is the top-level container for apps, users, and resources.
+//
+// Projects provide isolated namespaces for authentication, data storage,
+// and other platform services. Each project can have multiple apps
+// (iOS, Android, macOS, Windows, Linux, Web) that share the same user pool.
+message Project {
+  // Unique project identifier.
+  // Assigned by the system, immutable after creation.
+  // Format: alphanumeric with hyphens, 6-30 characters.
+  string project_id = 1;
+
+  // Resource name in the format "projects/{project_id}".
+  string name = 2;
+
+  // Internal project identifier.
+  // Derived from project_id and assigned by the system, immutable after creation.
+  // 16 bytes encoded as 32 hex characters ending in '01'
+  string pistachio_id = 3;
+
+  // Human-readable display name for the project.
+  // Max 64 characters.
+  string display_name = 4;
+
+  // Current state of the project.
+  ProjectState state = 5;
+
+  // Default resources provisioned for this project.
+  ProjectResources resources = 6;
+}
+
+// ProjectState indicates the lifecycle state of a project.
+enum ProjectState {
+  // Unspecified state.
+  PROJECT_STATE_UNSPECIFIED = 0;
+
+  // The project is active and operational.
+  PROJECT_STATE_ACTIVE = 1;
+
+  // The project has been soft-deleted.
+  // After 30 days in this state, it will be permanently deleted.
+  PROJECT_STATE_DELETED = 2;
+}
+
+// ProjectResources contains default resources provisioned for a project.
+message ProjectResources {
+  // Default hosting site name for the project.
+  // Format: "{project_id}.pistachiohq.com"
+  string hosting_site = 1;
+
+  // Default realtime database instance name.
+  // Format: "{project_id}-default-rtdb"
+  string realtime_database_instance = 2;
+
+  // Default storage bucket for the project.
+  // Format: "{project_id}.pistachiohq.storage"
+  string storage_bucket = 3;
+}

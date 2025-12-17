@@ -10,7 +10,17 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::derivable_impls)]
 
+#[allow(dead_code)]
+#[allow(clippy::enum_variant_names)]
 mod generated;
+
+#[allow(dead_code)]
+#[allow(clippy::enum_variant_names)]
+mod generated_admin;
+
+mod types;
+
+pub mod admin;
 
 pub use generated::apis;
 pub use generated::models;

@@ -19,7 +19,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build_client(true)
         .bytes(".")
         .compile_protos(
-            &[proto_dir.join("pistachio/v1/api.proto")],
+            &[
+                proto_dir.join("pistachio/v1/api.proto"),
+                proto_dir.join("pistachio/admin/v1/admin_api.proto"),
+            ],
             &[proto_dir.clone(), deps_dir],
         )?;
 

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/project.proto";
+
+// CreateProjectRequest creates a new project.
+message CreateProjectRequest {
+  // Desired project ID.
+  // If not provided, a unique ID will be generated.
+  // Must be 6-30 characters, lowercase alphanumeric with hyphens.
+  // Cannot start or end with a hyphen.
+  string project_id = 1 [(buf.validate.field).string = {
+    max_len: 30
+    pattern: "^$|^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Human-readable display name for the project.
+  // If not provided, project_id will be used as the display name.
+  // Max 64 characters.
+  string display_name = 2 [(buf.validate.field).string = {max_len: 64}];
+}
+
+// CreateProjectResponse contains the newly created project.
+message CreateProjectResponse {
+  // The created project.
+  pistachio.types.v1.Project project = 1;
+}

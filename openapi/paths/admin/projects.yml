@@ -1,0 +1,54 @@
+# Project Management Endpoints
+
+projects:
+  post:
+    operationId: createProject
+    summary: Create a new project
+    description: |
+      Creates a new Pistachio project.
+      Projects are the top-level container for apps, users, and resources.
+      Each project can have multiple apps across different platforms
+      that share the same user pool.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    requestBody:
+      description: Project creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/project.yml#/CreateProjectRequest'
+    responses:
+      '200':
+        description: Project created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/CreateProjectResponse'
+      '400':
+        description: Invalid projectId format or displayName
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '409':
+        description: Project ID already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'

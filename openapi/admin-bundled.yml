@@ -1,0 +1,212 @@
+openapi: 3.1.0
+info:
+    title: Pistachio Admin API
+    description: |
+        Administrative API for managing Pistachio projects and resources.
+        Requires service account authentication.
+    version: 0.1.0
+    contact:
+        name: Pistachio Team
+servers:
+    - url: https://admin.pistachiohq.com/v1
+      description: Production server
+    - url: https://admin.staging.pistachiohq.com/v1
+      description: Staging server
+tags:
+    - name: Projects
+      description: Project management operations
+paths:
+    /projects:
+        post:
+            operationId: createProject
+            summary: Create a new project
+            description: |
+                Creates a new Pistachio project.
+                Projects are the top-level container for apps, users, and resources.
+                Each project can have multiple apps across different platforms
+                that share the same user pool.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            requestBody:
+                description: Project creation parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: Request body for creating a new project.
+                            properties:
+                                projectId:
+                                    type: string
+                                    description: |
+                                        Desired project ID. If not provided, one will be generated.
+                                        Must be 6-30 characters, lowercase alphanumeric with hyphens.
+                                    pattern: '^$|^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                    maxLength: 30
+                                    example: my-new-project
+                                displayName:
+                                    type: string
+                                    description: |
+                                        Human-readable display name.
+                                        If not provided, projectId will be used as the display name.
+                                    maxLength: 64
+                                    example: My New Project
+                            example:
+                                projectId: my-new-project
+                                displayName: My New Project
+            responses:
+                '200':
+                    description: Project created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the newly created project.
+                                properties:
+                                    project:
+                                        type: object
+                                        description: |
+                                            Top-level container for apps, users, and resources.
+                                            Projects provide isolated namespaces for authentication, data storage,
+                                            and other platform services.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}".
+                                                example: projects/my-project
+                                            projectId:
+                                                type: string
+                                                description: Unique project identifier. Immutable after creation.
+                                                pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                example: my-project
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal project identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '01'.
+                                                example: a1b2c3d4e5f6789012345678901234501
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 64 characters.
+                                                maxLength: 64
+                                                example: My Project
+                                            state:
+                                                type: string
+                                                description: Lifecycle state of a project.
+                                                enum:
+                                                    - ACTIVE
+                                                    - DELETED
+                                                example: ACTIVE
+                                            resources:
+                                                type: object
+                                                description: Default resources provisioned for a project.
+                                                properties:
+                                                    hostingSite:
+                                                        type: string
+                                                        description: Default hosting site name.
+                                                        example: my-project.pistachiohq.com
+                                                    realtimeDatabaseInstance:
+                                                        type: string
+                                                        description: Default realtime database instance name.
+                                                        example: my-project-default-rtdb
+                                                    storageBucket:
+                                                        type: string
+                                                        description: Default storage bucket.
+                                                        example: my-project.pistachiohq.storage
+                '400':
+                    description: Invalid projectId format or displayName
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '409':
+                    description: Project ID already exists
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+components:
+    securitySchemes:
+        ApiKeyAuth:
+            type: apiKey
+            in: query
+            name: key
+            description: |
+                API key for client SDK operations.
+                API keys are auto-generated per app and identify the project.
+        ServiceAccountAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: |
+                Service account credential for admin operations.
+security:
+    - ApiKeyAuth: []
+      ServiceAccountAuth: []

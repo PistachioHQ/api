@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "pistachio/admin/v1/project.proto";
+
+// =============================================================================
+// Project Management Service
+// =============================================================================
+// ProjectManagement provides administrative operations for managing Pistachio projects.
+// Requires service account authentication.
+service ProjectManagement {
+  // CreateProject creates a new Pistachio project.
+  //
+  // Projects are the top-level container for apps, users, and resources.
+  // Each project can have multiple apps across different platforms
+  // that share the same user pool.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format or display_name
+  // - ALREADY_EXISTS: Project ID is already taken
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+}

@@ -1,0 +1,139 @@
+use pistachio_api_common::admin::client::PistachioAdminClient;
+use pistachio_api_common::admin::project::{
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse,
+};
+use pistachio_api_common::credentials::AdminCredentials;
+use pistachio_api_common::error::PistachioApiClientError;
+use tonic::service::Interceptor;
+use tonic::service::interceptor::InterceptedService;
+use tonic::transport::Channel;
+use tonic::{Request, Status};
+use tracing::{debug, error, info, instrument, warn};
+
+use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManagementClient;
+
+use super::create_project::handle_create_project;
+
+/// Interceptor that adds admin credentials to requests.
+#[derive(Debug, Clone)]
+struct AdminAuthInterceptor {
+    api_key: String,
+    service_account_token: String,
+}
+
+impl Interceptor for AdminAuthInterceptor {
+    fn call(&mut self, mut request: Request<()>) -> Result<Request<()>, Status> {
+        request.metadata_mut().insert(
+            "x-api-key",
+            self.api_key
+                .parse()
+                .map_err(|_| Status::internal("Invalid API key format"))?,
+        );
+        request.metadata_mut().insert(
+            "authorization",
+            format!("Bearer {}", self.service_account_token)
+                .parse()
+                .map_err(|_| Status::internal("Invalid service account token format"))?,
+        );
+        Ok(request)
+    }
+}
+
+type AuthenticatedClient =
+    ProjectManagementClient<InterceptedService<Channel, AdminAuthInterceptor>>;
+
+/// gRPC client for the Pistachio Admin API.
+#[derive(Debug, Clone)]
+pub struct AdminClient {
+    endpoint: tonic::transport::Endpoint,
+    credentials: AdminCredentials,
+    inner: Option<AuthenticatedClient>,
+}
+
+#[cfg_attr(
+    any(feature = "single-threaded", target_arch = "wasm32"),
+    async_trait::async_trait(?Send)
+)]
+#[cfg_attr(
+    not(any(feature = "single-threaded", target_arch = "wasm32")),
+    async_trait::async_trait
+)]
+impl PistachioAdminClient for AdminClient {
+    #[instrument(skip(endpoint, credentials), level = "debug")]
+    fn new(
+        endpoint: impl AsRef<str>,
+        credentials: AdminCredentials,
+    ) -> Result<Self, PistachioApiClientError> {
+        debug!(
+            "Creating new Pistachio Admin API client with endpoint: {}",
+            endpoint.as_ref()
+        );
+        let endpoint = Channel::from_shared(endpoint.as_ref().to_string())
+            .map_err(|e| PistachioApiClientError::InvalidUri(e.to_string()))?;
+
+        Ok(Self {
+            endpoint,
+            credentials,
+            inner: None,
+        })
+    }
+
+    #[instrument(skip(self), level = "debug")]
+    async fn connect(self) -> Result<Self, PistachioApiClientError> {
+        match self.inner {
+            Some(_) => {
+                debug!("Client already connected");
+                Ok(self)
+            }
+            None => {
+                debug!("Attempting to connect to Pistachio Admin API");
+                match self.endpoint.connect().await {
+                    Ok(channel) => {
+                        info!("Successfully connected to Pistachio Admin API");
+                        let interceptor = AdminAuthInterceptor {
+                            api_key: self.credentials.api_key().to_string(),
+                            service_account_token: self
+                                .credentials
+                                .service_account_token()
+                                .to_string(),
+                        };
+                        let client =
+                            ProjectManagementClient::with_interceptor(channel, interceptor);
+                        Ok(Self {
+                            endpoint: self.endpoint,
+                            credentials: self.credentials,
+                            inner: Some(client),
+                        })
+                    }
+                    Err(e) => {
+                        error!(
+                            error = %e,
+                            error_debug = ?e,
+                            "Failed to connect to Pistachio Admin API"
+                        );
+                        Err(PistachioApiClientError::ConnectionError(e.to_string()))
+                    }
+                }
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_project(
+        &mut self,
+        req: CreateProjectRequest,
+    ) -> Result<CreateProjectResponse, CreateProjectError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_project");
+                handle_create_project(client, req).await
+            }
+            None => {
+                warn!("Attempted create_project with unconnected client");
+                Err(CreateProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+}

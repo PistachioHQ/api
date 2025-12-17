@@ -243,28 +243,32 @@ tasks:
   # ============================================================================
 
   openapi:lint:
-    desc: "Lint OpenAPI spec (lints bundled output to properly resolve all references)"
+    desc: "Lint OpenAPI specs (lints bundled output to properly resolve all references)"
     dir: openapi
     deps: [openapi:bundle]
     cmds:
       - vacuum lint bundled.yml
+      - vacuum lint admin-bundled.yml
 
   openapi:lint:details:
-    desc: "Lint OpenAPI spec with detailed output"
+    desc: "Lint OpenAPI specs with detailed output"
     dir: openapi
     deps: [openapi:bundle]
     cmds:
       - vacuum lint bundled.yml --details
+      - vacuum lint admin-bundled.yml --details
 
   openapi:bundle:
-    desc: "Bundle OpenAPI spec into a single file"
+    desc: "Bundle OpenAPI specs into single files"
     dir: openapi
     cmds:
       - vacuum bundle pistachio-api.yml bundled.yml
+      - vacuum bundle pistachio-admin-api.yml admin-bundled.yml
     sources:
       - ./**/*.yml
     generates:
       - bundled.yml
+      - admin-bundled.yml
 
 
   # ============================================================================
