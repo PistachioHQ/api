@@ -21,6 +21,8 @@ pistachio-api-common = { path = "pistachio-api-common" }
 libgn = { git = "https://github.com/PistachioHQ/greennut-rs", branch = "main" }
 
 async-trait = "0.1.21"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+prost-types = "0.14"
 thiserror = ">=1.0.2,<3"
 tracing = "0.1.28"
 

@@ -14,7 +14,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManagementClient;
 
-use crate::types::{FromProto, IntoProto};
+use crate::types::{FromProto, IntoProto, timestamp_to_datetime};
 
 pub(crate) async fn handle_create_project<I: Interceptor>(
     client: &mut ProjectManagementClient<InterceptedService<Channel, I>>,
@@ -104,6 +104,8 @@ impl FromProto<pistachio_api::pistachio::types::v1::Project> for Project {
             ProjectName::parse(&proto.name).map_err(|_| ValidationError::InvalidValue("name"))?;
         let display_name = ProjectDisplayName::parse(&proto.display_name)
             .map_err(|_| ValidationError::InvalidValue("display_name"))?;
+        let created_at = timestamp_to_datetime(proto.created_at)?;
+        let updated_at = timestamp_to_datetime(proto.updated_at)?;
 
         Ok(Self {
             project_id,
@@ -112,6 +114,8 @@ impl FromProto<pistachio_api::pistachio::types::v1::Project> for Project {
             display_name,
             state,
             resources,
+            created_at,
+            updated_at,
         })
     }
 }

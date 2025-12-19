@@ -116,6 +116,16 @@ paths:
                                                         type: string
                                                         description: Default storage bucket.
                                                         example: my-project.pistachiohq.storage
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was last updated.
+                                                example: "2024-01-15T10:30:00Z"
                 '400':
                     description: Invalid projectId format or displayName
                     content:

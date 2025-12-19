@@ -17,6 +17,8 @@ pistachio-api-common = { workspace = true }
 libgn = { workspace = true }
 
 async-trait = { workspace = true }
+chrono = { workspace = true }
+prost-types = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 

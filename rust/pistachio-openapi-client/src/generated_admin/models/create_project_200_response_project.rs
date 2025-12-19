@@ -31,6 +31,12 @@ pub struct CreateProject200ResponseProject {
     pub state: Option<State>,
     #[serde(rename = "resources", skip_serializing_if = "Option::is_none")]
     pub resources: Option<Box<models::CreateProject200ResponseProjectResources>>,
+    /// Timestamp when the project was created.
+    #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    /// Timestamp when the project was last updated.
+    #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<String>,
 }
 
 impl CreateProject200ResponseProject {
@@ -43,6 +49,8 @@ impl CreateProject200ResponseProject {
             display_name: None,
             state: None,
             resources: None,
+            created_at: None,
+            updated_at: None,
         }
     }
 }

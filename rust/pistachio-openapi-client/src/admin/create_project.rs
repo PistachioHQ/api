@@ -14,7 +14,7 @@ use crate::generated_admin::models::{
     CreateProject200Response, CreateProject200ResponseProject,
     CreateProject200ResponseProjectResources, CreateProjectRequest as GenCreateProjectRequest,
 };
-use crate::types::FromJson;
+use crate::types::{FromJson, parse_timestamp};
 
 impl From<GenError> for CreateProjectError {
     fn from(error: GenError) -> Self {
@@ -117,6 +117,9 @@ impl FromJson<CreateProject200ResponseProject> for Project {
         let display_name = ProjectDisplayName::parse(&display_name_str)
             .map_err(|_| ValidationError::InvalidValue("display_name"))?;
 
+        let created_at = parse_timestamp(json.created_at)?;
+        let updated_at = parse_timestamp(json.updated_at)?;
+
         Ok(Self {
             project_id,
             name,
@@ -124,6 +127,8 @@ impl FromJson<CreateProject200ResponseProject> for Project {
             display_name,
             state,
             resources,
+            created_at,
+            updated_at,
         })
     }
 }
