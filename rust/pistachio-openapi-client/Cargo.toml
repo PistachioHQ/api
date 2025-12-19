@@ -20,6 +20,7 @@ single-threaded = ["pistachio-api-common/single-threaded"]
 
 [dependencies]
 pistachio-api-common = { workspace = true }
+libgn = { workspace = true }
 
 async-trait = { workspace = true }
 cfg-if = "1.0"

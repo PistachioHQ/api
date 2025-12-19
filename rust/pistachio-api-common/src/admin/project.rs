@@ -1,46 +1,6 @@
-pub use libgn::pistachio_id::{ProjectId as PistachioProjectId, ProjectIdError};
-pub use libgn::project::{ProjectDisplayName, ProjectId, ProjectName};
+use libgn::project::{Project, ProjectDisplayName, ProjectId};
 
 use crate::error::{PistachioApiClientError, ValidationError};
-
-/// Project is the top-level container for apps, users, and resources.
-#[derive(Debug, Clone)]
-pub struct Project {
-    /// Unique project identifier.
-    pub project_id: ProjectId,
-    /// Resource name in the format "projects/{project_id}".
-    pub name: ProjectName,
-    /// Internal project identifier (pistachio_id).
-    pub pistachio_id: PistachioProjectId,
-    /// Human-readable display name for the project.
-    pub display_name: ProjectDisplayName,
-    /// Current state of the project.
-    pub state: ProjectState,
-    /// Default resources provisioned for this project.
-    pub resources: Option<ProjectResources>,
-}
-
-/// ProjectState indicates the lifecycle state of a project.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ProjectState {
-    /// Unspecified state.
-    Unspecified,
-    /// The project is active and operational.
-    Active,
-    /// The project has been soft-deleted.
-    Deleted,
-}
-
-/// ProjectResources contains default resources provisioned for a project.
-#[derive(Debug, Clone)]
-pub struct ProjectResources {
-    /// Default hosting site name for the project.
-    pub hosting_site: String,
-    /// Default realtime database instance name.
-    pub realtime_database_instance: String,
-    /// Default storage bucket for the project.
-    pub storage_bucket: String,
-}
 
 // =============================================================================
 // CreateProject

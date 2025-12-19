@@ -431,7 +431,7 @@ tasks:
   rust:deny:
     desc: "Check dependencies against policy (licenses, bans, advisories)"
     cmds:
-      - cd rust && cargo deny --all-features check --deny warnings
+      - cd rust && cargo deny --all-features check --deny warnings --allow unmatched-organization
       - cd gen/rust && cargo deny --all-features check --deny warnings
 
   rust:update:
@@ -508,14 +508,13 @@ tasks:
     desc: "Run all linting checks for CI"
     cmds:
       - task: buf:lint
-      - cd gen/rust && cargo clippy -- -D warnings
+      - task: rust:clippy
 
   ci:fmt:
     desc: "Format check for CI"
     cmds:
       - task: buf:format:check
-      - cd rust && cargo fmt --check
-      - cd gen/rust && cargo fmt --check
+      - task: rust:fmt:check
 
   ci:build:
     desc: "Build all generated code for CI"
@@ -525,14 +524,12 @@ tasks:
   ci:test:
     desc: "Test for CI"
     cmds:
-      - cd rust && cargo test
-      - cd gen/rust && cargo test
+      - task: rust:test
 
   ci:security:
     desc: "Security checks for CI"
     cmds:
-      - cd rust && cargo audit --deny warnings
-      - cd gen/rust && cargo audit --deny warnings
+      - task: rust:audit
       - cd rust && cargo deny --all-features check --deny warnings
       - cd gen/rust && cargo deny --all-features check --deny warnings
 

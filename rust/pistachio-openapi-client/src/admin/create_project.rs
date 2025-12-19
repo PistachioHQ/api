@@ -1,6 +1,9 @@
+use libgn::pistachio_id::ProjectId as PistachioProjectId;
+use libgn::project::{
+    Project, ProjectDisplayName, ProjectId, ProjectName, ProjectResources, ProjectState,
+};
 use pistachio_api_common::admin::project::{
-    CreateProjectError, CreateProjectRequest, CreateProjectResponse, PistachioProjectId, Project,
-    ProjectDisplayName, ProjectId, ProjectName, ProjectResources, ProjectState,
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse,
 };
 use pistachio_api_common::error::ValidationError;
 use tracing::{debug, error};
