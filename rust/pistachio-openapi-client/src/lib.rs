@@ -20,7 +20,5 @@ mod generated_admin;
 
 mod types;
 
-pub mod admin;
-
-pub use generated::apis;
-pub use generated::models;
+mod admin;
+pub use admin::AdminClient;
