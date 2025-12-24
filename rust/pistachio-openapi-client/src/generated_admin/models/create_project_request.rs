@@ -20,6 +20,9 @@ pub struct CreateProjectRequest {
     /// Human-readable display name. If not provided, projectId will be used as the display name.
     #[serde(rename = "displayName", skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
+    /// Invitation code for project creation. Must be a valid 16 hex character code. Required for gated project creation.
+    #[serde(rename = "invitationCode", skip_serializing_if = "Option::is_none")]
+    pub invitation_code: Option<String>,
 }
 
 impl CreateProjectRequest {
@@ -28,6 +31,7 @@ impl CreateProjectRequest {
         CreateProjectRequest {
             project_id: None,
             display_name: None,
+            invitation_code: None,
         }
     }
 }

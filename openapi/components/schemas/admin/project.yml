@@ -88,9 +88,19 @@ CreateProjectRequest:
         If not provided, projectId will be used as the display name.
       maxLength: 64
       example: My New Project
+    invitationCode:
+      type: string
+      description: |
+        Invitation code for project creation.
+        Must be a valid 16 hex character code.
+        Required for gated project creation.
+      pattern: '^$|^[a-f0-9]{16}$'
+      maxLength: 16
+      example: a1b2c3d4e5f67890
   example:
     projectId: my-new-project
     displayName: My New Project
+    invitationCode: a1b2c3d4e5f67890
 
 CreateProjectResponse:
   type: object

@@ -20,6 +20,14 @@ message CreateProjectRequest {
   // If not provided, project_id will be used as the display name.
   // Max 64 characters.
   string display_name = 2 [(buf.validate.field).string = {max_len: 64}];
+
+  // Invitation code for project creation.
+  // Must be a valid 16 hex character code.
+  // Required for gated project creation.
+  string invitation_code = 3 [(buf.validate.field).string = {
+    max_len: 16
+    pattern: "^$|^[a-f0-9]{16}$"
+  }];
 }
 
 // CreateProjectResponse contains the newly created project.

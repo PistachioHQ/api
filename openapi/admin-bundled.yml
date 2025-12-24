@@ -54,9 +54,19 @@ paths:
                                         If not provided, projectId will be used as the display name.
                                     maxLength: 64
                                     example: My New Project
+                                invitationCode:
+                                    type: string
+                                    description: |
+                                        Invitation code for project creation.
+                                        Must be a valid 16 hex character code.
+                                        Required for gated project creation.
+                                    pattern: '^$|^[a-f0-9]{16}$'
+                                    maxLength: 16
+                                    example: a1b2c3d4e5f67890
                             example:
                                 projectId: my-new-project
                                 displayName: My New Project
+                                invitationCode: a1b2c3d4e5f67890
             responses:
                 '200':
                     description: Project created
@@ -208,15 +218,12 @@ components:
             type: apiKey
             in: query
             name: key
-            description: |
-                API key for client SDK operations.
-                API keys are auto-generated per app and identify the project.
+            description: API key for client SDK operations. API keys are auto-generated per app and identify the project.
         ServiceAccountAuth:
             type: http
             scheme: bearer
             bearerFormat: JWT
-            description: |
-                Service account credential for admin operations.
+            description: Service account credential for admin operations.
 security:
     - ApiKeyAuth: []
       ServiceAccountAuth: []

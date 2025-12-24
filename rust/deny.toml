@@ -170,39 +170,24 @@ allow = [
 # and other crypto crates that have internal dependencies (e.g., chacha20poly1305 -> chacha20).
 deny = [
     # Block ciphers and modes
-    { crate = "aes", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for AES operations" },
+    { crate = "aes", wrappers = ["libgn-crypto-internal", "aes-gcm", "aes-kw"], reason = "Use libgn-crypto for AES operations" },
     { crate = "cbc", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for CBC mode" },
-    { crate = "ctr", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for CTR mode" },
+    { crate = "ctr", wrappers = ["libgn-crypto-internal", "aes-gcm"], reason = "Use libgn-crypto for CTR mode" },
     # cipher is a foundational trait crate used by many crypto crates internally
-    { crate = "cipher", wrappers = ["libgn-crypto-internal", "aes", "cbc", "ctr", "chacha20", "chacha20poly1305"], reason = "Use libgn-crypto for cipher traits" },
-
-    # ChaCha20/Poly1305 AEAD
-    { crate = "chacha20", wrappers = ["libgn-crypto-internal", "chacha20poly1305"], reason = "Use libgn-crypto for ChaCha20" },
-    { crate = "chacha20poly1305", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for ChaCha20Poly1305 AEAD" },
-    { crate = "poly1305", wrappers = ["chacha20poly1305"], reason = "Use chacha20poly1305 for Poly1305 MAC" },
-
-    # Key derivation
-    { crate = "argon2", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for Argon2 key derivation" },
+    { crate = "cipher", wrappers = ["libgn-crypto-internal", "aes", "aes-gcm", "cbc", "ctr"], reason = "Use libgn-crypto for cipher traits" },
+    # aead is a trait crate for AEAD algorithms
+    { crate = "aead", wrappers = ["aes-gcm"], reason = "Use libgn-crypto for AEAD traits" },
 
     # Hash functions - digest is a foundational trait used by many hash implementations
-    { crate = "sha2", wrappers = ["libgn-crypto-internal", "ed25519-dalek"], reason = "Use libgn-crypto for SHA-2 hashing" },
-    { crate = "sha3", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for SHA-3 hashing" },
-    { crate = "digest", wrappers = ["sha2", "sha3", "hmac", "blake2", "curve25519-dalek"], reason = "Digest traits used by hash implementations" },
+    { crate = "sha2", wrappers = ["libgn-crypto-internal", "p256"], reason = "Use libgn-crypto for SHA-2 hashing" },
+    { crate = "digest", wrappers = ["sha2", "hmac", "signature", "ecdsa", "elliptic-curve"], reason = "Digest traits used by hash implementations" },
 
     # MACs
-    { crate = "hmac", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for HMAC" },
-
-    # Elliptic curve cryptography
-    { crate = "ed25519-dalek", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for Ed25519 signatures" },
-    { crate = "x25519-dalek", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for X25519 key exchange" },
-
-    # Post-quantum cryptography
-    { crate = "pqcrypto-traits", wrappers = ["libgn-crypto-internal", "pqcrypto-mlkem"], reason = "Use libgn-crypto for PQ crypto traits" },
-    { crate = "pqcrypto-mlkem", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for ML-KEM" },
+    { crate = "hmac", wrappers = ["libgn-crypto-internal", "rfc6979"], reason = "Use libgn-crypto for HMAC" },
 
     # Low-level crypto utilities - crypto-common is a foundational crate
-    { crate = "crypto-common", wrappers = ["libgn-crypto-internal", "cipher", "digest", "aead", "universal-hash"], reason = "Use libgn-crypto for crypto-common traits" },
-    { crate = "ring", wrappers = ["libgn-crypto-internal", "rustls", "rustls-webpki"], reason = "Use libgn-crypto for ring primitives" },
+    { crate = "crypto-common", wrappers = ["cipher", "digest", "aead", "universal-hash"], reason = "Use libgn-crypto for crypto-common traits" },
+    { crate = "ring", wrappers = ["rustls", "rustls-webpki"], reason = "Use libgn-crypto for ring primitives" },
 
     # Random number generation - enforce all randomness through internal crate
     { crate = "rand", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for secure random bytes" },

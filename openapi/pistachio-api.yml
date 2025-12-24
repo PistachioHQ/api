@@ -32,11 +32,17 @@ paths:
 components:
   securitySchemes:
     ApiKeyAuth:
-      $ref: './components/security.yml#/ApiKeyAuth'
-      description: API key for client SDK operations
+      type: apiKey
+      in: query
+      name: key
+      description: API key for client SDK operations. API keys are auto-generated per app and identify the project.
     BearerAuth:
-      $ref: './components/security.yml#/BearerAuth'
-      description: ID token (JWT) for authenticated operations
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: ID token (JWT) for authenticated operations. Obtained via sign-in and must be included in the Authorization header.
     ServiceAccountAuth:
-      $ref: './components/security.yml#/ServiceAccountAuth'
-      description: Service account credential for admin operations
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Service account credential for admin operations.

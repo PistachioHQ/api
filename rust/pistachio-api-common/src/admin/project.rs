@@ -1,4 +1,4 @@
-use libgn::project::{Project, ProjectDisplayName, ProjectId};
+use libgn::project::{Project, ProjectDisplayName, ProjectId, ProjectInvitationCode};
 
 use crate::error::{PistachioApiClientError, ValidationError};
 
@@ -38,6 +38,9 @@ pub struct CreateProjectRequest {
     /// Human-readable display name for the project.
     /// If not provided, project_id will be used as the display name.
     pub display_name: Option<ProjectDisplayName>,
+    /// Invitation code for project creation.
+    /// Must be a valid 16 hex character code.
+    pub invitation_code: Option<ProjectInvitationCode>,
 }
 
 impl CreateProjectRequest {
@@ -55,6 +58,12 @@ impl CreateProjectRequest {
     /// Sets the display name.
     pub fn with_display_name(mut self, display_name: ProjectDisplayName) -> Self {
         self.display_name = Some(display_name);
+        self
+    }
+
+    /// Sets the invitation code.
+    pub fn with_invitation_code(mut self, invitation_code: ProjectInvitationCode) -> Self {
+        self.invitation_code = Some(invitation_code);
         self
     }
 }

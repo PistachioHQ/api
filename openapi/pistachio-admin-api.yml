@@ -25,9 +25,15 @@ paths:
 components:
   securitySchemes:
     ApiKeyAuth:
-      $ref: './components/security.yml#/ApiKeyAuth'
+      type: apiKey
+      in: query
+      name: key
+      description: API key for client SDK operations. API keys are auto-generated per app and identify the project.
     ServiceAccountAuth:
-      $ref: './components/security.yml#/ServiceAccountAuth'
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Service account credential for admin operations.
 
 security:
   - ApiKeyAuth: []

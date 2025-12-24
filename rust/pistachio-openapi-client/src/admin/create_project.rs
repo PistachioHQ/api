@@ -39,6 +39,7 @@ pub(crate) async fn handle_create_project(
     let request = GenCreateProjectRequest {
         project_id: req.project_id.map(|id| id.to_string()),
         display_name: req.display_name.map(|name| name.to_string()),
+        invitation_code: req.invitation_code.map(|code| code.to_string()),
     };
 
     debug!(?request, "Sending create_project request");

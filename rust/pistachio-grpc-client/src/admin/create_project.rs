@@ -64,6 +64,10 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::CreateProjectRequest> for Cr
                 .display_name
                 .map(|name| name.to_string())
                 .unwrap_or_default(),
+            invitation_code: self
+                .invitation_code
+                .map(|code| code.to_string())
+                .unwrap_or_default(),
         }
     }
 }
