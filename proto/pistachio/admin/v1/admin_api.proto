@@ -21,4 +21,58 @@ service ProjectManagement {
   // - ALREADY_EXISTS: Project ID is already taken
   // - PERMISSION_DENIED: Insufficient permissions
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+
+  // GetProject retrieves a project by its ID.
+  //
+  // Returns the project details including its current state and resources.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+
+  // UpdateProject updates an existing project.
+  //
+  // Currently only the display_name can be updated.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or display_name format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+
+  // DeleteProject soft-deletes a project.
+  //
+  // The project will be marked as DELETED and will be permanently removed
+  // after 30 days. During this period, the project can be restored.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+
+  // ListProjects lists all projects accessible to the service account.
+  //
+  // Results are paginated and can optionally include deleted projects.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid page_size or page_token
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+
+  // SearchProjects searches for projects using full-text search.
+  //
+  // Provides advanced search capabilities including:
+  // - Full-text search across project fields
+  // - Field-specific queries (e.g., display_name:Production*)
+  // - Boolean operators (AND, OR, NOT)
+  // - Range queries for dates
+  // - Flexible sorting and cursor-based pagination
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid search query or parameters
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc SearchProjects(SearchProjectsRequest) returns (SearchProjectsResponse);
 }

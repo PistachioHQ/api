@@ -383,10 +383,11 @@ tasks:
       - target/debug/build/pistachio-api-*/out/*.rs
 
   gen:
-    desc: "Generate all code from protobuf definitions"
+    desc: "Generate all code (proto via cargo build, OpenAPI via build.rs)"
     cmds:
       - task: buf:deps
       - task: gen:rust
+      - task: openapi:bundle
 
   # ============================================================================
   # Rust tasks

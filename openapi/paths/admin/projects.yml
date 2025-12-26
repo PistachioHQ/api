@@ -1,6 +1,55 @@
 # Project Management Endpoints
 
 projects:
+  get:
+    operationId: listProjects
+    summary: List projects
+    description: |
+      Lists all projects accessible to the service account.
+      By default, only ACTIVE projects are returned.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+      - name: showDeleted
+        in: query
+        description: If true, include deleted projects in the results.
+        required: false
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: List of projects
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/ListProjectsResponse'
+      '400':
+        description: Invalid pagination parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
   post:
     operationId: createProject
     summary: Create a new project
@@ -48,6 +97,286 @@ projects:
               $ref: '../../components/schemas/error.yml#/Error'
       '409':
         description: Project ID already exists
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+projectById:
+  get:
+    operationId: getProject
+    summary: Get a project
+    description: |
+      Retrieves a project by its ID.
+      Returns the project details including its current state and resources.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to retrieve
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    responses:
+      '200':
+        description: Project details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/GetProjectResponse'
+      '400':
+        description: Invalid projectId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  patch:
+    operationId: updateProject
+    summary: Update a project
+    description: |
+      Updates an existing project.
+      Currently only the display_name can be updated.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to update
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Project update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/project.yml#/UpdateProjectRequest'
+    responses:
+      '200':
+        description: Project updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/UpdateProjectResponse'
+      '400':
+        description: Invalid projectId or displayName format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  delete:
+    operationId: deleteProject
+    summary: Delete a project
+    description: |
+      Soft-deletes a project.
+      The project will be marked as DELETED and will be permanently removed
+      after 30 days. During this period, the project can be restored.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to delete
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    responses:
+      '200':
+        description: Project deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/DeleteProjectResponse'
+      '400':
+        description: Invalid projectId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+projectsSearch:
+  get:
+    operationId: searchProjects
+    summary: Search projects
+    description: |
+      Searches for projects using full-text search.
+
+      By default, only ACTIVE projects are returned unless a state filter is specified.
+      Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+
+      Searchable fields:
+      - project_id: The unique project identifier
+      - display_name: Human-readable display name
+      - state: Project state (ACTIVE, DELETED)
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my-project" - Search all fields
+      - "display_name:Production*" - Projects with display name starting with "Production"
+      - "state:ACTIVE AND created_at:[2024-01-01 TO *]" - Active projects created in 2024
+
+      For complex queries that exceed URL length limits, use POST instead.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - $ref: '../../components/parameters/search.yml#/Query'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/SearchProjectsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  post:
+    operationId: searchProjectsPost
+    summary: Search projects
+    description: |
+      Searches for projects using full-text search.
+      Use this method for complex queries that exceed URL length limits.
+
+      By default, only ACTIVE projects are returned unless a state filter is specified.
+      Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+
+      Searchable fields:
+      - project_id: The unique project identifier
+      - display_name: Human-readable display name
+      - state: Project state (ACTIVE, DELETED)
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my-project" - Search all fields
+      - "display_name:Production*" - Projects with display name starting with "Production"
+      - "state:ACTIVE AND created_at:[2024-01-01 TO *]" - Active projects created in 2024
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    requestBody:
+      description: Search parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/project.yml#/SearchProjectsRequest'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/SearchProjectsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
         content:
           application/json:
             schema:

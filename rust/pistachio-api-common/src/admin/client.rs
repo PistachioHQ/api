@@ -1,7 +1,13 @@
 use crate::credentials::AdminCredentials;
 use crate::error::PistachioApiClientError;
 
-use super::project::{CreateProjectError, CreateProjectRequest, CreateProjectResponse};
+use super::project::{
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
+    DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
+    GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
+    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UpdateProjectError,
+    UpdateProjectRequest, UpdateProjectResponse,
+};
 
 /// Trait for Pistachio Admin API clients.
 ///
@@ -35,4 +41,46 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: CreateProjectRequest,
     ) -> Result<CreateProjectResponse, CreateProjectError>;
+
+    /// Retrieves a project by its ID.
+    ///
+    /// Returns the project details including its current state and resources.
+    async fn get_project(
+        &mut self,
+        req: GetProjectRequest,
+    ) -> Result<GetProjectResponse, GetProjectError>;
+
+    /// Updates an existing project.
+    ///
+    /// Currently only the display_name can be updated.
+    async fn update_project(
+        &mut self,
+        req: UpdateProjectRequest,
+    ) -> Result<UpdateProjectResponse, UpdateProjectError>;
+
+    /// Soft-deletes a project.
+    ///
+    /// The project will be marked as DELETED and will be permanently removed
+    /// after 30 days. During this period, the project can be restored.
+    async fn delete_project(
+        &mut self,
+        req: DeleteProjectRequest,
+    ) -> Result<DeleteProjectResponse, DeleteProjectError>;
+
+    /// Lists all projects accessible to the service account.
+    ///
+    /// Results are paginated and can optionally include deleted projects.
+    async fn list_projects(
+        &mut self,
+        req: ListProjectsRequest,
+    ) -> Result<ListProjectsResponse, ListProjectsError>;
+
+    /// Searches for projects using full-text search.
+    ///
+    /// Provides advanced search capabilities including field-specific queries,
+    /// boolean operators, and flexible sorting.
+    async fn search_projects(
+        &mut self,
+        req: SearchProjectsRequest,
+    ) -> Result<SearchProjectsResponse, SearchProjectsError>;
 }

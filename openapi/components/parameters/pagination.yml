@@ -1,0 +1,42 @@
+# Reusable Pagination Parameters
+# These should be used by all list endpoints to ensure consistent pagination behavior.
+
+PageSize:
+  name: pageSize
+  in: query
+  description: Number of results to return per page. Defaults to 20, maximum is 100.
+  required: false
+  schema:
+    type: integer
+    minimum: 0
+    maximum: 100
+    default: 20
+    example: 20
+
+Cursor:
+  name: cursor
+  in: query
+  description: |
+    Cursor for pagination. Use "*" for the first page.
+    Use the `nextCursor` from the previous response for subsequent pages.
+  required: false
+  schema:
+    type: string
+    maxLength: 512
+    example: "*"
+
+Sort:
+  name: sort
+  in: query
+  description: |
+    Sort specification. Format: "field:direction" (e.g., "created_at:DESC").
+    Multiple fields can be comma-separated (e.g., "created_at:DESC,display_name:ASC").
+
+    Valid directions: ASC, DESC (case-insensitive).
+    Valid fields are endpoint-specific (see endpoint documentation).
+    Default sort is endpoint-specific (typically created_at:DESC).
+  required: false
+  schema:
+    type: string
+    pattern: '^[a-z_]+:(ASC|DESC|asc|desc)(,[a-z_]+:(ASC|DESC|asc|desc))*$'
+    example: "created_at:DESC"

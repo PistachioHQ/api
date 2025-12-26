@@ -11,9 +11,9 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// CreateProject200ResponseProjectResources : Default resources provisioned for a project.
+/// ListProjects200ResponseProjectsInnerResources : Default resources provisioned for a project.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CreateProject200ResponseProjectResources {
+pub struct ListProjects200ResponseProjectsInnerResources {
     /// Default hosting site name.
     #[serde(rename = "hostingSite", skip_serializing_if = "Option::is_none")]
     pub hosting_site: Option<String>,
@@ -28,10 +28,10 @@ pub struct CreateProject200ResponseProjectResources {
     pub storage_bucket: Option<String>,
 }
 
-impl CreateProject200ResponseProjectResources {
+impl ListProjects200ResponseProjectsInnerResources {
     /// Default resources provisioned for a project.
-    pub fn new() -> CreateProject200ResponseProjectResources {
-        CreateProject200ResponseProjectResources {
+    pub fn new() -> ListProjects200ResponseProjectsInnerResources {
+        ListProjects200ResponseProjectsInnerResources {
             hosting_site: None,
             realtime_database_instance: None,
             storage_bucket: None,

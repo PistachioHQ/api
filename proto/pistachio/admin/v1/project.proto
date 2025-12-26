@@ -3,7 +3,9 @@ syntax = "proto3";
 package pistachio.admin.v1;
 
 import "buf/validate/validate.proto";
+import "pistachio/types/v1/pagination.proto";
 import "pistachio/types/v1/project.proto";
+import "pistachio/types/v1/search.proto";
 
 // CreateProjectRequest creates a new project.
 message CreateProjectRequest {
@@ -23,10 +25,10 @@ message CreateProjectRequest {
 
   // Invitation code for project creation.
   // Must be a valid 16 hex character code.
-  // Required for gated project creation.
+  // Required for project creation.
   string invitation_code = 3 [(buf.validate.field).string = {
-    max_len: 16
-    pattern: "^$|^[a-f0-9]{16}$"
+    len: 16
+    pattern: "^[a-f0-9]{16}$"
   }];
 }
 
@@ -34,4 +36,138 @@ message CreateProjectRequest {
 message CreateProjectResponse {
   // The created project.
   pistachio.types.v1.Project project = 1;
+}
+
+// =============================================================================
+// GetProject
+// =============================================================================
+
+// GetProjectRequest retrieves a project by its ID.
+message GetProjectRequest {
+  // The project ID to retrieve.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// GetProjectResponse contains the requested project.
+message GetProjectResponse {
+  // The retrieved project.
+  pistachio.types.v1.Project project = 1;
+}
+
+// =============================================================================
+// UpdateProject
+// =============================================================================
+
+// UpdateProjectRequest updates an existing project.
+message UpdateProjectRequest {
+  // The project ID to update.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // New display name for the project.
+  // - If not provided (None/null), the display name will not be changed.
+  // - If provided as empty string, this is invalid (min 1 char when present).
+  // Max 64 characters.
+  optional string display_name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+}
+
+// UpdateProjectResponse contains the updated project.
+message UpdateProjectResponse {
+  // The updated project.
+  pistachio.types.v1.Project project = 1;
+}
+
+// =============================================================================
+// DeleteProject
+// =============================================================================
+
+// DeleteProjectRequest soft-deletes a project.
+message DeleteProjectRequest {
+  // The project ID to delete.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// DeleteProjectResponse is returned after a project is deleted.
+message DeleteProjectResponse {
+  // Empty response. The project has been soft-deleted.
+}
+
+// =============================================================================
+// ListProjects
+// =============================================================================
+
+// ListProjectsRequest lists projects with optional filtering and pagination.
+message ListProjectsRequest {
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: project_id, display_name, created_at, updated_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 1;
+
+  // If true, include deleted projects in the results.
+  // Defaults to false (only ACTIVE projects are returned).
+  bool show_deleted = 2;
+}
+
+// ListProjectsResponse contains a page of projects.
+message ListProjectsResponse {
+  // The list of projects.
+  repeated pistachio.types.v1.Project projects = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// =============================================================================
+// SearchProjects
+// =============================================================================
+
+// SearchProjectsRequest searches for projects using full-text search.
+//
+// By default, only ACTIVE projects are returned unless a state filter is specified.
+// Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+message SearchProjectsRequest {
+  // Search parameters including query, sorting, and pagination.
+  //
+  // Searchable fields for projects:
+  // - project_id: The unique project identifier
+  // - display_name: Human-readable display name
+  // - state: Project state (ACTIVE, DELETED)
+  // - created_at: Timestamp when created
+  // - updated_at: Timestamp when last updated
+  //
+  // Sortable fields: project_id, display_name, created_at, updated_at
+  //
+  // Example queries:
+  // - "my-project" - Search all fields
+  // - "display_name:Production*" - Projects with display name starting with "Production"
+  // - "state:ACTIVE AND created_at:[2024-01-01 TO *]" - Active projects created in 2024
+  // - "state:*" - Include all projects regardless of state
+  pistachio.types.v1.SearchParams params = 1;
+}
+
+// SearchProjectsResponse contains search results for projects.
+message SearchProjectsResponse {
+  // The list of projects matching the search query.
+  repeated pistachio.types.v1.Project projects = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
 }

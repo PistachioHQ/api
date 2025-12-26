@@ -1,0 +1,27 @@
+# Reusable Search Parameters
+# These should be used by all search endpoints to ensure consistent search behavior.
+
+Query:
+  name: query
+  in: query
+  description: |
+    Search query string.
+
+    Supports:
+    - Terms: `alice` (searches all fields)
+    - Phrases: `"Alice Smith"` (exact phrase match)
+    - Field queries: `username:alice` (specific field)
+    - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+    - Boolean operators: `AND`, `OR`, `NOT`
+    - Grouping: `(alice OR bob) AND email:*@corp.com`
+    - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+    - Boosting: `username:alice^2.0`
+
+    Empty string or "*" returns all documents.
+    Searchable fields are endpoint-specific (see endpoint documentation).
+  required: false
+  schema:
+    type: string
+    maxLength: 1000
+    default: "*"
+    example: "display_name:Production*"

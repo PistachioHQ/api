@@ -1,6 +1,10 @@
 use pistachio_api_common::admin::client::PistachioAdminClient;
 use pistachio_api_common::admin::project::{
-    CreateProjectError, CreateProjectRequest, CreateProjectResponse,
+    CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
+    DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
+    GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
+    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UpdateProjectError,
+    UpdateProjectRequest, UpdateProjectResponse,
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
@@ -13,6 +17,11 @@ use tracing::{debug, error, info, instrument, warn};
 use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManagementClient;
 
 use super::create_project::handle_create_project;
+use super::delete_project::handle_delete_project;
+use super::get_project::handle_get_project;
+use super::list_projects::handle_list_projects;
+use super::search_projects::handle_search_projects;
+use super::update_project::handle_update_project;
 
 /// Interceptor that adds admin credentials to requests.
 #[derive(Debug, Clone)]
@@ -131,6 +140,101 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted create_project with unconnected client");
                 Err(CreateProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_project(
+        &mut self,
+        req: GetProjectRequest,
+    ) -> Result<GetProjectResponse, GetProjectError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_project");
+                handle_get_project(client, req).await
+            }
+            None => {
+                warn!("Attempted get_project with unconnected client");
+                Err(GetProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_project(
+        &mut self,
+        req: UpdateProjectRequest,
+    ) -> Result<UpdateProjectResponse, UpdateProjectError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_project");
+                handle_update_project(client, req).await
+            }
+            None => {
+                warn!("Attempted update_project with unconnected client");
+                Err(UpdateProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_project(
+        &mut self,
+        req: DeleteProjectRequest,
+    ) -> Result<DeleteProjectResponse, DeleteProjectError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_project");
+                handle_delete_project(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_project with unconnected client");
+                Err(DeleteProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_projects(
+        &mut self,
+        req: ListProjectsRequest,
+    ) -> Result<ListProjectsResponse, ListProjectsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_projects");
+                handle_list_projects(client, req).await
+            }
+            None => {
+                warn!("Attempted list_projects with unconnected client");
+                Err(ListProjectsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn search_projects(
+        &mut self,
+        req: SearchProjectsRequest,
+    ) -> Result<SearchProjectsResponse, SearchProjectsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting search_projects");
+                handle_search_projects(client, req).await
+            }
+            None => {
+                warn!("Attempted search_projects with unconnected client");
+                Err(SearchProjectsError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }

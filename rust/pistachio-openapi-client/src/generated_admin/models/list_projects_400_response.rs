@@ -11,9 +11,9 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// CreateProject400Response : Standard error response
+/// ListProjects400Response : Standard error response
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CreateProject400Response {
+pub struct ListProjects400Response {
     /// Machine-readable error code
     #[serde(rename = "code")]
     pub code: String,
@@ -22,9 +22,9 @@ pub struct CreateProject400Response {
     pub message: String,
 }
 
-impl CreateProject400Response {
+impl ListProjects400Response {
     /// Standard error response
-    pub fn new(code: String, message: String) -> CreateProject400Response {
-        CreateProject400Response { code, message }
+    pub fn new(code: String, message: String) -> ListProjects400Response {
+        ListProjects400Response { code, message }
     }
 }

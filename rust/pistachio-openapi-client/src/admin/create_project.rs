@@ -11,8 +11,8 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::projects_api::{CreateProjectError as GenError, create_project};
 use crate::generated_admin::models::{
-    CreateProject200Response, CreateProject200ResponseProject,
-    CreateProject200ResponseProjectResources, CreateProjectRequest as GenCreateProjectRequest,
+    CreateProject200Response, CreateProjectRequest as GenCreateProjectRequest,
+    ListProjects200ResponseProjectsInner, ListProjects200ResponseProjectsInnerResources,
 };
 use crate::types::{FromJson, parse_timestamp};
 
@@ -80,11 +80,11 @@ impl FromJson<CreateProject200Response> for CreateProjectResponse {
     }
 }
 
-impl FromJson<CreateProject200ResponseProject> for Project {
+impl FromJson<ListProjects200ResponseProjectsInner> for Project {
     type Error = ValidationError;
 
-    fn from_json(json: CreateProject200ResponseProject) -> Result<Self, Self::Error> {
-        use crate::generated_admin::models::create_project_200_response_project::State;
+    fn from_json(json: ListProjects200ResponseProjectsInner) -> Result<Self, Self::Error> {
+        use crate::generated_admin::models::list_projects_200_response_projects_inner::State;
 
         let state = match json.state {
             Some(State::Active) => ProjectState::Active,
@@ -134,10 +134,10 @@ impl FromJson<CreateProject200ResponseProject> for Project {
     }
 }
 
-impl FromJson<CreateProject200ResponseProjectResources> for ProjectResources {
+impl FromJson<ListProjects200ResponseProjectsInnerResources> for ProjectResources {
     type Error = ValidationError;
 
-    fn from_json(json: CreateProject200ResponseProjectResources) -> Result<Self, Self::Error> {
+    fn from_json(json: ListProjects200ResponseProjectsInnerResources) -> Result<Self, Self::Error> {
         Ok(Self {
             hosting_site: json.hosting_site.unwrap_or_default(),
             realtime_database_instance: json.realtime_database_instance.unwrap_or_default(),

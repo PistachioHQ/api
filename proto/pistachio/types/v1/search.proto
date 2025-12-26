@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/pagination.proto";
+
+// SearchParams contains common search parameters for search endpoints.
+//
+// This message provides reusable search infrastructure that can be embedded
+// in domain-specific search request messages (SearchUsersRequest, etc.).
+// It extends PaginationParams with a query field for full-text search.
+message SearchParams {
+  // Query string for searching.
+  //
+  // Supports:
+  // - Terms: `alice` (searches all fields with OR)
+  // - Phrases: `"Alice Smith"` (exact phrase match)
+  // - Field queries: `username:alice` (specific field)
+  // - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+  // - Boolean operators: `AND`, `OR`, `NOT`
+  // - Grouping: `(alice OR bob) AND email:*@corp.com`
+  // - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+  //          `created_at:{2024-01-01 TO 2024-12-31}` (exclusive)
+  // - Boosting: `username:alice^2.0`
+  //
+  // Empty string or "*" returns all documents (list semantics).
+  string query = 1 [(buf.validate.field).string = {max_len: 1000}];
+
+  // Pagination parameters including page size, cursor, and sort.
+  PaginationParams pagination = 2;
+}

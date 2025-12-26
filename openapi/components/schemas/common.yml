@@ -1,0 +1,113 @@
+# Common Schemas for Pagination and Search
+
+# =============================================================================
+# Pagination
+# =============================================================================
+
+SortDirection:
+  type: string
+  description: Sort direction for ordering results.
+  enum:
+    - ASC
+    - DESC
+  example: DESC
+
+SortField:
+  type: object
+  description: Specifies a field and direction for sorting.
+  properties:
+    field:
+      type: string
+      description: The field name to sort by. Valid fields are endpoint-specific.
+      minLength: 1
+      maxLength: 64
+      example: created_at
+    direction:
+      $ref: '#/SortDirection'
+  required:
+    - field
+
+PaginationParams:
+  type: object
+  description: |
+    Common pagination parameters for list endpoints.
+    Can be embedded in list request messages or composed into SearchParams.
+  properties:
+    pageSize:
+      type: integer
+      description: Number of results to return per page. Defaults to 20, maximum is 100.
+      minimum: 0
+      maximum: 100
+      default: 20
+      example: 20
+    cursor:
+      type: string
+      description: |
+        Cursor for pagination.
+        Use "*" for the first page of results.
+        Use the `nextCursor` from the previous response for subsequent pages.
+        When cursor is provided (and not "*"), the sort parameter is ignored.
+      maxLength: 512
+      example: "*"
+    sort:
+      type: array
+      description: |
+        Sort specification as an ordered list of fields.
+        Each endpoint defines its own default sort and valid fields.
+        Ignored when cursor is provided (except for "*").
+      maxItems: 5
+      items:
+        $ref: '#/SortField'
+      example:
+        - field: created_at
+          direction: DESC
+
+PaginationMeta:
+  type: object
+  description: Pagination metadata for list and search responses.
+  properties:
+    nextCursor:
+      type: string
+      description: |
+        Cursor for fetching the next page of results.
+        Pass this value as the `cursor` parameter in the next request.
+        When `nextCursor` equals the input `cursor`, there are no more results.
+      example: eyJwYWdlIjogMn0
+    totalCount:
+      type: integer
+      format: int64
+      description: |
+        Total number of items matching the request.
+        May be omitted for performance reasons on large result sets.
+      example: 42
+
+# =============================================================================
+# Search
+# =============================================================================
+
+SearchParams:
+  type: object
+  description: |
+    Common search parameters for search endpoints.
+    Extends PaginationParams with a query field for full-text search.
+  properties:
+    query:
+      type: string
+      description: |
+        Query string for searching.
+
+        Supports:
+        - Terms: `alice` (searches all fields with OR)
+        - Phrases: `"Alice Smith"` (exact phrase match)
+        - Field queries: `username:alice` (specific field)
+        - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+        - Boolean operators: `AND`, `OR`, `NOT`
+        - Grouping: `(alice OR bob) AND email:*@corp.com`
+        - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+        - Boosting: `username:alice^2.0`
+
+        Empty string or "*" returns all documents (list semantics).
+      maxLength: 1000
+      example: "display_name:Production* AND state:ACTIVE"
+    pagination:
+      $ref: '#/PaginationParams'

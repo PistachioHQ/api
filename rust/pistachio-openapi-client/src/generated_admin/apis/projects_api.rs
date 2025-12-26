@@ -17,10 +17,73 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateProjectError {
-    Status400(models::CreateProject400Response),
-    Status401(models::CreateProject400Response),
-    Status403(models::CreateProject400Response),
-    Status409(models::CreateProject400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status409(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`delete_project`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum DeleteProjectError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`get_project`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetProjectError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`list_projects`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ListProjectsError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`search_projects`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SearchProjectsError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`search_projects_post`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SearchProjectsPostError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`update_project`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateProjectError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -82,6 +145,442 @@ pub async fn create_project(
     } else {
         let content = resp.text().await?;
         let entity: Option<CreateProjectError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Soft-deletes a project. The project will be marked as DELETED and will be permanently removed after 30 days. During this period, the project can be restored.
+pub async fn delete_project(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+) -> Result<serde_json::Value, Error<DeleteProjectError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+
+    let uri_str = format!(
+        "{}/projects/{projectId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::DELETE, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<DeleteProjectError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Retrieves a project by its ID. Returns the project details including its current state and resources.
+pub async fn get_project(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+) -> Result<models::GetProject200Response, Error<GetProjectError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+
+    let uri_str = format!(
+        "{}/projects/{projectId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProject200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProject200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<GetProjectError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Lists all projects accessible to the service account. By default, only ACTIVE projects are returned. Results are paginated with cursor-based pagination.
+pub async fn list_projects(
+    configuration: &configuration::Configuration,
+    page_size: Option<i32>,
+    cursor: Option<&str>,
+    sort: Option<&str>,
+    show_deleted: Option<bool>,
+) -> Result<models::ListProjects200Response, Error<ListProjectsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_query_page_size = page_size;
+    let p_query_cursor = cursor;
+    let p_query_sort = sort;
+    let p_query_show_deleted = show_deleted;
+
+    let uri_str = format!("{}/projects", configuration.base_path);
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_page_size {
+        req_builder = req_builder.query(&[("pageSize", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_sort {
+        req_builder = req_builder.query(&[("sort", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_show_deleted {
+        req_builder = req_builder.query(&[("showDeleted", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::ListProjects200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListProjects200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<ListProjectsError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Searches for projects using full-text search.  By default, only ACTIVE projects are returned unless a state filter is specified. Use \"state:DELETED\" to find deleted projects, or \"state:*\" to include all states.  Searchable fields: - project_id: The unique project identifier - display_name: Human-readable display name - state: Project state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my-project\" - Search all fields - \"display_name:Production*\" - Projects with display name starting with \"Production\" - \"state:ACTIVE AND created_at:[2024-01-01 TO *]\" - Active projects created in 2024  For complex queries that exceed URL length limits, use POST instead.
+pub async fn search_projects(
+    configuration: &configuration::Configuration,
+    query: Option<&str>,
+    page_size: Option<i32>,
+    cursor: Option<&str>,
+    sort: Option<&str>,
+) -> Result<models::SearchProjects200Response, Error<SearchProjectsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_query_query = query;
+    let p_query_page_size = page_size;
+    let p_query_cursor = cursor;
+    let p_query_sort = sort;
+
+    let uri_str = format!("{}/projects:search", configuration.base_path);
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_query {
+        req_builder = req_builder.query(&[("query", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_page_size {
+        req_builder = req_builder.query(&[("pageSize", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_cursor {
+        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_sort {
+        req_builder = req_builder.query(&[("sort", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::SearchProjects200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchProjects200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SearchProjectsError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Searches for projects using full-text search. Use this method for complex queries that exceed URL length limits.  By default, only ACTIVE projects are returned unless a state filter is specified. Use \"state:DELETED\" to find deleted projects, or \"state:*\" to include all states.  Searchable fields: - project_id: The unique project identifier - display_name: Human-readable display name - state: Project state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my-project\" - Search all fields - \"display_name:Production*\" - Projects with display name starting with \"Production\" - \"state:ACTIVE AND created_at:[2024-01-01 TO *]\" - Active projects created in 2024
+pub async fn search_projects_post(
+    configuration: &configuration::Configuration,
+    search_projects_post_request: models::SearchProjectsPostRequest,
+) -> Result<models::SearchProjects200Response, Error<SearchProjectsPostError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_search_projects_post_request = search_projects_post_request;
+
+    let uri_str = format!("{}/projects:search", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_search_projects_post_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::SearchProjects200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchProjects200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SearchProjectsPostError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Updates an existing project. Currently only the display_name can be updated.
+pub async fn update_project(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    update_project_request: models::UpdateProjectRequest,
+) -> Result<models::UpdateProject200Response, Error<UpdateProjectError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_body_update_project_request = update_project_request;
+
+    let uri_str = format!(
+        "{}/projects/{projectId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::PATCH, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_update_project_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::UpdateProject200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateProject200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<UpdateProjectError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

@@ -11,16 +11,16 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// CreateProject200Response : Response containing the newly created project.
+/// UpdateProject200Response : Response containing the updated project.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CreateProject200Response {
+pub struct UpdateProject200Response {
     #[serde(rename = "project", skip_serializing_if = "Option::is_none")]
     pub project: Option<Box<models::ListProjects200ResponseProjectsInner>>,
 }
 
-impl CreateProject200Response {
-    /// Response containing the newly created project.
-    pub fn new() -> CreateProject200Response {
-        CreateProject200Response { project: None }
+impl UpdateProject200Response {
+    /// Response containing the updated project.
+    pub fn new() -> UpdateProject200Response {
+        UpdateProject200Response { project: None }
     }
 }

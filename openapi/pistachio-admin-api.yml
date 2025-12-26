@@ -21,6 +21,10 @@ tags:
 paths:
   /projects:
     $ref: './paths/admin/projects.yml#/projects'
+  /projects/{projectId}:
+    $ref: './paths/admin/projects.yml#/projectById'
+  /projects:search:
+    $ref: './paths/admin/projects.yml#/projectsSearch'
 
 components:
   securitySchemes:

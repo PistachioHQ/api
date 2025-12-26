@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "buf/validate/validate.proto";
+
+// SortDirection specifies ascending or descending order.
+enum SortDirection {
+  // Unspecified defaults to ascending.
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  // Ascending order (A-Z, 0-9, oldest first).
+  SORT_DIRECTION_ASC = 1;
+  // Descending order (Z-A, 9-0, newest first).
+  SORT_DIRECTION_DESC = 2;
+}
+
+// SortField specifies a field and direction for sorting.
+message SortField {
+  // The field name to sort by.
+  // Valid fields are endpoint-specific (e.g., "username", "created_at").
+  string field = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+
+  // Sort direction. Defaults to ascending if unspecified.
+  SortDirection direction = 2;
+}
+
+// PaginationParams contains common pagination parameters for list endpoints.
+//
+// This message provides reusable pagination infrastructure that can be embedded
+// in domain-specific list request messages (ListProjectsRequest, etc.) or
+// composed into SearchParams for search endpoints.
+message PaginationParams {
+  // Number of results to return per page.
+  // Defaults to 20 if not specified or 0. Maximum is 100.
+  int32 page_size = 1 [(buf.validate.field).int32 = {
+    gte: 0
+    lte: 100
+  }];
+
+  // Cursor for pagination.
+  // Use "*" for the first page of results.
+  // Use the `next_cursor` from the previous response for subsequent pages.
+  // When cursor is provided (and not "*"), the sort parameter is ignored
+  // because the cursor contains the complete sort state.
+  string cursor = 2 [(buf.validate.field).string = {max_len: 512}];
+
+  // Sort specification as an ordered list of fields.
+  // Each endpoint defines its own default sort and valid fields.
+  // Ignored when cursor is provided (except for "*").
+  repeated SortField sort = 3 [(buf.validate.field).repeated = {max_items: 5}];
+}
+
+// PaginationMeta contains pagination metadata for list responses.
+//
+// This message provides reusable response metadata that can be embedded
+// in domain-specific list response messages (ListProjectsResponse, etc.).
+message PaginationMeta {
+  // Cursor for fetching the next page of results.
+  // Pass this value as the `cursor` parameter in the next request.
+  // When `next_cursor` equals the input `cursor`, there are no more results.
+  string next_cursor = 1;
+
+  // Total number of items matching the request.
+  // May be omitted for performance reasons on large result sets.
+  optional int64 total_count = 2;
+}

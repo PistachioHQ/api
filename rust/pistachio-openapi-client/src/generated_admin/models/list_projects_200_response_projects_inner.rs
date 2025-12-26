@@ -11,9 +11,9 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// CreateProject200ResponseProject : Top-level container for apps, users, and resources. Projects provide isolated namespaces for authentication, data storage, and other platform services.
+/// ListProjects200ResponseProjectsInner : Top-level container for apps, users, and resources. Projects provide isolated namespaces for authentication, data storage, and other platform services.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CreateProject200ResponseProject {
+pub struct ListProjects200ResponseProjectsInner {
     /// Resource name in the format \"projects/{project_id}\".
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -30,7 +30,7 @@ pub struct CreateProject200ResponseProject {
     #[serde(rename = "state", skip_serializing_if = "Option::is_none")]
     pub state: Option<State>,
     #[serde(rename = "resources", skip_serializing_if = "Option::is_none")]
-    pub resources: Option<Box<models::CreateProject200ResponseProjectResources>>,
+    pub resources: Option<Box<models::ListProjects200ResponseProjectsInnerResources>>,
     /// Timestamp when the project was created.
     #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
     pub created_at: Option<String>,
@@ -39,10 +39,10 @@ pub struct CreateProject200ResponseProject {
     pub updated_at: Option<String>,
 }
 
-impl CreateProject200ResponseProject {
+impl ListProjects200ResponseProjectsInner {
     /// Top-level container for apps, users, and resources. Projects provide isolated namespaces for authentication, data storage, and other platform services.
-    pub fn new() -> CreateProject200ResponseProject {
-        CreateProject200ResponseProject {
+    pub fn new() -> ListProjects200ResponseProjectsInner {
+        ListProjects200ResponseProjectsInner {
             name: None,
             project_id: None,
             pistachio_id: None,

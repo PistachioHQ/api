@@ -17,6 +17,207 @@ tags:
       description: Project management operations
 paths:
     /projects:
+        get:
+            operationId: listProjects
+            summary: List projects
+            description: |
+                Lists all projects accessible to the service account.
+                By default, only ACTIVE projects are returned.
+                Results are paginated with cursor-based pagination.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: pageSize
+                  in: query
+                  description: Number of results to return per page. Defaults to 20, maximum is 100.
+                  required: false
+                  schema:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    default: 20
+                    example: 20
+                - name: cursor
+                  in: query
+                  description: |
+                    Cursor for pagination. Use "*" for the first page.
+                    Use the `nextCursor` from the previous response for subsequent pages.
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 512
+                    example: "*"
+                - name: sort
+                  in: query
+                  description: |
+                    Sort specification. Format: "field:direction" (e.g., "created_at:DESC").
+                    Multiple fields can be comma-separated (e.g., "created_at:DESC,display_name:ASC").
+
+                    Valid directions: ASC, DESC (case-insensitive).
+                    Valid fields are endpoint-specific (see endpoint documentation).
+                    Default sort is endpoint-specific (typically created_at:DESC).
+                  required: false
+                  schema:
+                    type: string
+                    pattern: '^[a-z_]+:(ASC|DESC|asc|desc)(,[a-z_]+:(ASC|DESC|asc|desc))*$'
+                    example: "created_at:DESC"
+                - name: showDeleted
+                  in: query
+                  description: If true, include deleted projects in the results.
+                  required: false
+                  schema:
+                    type: boolean
+                    default: false
+            responses:
+                '200':
+                    description: List of projects
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing a page of projects.
+                                properties:
+                                    projects:
+                                        type: array
+                                        description: The list of projects.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Top-level container for apps, users, and resources.
+                                                Projects provide isolated namespaces for authentication, data storage,
+                                                and other platform services.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}".
+                                                    example: projects/my-project
+                                                projectId:
+                                                    type: string
+                                                    description: Unique project identifier. Immutable after creation.
+                                                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                    example: my-project
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal project identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '01'.
+                                                    example: a1b2c3d4e5f6789012345678901234501
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 64 characters.
+                                                    maxLength: 64
+                                                    example: My Project
+                                                state:
+                                                    type: string
+                                                    description: Lifecycle state of a project.
+                                                    enum:
+                                                        - ACTIVE
+                                                        - DELETED
+                                                    example: ACTIVE
+                                                resources:
+                                                    type: object
+                                                    description: Default resources provisioned for a project.
+                                                    properties:
+                                                        hostingSite:
+                                                            type: string
+                                                            description: Default hosting site name.
+                                                            example: my-project.pistachiohq.com
+                                                        realtimeDatabaseInstance:
+                                                            type: string
+                                                            description: Default realtime database instance name.
+                                                            example: my-project-default-rtdb
+                                                        storageBucket:
+                                                            type: string
+                                                            description: Default storage bucket.
+                                                            example: my-project.pistachiohq.storage
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid pagination parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
         post:
             operationId: createProject
             summary: Create a new project
@@ -195,6 +396,961 @@ paths:
                                     - message
                 '409':
                     description: Project ID already exists
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+    /projects/{projectId}:
+        get:
+            operationId: getProject
+            summary: Get a project
+            description: |
+                Retrieves a project by its ID.
+                Returns the project details including its current state and resources.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID to retrieve
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            responses:
+                '200':
+                    description: Project details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the requested project.
+                                properties:
+                                    project:
+                                        type: object
+                                        description: |
+                                            Top-level container for apps, users, and resources.
+                                            Projects provide isolated namespaces for authentication, data storage,
+                                            and other platform services.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}".
+                                                example: projects/my-project
+                                            projectId:
+                                                type: string
+                                                description: Unique project identifier. Immutable after creation.
+                                                pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                example: my-project
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal project identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '01'.
+                                                example: a1b2c3d4e5f6789012345678901234501
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 64 characters.
+                                                maxLength: 64
+                                                example: My Project
+                                            state:
+                                                type: string
+                                                description: Lifecycle state of a project.
+                                                enum:
+                                                    - ACTIVE
+                                                    - DELETED
+                                                example: ACTIVE
+                                            resources:
+                                                type: object
+                                                description: Default resources provisioned for a project.
+                                                properties:
+                                                    hostingSite:
+                                                        type: string
+                                                        description: Default hosting site name.
+                                                        example: my-project.pistachiohq.com
+                                                    realtimeDatabaseInstance:
+                                                        type: string
+                                                        description: Default realtime database instance name.
+                                                        example: my-project-default-rtdb
+                                                    storageBucket:
+                                                        type: string
+                                                        description: Default storage bucket.
+                                                        example: my-project.pistachiohq.storage
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was last updated.
+                                                example: "2024-01-15T10:30:00Z"
+                '400':
+                    description: Invalid projectId format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        patch:
+            operationId: updateProject
+            summary: Update a project
+            description: |
+                Updates an existing project.
+                Currently only the display_name can be updated.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID to update
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            requestBody:
+                description: Project update parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: Request body for updating an existing project.
+                            properties:
+                                displayName:
+                                    type: string
+                                    description: |
+                                        New display name for the project.
+                                        - If not provided (omitted from JSON), the display name will not be changed.
+                                        - If provided, must be 1-64 characters.
+                                    minLength: 1
+                                    maxLength: 64
+                                    example: My Updated Project
+                            example:
+                                displayName: My Updated Project
+            responses:
+                '200':
+                    description: Project updated
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the updated project.
+                                properties:
+                                    project:
+                                        type: object
+                                        description: |
+                                            Top-level container for apps, users, and resources.
+                                            Projects provide isolated namespaces for authentication, data storage,
+                                            and other platform services.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}".
+                                                example: projects/my-project
+                                            projectId:
+                                                type: string
+                                                description: Unique project identifier. Immutable after creation.
+                                                pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                example: my-project
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal project identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '01'.
+                                                example: a1b2c3d4e5f6789012345678901234501
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 64 characters.
+                                                maxLength: 64
+                                                example: My Project
+                                            state:
+                                                type: string
+                                                description: Lifecycle state of a project.
+                                                enum:
+                                                    - ACTIVE
+                                                    - DELETED
+                                                example: ACTIVE
+                                            resources:
+                                                type: object
+                                                description: Default resources provisioned for a project.
+                                                properties:
+                                                    hostingSite:
+                                                        type: string
+                                                        description: Default hosting site name.
+                                                        example: my-project.pistachiohq.com
+                                                    realtimeDatabaseInstance:
+                                                        type: string
+                                                        description: Default realtime database instance name.
+                                                        example: my-project-default-rtdb
+                                                    storageBucket:
+                                                        type: string
+                                                        description: Default storage bucket.
+                                                        example: my-project.pistachiohq.storage
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the project was last updated.
+                                                example: "2024-01-15T10:30:00Z"
+                '400':
+                    description: Invalid projectId or displayName format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        delete:
+            operationId: deleteProject
+            summary: Delete a project
+            description: |
+                Soft-deletes a project.
+                The project will be marked as DELETED and will be permanently removed
+                after 30 days. During this period, the project can be restored.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID to delete
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            responses:
+                '200':
+                    description: Project deleted
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response confirming the project was deleted.
+                '400':
+                    description: Invalid projectId format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+    /projects:search:
+        get:
+            operationId: searchProjects
+            summary: Search projects
+            description: |
+                Searches for projects using full-text search.
+
+                By default, only ACTIVE projects are returned unless a state filter is specified.
+                Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+
+                Searchable fields:
+                - project_id: The unique project identifier
+                - display_name: Human-readable display name
+                - state: Project state (ACTIVE, DELETED)
+                - created_at: Timestamp when created
+                - updated_at: Timestamp when last updated
+
+                Example queries:
+                - "my-project" - Search all fields
+                - "display_name:Production*" - Projects with display name starting with "Production"
+                - "state:ACTIVE AND created_at:[2024-01-01 TO *]" - Active projects created in 2024
+
+                For complex queries that exceed URL length limits, use POST instead.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: query
+                  in: query
+                  description: |
+                    Search query string.
+
+                    Supports:
+                    - Terms: `alice` (searches all fields)
+                    - Phrases: `"Alice Smith"` (exact phrase match)
+                    - Field queries: `username:alice` (specific field)
+                    - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+                    - Boolean operators: `AND`, `OR`, `NOT`
+                    - Grouping: `(alice OR bob) AND email:*@corp.com`
+                    - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+                    - Boosting: `username:alice^2.0`
+
+                    Empty string or "*" returns all documents.
+                    Searchable fields are endpoint-specific (see endpoint documentation).
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 1000
+                    default: "*"
+                    example: "display_name:Production*"
+                - name: pageSize
+                  in: query
+                  description: Number of results to return per page. Defaults to 20, maximum is 100.
+                  required: false
+                  schema:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    default: 20
+                    example: 20
+                - name: cursor
+                  in: query
+                  description: |
+                    Cursor for pagination. Use "*" for the first page.
+                    Use the `nextCursor` from the previous response for subsequent pages.
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 512
+                    example: "*"
+                - name: sort
+                  in: query
+                  description: |
+                    Sort specification. Format: "field:direction" (e.g., "created_at:DESC").
+                    Multiple fields can be comma-separated (e.g., "created_at:DESC,display_name:ASC").
+
+                    Valid directions: ASC, DESC (case-insensitive).
+                    Valid fields are endpoint-specific (see endpoint documentation).
+                    Default sort is endpoint-specific (typically created_at:DESC).
+                  required: false
+                  schema:
+                    type: string
+                    pattern: '^[a-z_]+:(ASC|DESC|asc|desc)(,[a-z_]+:(ASC|DESC|asc|desc))*$'
+                    example: "created_at:DESC"
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing search results for projects.
+                                properties:
+                                    projects:
+                                        type: array
+                                        description: The list of projects matching the search query.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Top-level container for apps, users, and resources.
+                                                Projects provide isolated namespaces for authentication, data storage,
+                                                and other platform services.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}".
+                                                    example: projects/my-project
+                                                projectId:
+                                                    type: string
+                                                    description: Unique project identifier. Immutable after creation.
+                                                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                    example: my-project
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal project identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '01'.
+                                                    example: a1b2c3d4e5f6789012345678901234501
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 64 characters.
+                                                    maxLength: 64
+                                                    example: My Project
+                                                state:
+                                                    type: string
+                                                    description: Lifecycle state of a project.
+                                                    enum:
+                                                        - ACTIVE
+                                                        - DELETED
+                                                    example: ACTIVE
+                                                resources:
+                                                    type: object
+                                                    description: Default resources provisioned for a project.
+                                                    properties:
+                                                        hostingSite:
+                                                            type: string
+                                                            description: Default hosting site name.
+                                                            example: my-project.pistachiohq.com
+                                                        realtimeDatabaseInstance:
+                                                            type: string
+                                                            description: Default realtime database instance name.
+                                                            example: my-project-default-rtdb
+                                                        storageBucket:
+                                                            type: string
+                                                            description: Default storage bucket.
+                                                            example: my-project.pistachiohq.storage
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid search query or parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        post:
+            operationId: searchProjectsPost
+            summary: Search projects
+            description: |
+                Searches for projects using full-text search.
+                Use this method for complex queries that exceed URL length limits.
+
+                By default, only ACTIVE projects are returned unless a state filter is specified.
+                Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+
+                Searchable fields:
+                - project_id: The unique project identifier
+                - display_name: Human-readable display name
+                - state: Project state (ACTIVE, DELETED)
+                - created_at: Timestamp when created
+                - updated_at: Timestamp when last updated
+
+                Example queries:
+                - "my-project" - Search all fields
+                - "display_name:Production*" - Projects with display name starting with "Production"
+                - "state:ACTIVE AND created_at:[2024-01-01 TO *]" - Active projects created in 2024
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            requestBody:
+                description: Search parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: |
+                                Request body for searching projects.
+                                By default, only ACTIVE projects are returned unless a state filter is specified.
+                                Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+                            properties:
+                                params:
+                                    type: object
+                                    description: |
+                                        Common search parameters for search endpoints.
+                                        Extends PaginationParams with a query field for full-text search.
+                                    properties:
+                                        query:
+                                            type: string
+                                            description: |
+                                                Query string for searching.
+
+                                                Supports:
+                                                - Terms: `alice` (searches all fields with OR)
+                                                - Phrases: `"Alice Smith"` (exact phrase match)
+                                                - Field queries: `username:alice` (specific field)
+                                                - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+                                                - Boolean operators: `AND`, `OR`, `NOT`
+                                                - Grouping: `(alice OR bob) AND email:*@corp.com`
+                                                - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+                                                - Boosting: `username:alice^2.0`
+
+                                                Empty string or "*" returns all documents (list semantics).
+                                            maxLength: 1000
+                                            example: "display_name:Production* AND state:ACTIVE"
+                                        pagination:
+                                            type: object
+                                            description: |
+                                                Common pagination parameters for list endpoints.
+                                                Can be embedded in list request messages or composed into SearchParams.
+                                            properties:
+                                                pageSize:
+                                                    type: integer
+                                                    description: Number of results to return per page. Defaults to 20, maximum is 100.
+                                                    minimum: 0
+                                                    maximum: 100
+                                                    default: 20
+                                                    example: 20
+                                                cursor:
+                                                    type: string
+                                                    description: |
+                                                        Cursor for pagination.
+                                                        Use "*" for the first page of results.
+                                                        Use the `nextCursor` from the previous response for subsequent pages.
+                                                        When cursor is provided (and not "*"), the sort parameter is ignored.
+                                                    maxLength: 512
+                                                    example: "*"
+                                                sort:
+                                                    type: array
+                                                    description: |
+                                                        Sort specification as an ordered list of fields.
+                                                        Each endpoint defines its own default sort and valid fields.
+                                                        Ignored when cursor is provided (except for "*").
+                                                    maxItems: 5
+                                                    items:
+                                                        type: object
+                                                        description: Specifies a field and direction for sorting.
+                                                        properties:
+                                                            field:
+                                                                type: string
+                                                                description: The field name to sort by. Valid fields are endpoint-specific.
+                                                                minLength: 1
+                                                                maxLength: 64
+                                                                example: created_at
+                                                            direction:
+                                                                type: string
+                                                                description: Sort direction for ordering results.
+                                                                enum:
+                                                                    - ASC
+                                                                    - DESC
+                                                                example: DESC
+                                                        required:
+                                                            - field
+                                                    example:
+                                                        - field: created_at
+                                                          direction: DESC
+                            example:
+                                params:
+                                    query: "display_name:Production*"
+                                    pagination:
+                                        pageSize: 20
+                                        cursor: "*"
+                                        sort:
+                                            - field: created_at
+                                              direction: DESC
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing search results for projects.
+                                properties:
+                                    projects:
+                                        type: array
+                                        description: The list of projects matching the search query.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Top-level container for apps, users, and resources.
+                                                Projects provide isolated namespaces for authentication, data storage,
+                                                and other platform services.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}".
+                                                    example: projects/my-project
+                                                projectId:
+                                                    type: string
+                                                    description: Unique project identifier. Immutable after creation.
+                                                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                                                    example: my-project
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal project identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '01'.
+                                                    example: a1b2c3d4e5f6789012345678901234501
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 64 characters.
+                                                    maxLength: 64
+                                                    example: My Project
+                                                state:
+                                                    type: string
+                                                    description: Lifecycle state of a project.
+                                                    enum:
+                                                        - ACTIVE
+                                                        - DELETED
+                                                    example: ACTIVE
+                                                resources:
+                                                    type: object
+                                                    description: Default resources provisioned for a project.
+                                                    properties:
+                                                        hostingSite:
+                                                            type: string
+                                                            description: Default hosting site name.
+                                                            example: my-project.pistachiohq.com
+                                                        realtimeDatabaseInstance:
+                                                            type: string
+                                                            description: Default realtime database instance name.
+                                                            example: my-project-default-rtdb
+                                                        storageBucket:
+                                                            type: string
+                                                            description: Default storage bucket.
+                                                            example: my-project.pistachiohq.storage
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the project was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid search query or parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
                     content:
                         application/json:
                             schema:

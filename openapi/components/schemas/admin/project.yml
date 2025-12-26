@@ -108,3 +108,91 @@ CreateProjectResponse:
   properties:
     project:
       $ref: '#/Project'
+
+# GetProject
+
+GetProjectResponse:
+  type: object
+  description: Response containing the requested project.
+  properties:
+    project:
+      $ref: '#/Project'
+
+# UpdateProject
+
+UpdateProjectRequest:
+  type: object
+  description: Request body for updating an existing project.
+  properties:
+    displayName:
+      type: string
+      description: |
+        New display name for the project.
+        - If not provided (omitted from JSON), the display name will not be changed.
+        - If provided, must be 1-64 characters.
+      minLength: 1
+      maxLength: 64
+      example: My Updated Project
+  example:
+    displayName: My Updated Project
+
+UpdateProjectResponse:
+  type: object
+  description: Response containing the updated project.
+  properties:
+    project:
+      $ref: '#/Project'
+
+# DeleteProject
+
+DeleteProjectResponse:
+  type: object
+  description: Response confirming the project was deleted.
+  properties: {}
+
+# ListProjects
+
+ListProjectsResponse:
+  type: object
+  description: Response containing a page of projects.
+  properties:
+    projects:
+      type: array
+      description: The list of projects.
+      items:
+        $ref: '#/Project'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
+
+# SearchProjects
+
+SearchProjectsRequest:
+  type: object
+  description: |
+    Request body for searching projects.
+    By default, only ACTIVE projects are returned unless a state filter is specified.
+    Use "state:DELETED" to find deleted projects, or "state:*" to include all states.
+  properties:
+    params:
+      $ref: '../common.yml#/SearchParams'
+  example:
+    params:
+      query: "display_name:Production*"
+      pagination:
+        pageSize: 20
+        cursor: "*"
+        sort:
+          - field: created_at
+            direction: DESC
+
+SearchProjectsResponse:
+  type: object
+  description: Response containing search results for projects.
+  properties:
+    projects:
+      type: array
+      description: The list of projects matching the search query.
+      items:
+        $ref: '#/Project'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
