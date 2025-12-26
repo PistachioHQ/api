@@ -54,9 +54,41 @@ type AuthenticatedClient =
 /// gRPC client for the Pistachio Admin API.
 #[derive(Debug, Clone)]
 pub struct AdminClient {
-    endpoint: tonic::transport::Endpoint,
+    endpoint: Option<tonic::transport::Endpoint>,
     credentials: AdminCredentials,
     inner: Option<AuthenticatedClient>,
+}
+
+impl AdminClient {
+    /// Creates a new client from an existing connected channel.
+    ///
+    /// This allows sharing a single HTTP/2 connection across multiple clients.
+    /// The channel should already be connected.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use tonic::transport::Channel;
+    ///
+    /// let channel = Channel::from_static("https://admin.pistachiohq.com")
+    ///     .connect()
+    ///     .await?;
+    ///
+    /// let client = AdminClient::from_channel(channel, credentials);
+    /// ```
+    pub fn from_channel(channel: Channel, credentials: AdminCredentials) -> Self {
+        let interceptor = AdminAuthInterceptor {
+            api_key: credentials.api_key().to_string(),
+            service_account_token: credentials.service_account_token().to_string(),
+        };
+        let client = ProjectManagementClient::with_interceptor(channel, interceptor);
+
+        Self {
+            endpoint: None,
+            credentials,
+            inner: Some(client),
+        }
+    }
 }
 
 #[cfg_attr(
@@ -81,7 +113,7 @@ impl PistachioAdminClient for AdminClient {
             .map_err(|e| PistachioApiClientError::InvalidUri(e.to_string()))?;
 
         Ok(Self {
-            endpoint,
+            endpoint: Some(endpoint),
             credentials,
             inner: None,
         })
@@ -95,8 +127,13 @@ impl PistachioAdminClient for AdminClient {
                 Ok(self)
             }
             None => {
+                let endpoint = self
+                    .endpoint
+                    .as_ref()
+                    .ok_or(PistachioApiClientError::NotConnected)?;
+
                 debug!("Attempting to connect to Pistachio Admin API");
-                match self.endpoint.connect().await {
+                match endpoint.connect().await {
                     Ok(channel) => {
                         info!("Successfully connected to Pistachio Admin API");
                         let interceptor = AdminAuthInterceptor {
