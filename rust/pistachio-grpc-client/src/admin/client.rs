@@ -1,11 +1,11 @@
 use pistachio_api_common::admin::client::PistachioAdminClient;
 use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
-    DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
-    GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
-    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
-    UpdateProjectResponse,
+    DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
+    GetAdminSdkConfigResponse, GetProjectError, GetProjectRequest, GetProjectResponse,
+    ListProjectsError, ListProjectsRequest, ListProjectsResponse, SearchProjectsError,
+    SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
+    UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
@@ -19,6 +19,7 @@ use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManag
 
 use super::create_project::handle_create_project;
 use super::delete_project::handle_delete_project;
+use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_project::handle_get_project;
 use super::list_projects::handle_list_projects;
 use super::search_projects::handle_search_projects;
@@ -293,6 +294,25 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted search_projects with unconnected client");
                 Err(SearchProjectsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_admin_sdk_config(
+        &mut self,
+        req: GetAdminSdkConfigRequest,
+    ) -> Result<GetAdminSdkConfigResponse, GetAdminSdkConfigError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_admin_sdk_config");
+                handle_get_admin_sdk_config(client, req).await
+            }
+            None => {
+                warn!("Attempted get_admin_sdk_config with unconnected client");
+                Err(GetAdminSdkConfigError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }

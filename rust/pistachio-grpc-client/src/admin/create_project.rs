@@ -118,6 +118,7 @@ impl FromProto<pistachio_api::pistachio::types::v1::Project> for Project {
             display_name,
             state,
             resources,
+            location_id: None,
             created_at,
             updated_at,
         })

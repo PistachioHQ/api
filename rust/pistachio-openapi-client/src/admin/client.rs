@@ -4,11 +4,11 @@ use cfg_if::cfg_if;
 use pistachio_api_common::admin::client::PistachioAdminClient;
 use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
-    DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
-    GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
-    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
-    UpdateProjectResponse,
+    DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
+    GetAdminSdkConfigResponse, GetProjectError, GetProjectRequest, GetProjectResponse,
+    ListProjectsError, ListProjectsRequest, ListProjectsResponse, SearchProjectsError,
+    SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
+    UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
@@ -16,6 +16,7 @@ use tracing::{debug, instrument};
 
 use super::create_project::handle_create_project;
 use super::delete_project::handle_delete_project;
+use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_project::handle_get_project;
 use super::list_projects::handle_list_projects;
 use super::search_projects::handle_search_projects;
@@ -129,6 +130,15 @@ macro_rules! impl_admin_client {
             ) -> Result<SearchProjectsResponse, SearchProjectsError> {
                 debug!("Attempting search_projects via OpenAPI");
                 handle_search_projects(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn get_admin_sdk_config(
+                &mut self,
+                req: GetAdminSdkConfigRequest,
+            ) -> Result<GetAdminSdkConfigResponse, GetAdminSdkConfigError> {
+                debug!("Attempting get_admin_sdk_config via OpenAPI");
+                handle_get_admin_sdk_config(&self.config, req).await
             }
         }
     };

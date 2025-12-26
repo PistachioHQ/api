@@ -87,4 +87,15 @@ service ProjectManagement {
   // - INVALID_ARGUMENT: Invalid search query or parameters
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchProjects(SearchProjectsRequest) returns (SearchProjectsResponse);
+
+  // GetAdminSdkConfig retrieves the Admin SDK configuration for a project.
+  //
+  // Returns configuration needed to initialize the Admin SDK, including
+  // storage bucket URL and database URL.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetAdminSdkConfig(GetAdminSdkConfigRequest) returns (GetAdminSdkConfigResponse);
 }

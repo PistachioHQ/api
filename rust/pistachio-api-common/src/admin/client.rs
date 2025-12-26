@@ -3,11 +3,11 @@ use crate::error::PistachioApiClientError;
 
 use super::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
-    DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
-    GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
-    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
-    UpdateProjectResponse,
+    DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
+    GetAdminSdkConfigResponse, GetProjectError, GetProjectRequest, GetProjectResponse,
+    ListProjectsError, ListProjectsRequest, ListProjectsResponse, SearchProjectsError,
+    SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
+    UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
 
 /// Trait for Pistachio Admin API clients.
@@ -93,4 +93,12 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: SearchProjectsRequest,
     ) -> Result<SearchProjectsResponse, SearchProjectsError>;
+
+    /// Retrieves the Admin SDK configuration for a project.
+    ///
+    /// Returns configuration needed to initialize the Admin SDK.
+    async fn get_admin_sdk_config(
+        &mut self,
+        req: GetAdminSdkConfigRequest,
+    ) -> Result<GetAdminSdkConfigResponse, GetAdminSdkConfigError>;
 }

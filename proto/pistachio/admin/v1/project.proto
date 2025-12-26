@@ -192,3 +192,29 @@ message SearchProjectsResponse {
   // Pagination metadata including next cursor and total count.
   pistachio.types.v1.PaginationMeta pagination = 2;
 }
+
+// =============================================================================
+// GetAdminSdkConfig
+// =============================================================================
+
+// GetAdminSdkConfigRequest retrieves the Admin SDK configuration for a project.
+message GetAdminSdkConfigRequest {
+  // The project ID.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// GetAdminSdkConfigResponse contains the Admin SDK configuration.
+message GetAdminSdkConfigResponse {
+  // Project ID.
+  string project_id = 1;
+
+  // Storage bucket name.
+  string storage_bucket = 2;
+
+  // Location/region for default resources.
+  string location_id = 3;
+}

@@ -440,3 +440,55 @@ projectsSearch:
           application/json:
             schema:
               $ref: '../../components/schemas/error.yml#/Error'
+
+projectAdminSdkConfig:
+  get:
+    operationId: getAdminSdkConfig
+    summary: Get Admin SDK configuration
+    description: |
+      Retrieves the Admin SDK configuration for a project.
+      Returns configuration needed to initialize the Admin SDK.
+    tags:
+      - Projects
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    responses:
+      '200':
+        description: Admin SDK configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/project.yml#/GetAdminSdkConfigResponse'
+      '400':
+        description: Invalid projectId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'

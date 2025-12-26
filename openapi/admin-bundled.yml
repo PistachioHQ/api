@@ -1553,6 +1553,123 @@ paths:
                                 required:
                                     - code
                                     - message
+    /projects/{projectId}/adminSdkConfig:
+        get:
+            operationId: getAdminSdkConfig
+            summary: Get Admin SDK configuration
+            description: |
+                Retrieves the Admin SDK configuration for a project.
+                Returns configuration needed to initialize the Admin SDK.
+            tags:
+                - Projects
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            responses:
+                '200':
+                    description: Admin SDK configuration
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the Admin SDK configuration.
+                                properties:
+                                    projectId:
+                                        type: string
+                                        description: The project ID.
+                                        example: my-project
+                                    storageBucket:
+                                        type: string
+                                        description: Storage bucket name.
+                                        example: my-project.pistachiohq.storage
+                                    locationId:
+                                        type: string
+                                        description: Location/region for default resources.
+                                        example: us-central1
+                '400':
+                    description: Invalid projectId format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
 components:
     securitySchemes:
         ApiKeyAuth:

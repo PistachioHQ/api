@@ -128,6 +128,7 @@ impl FromJson<ListProjects200ResponseProjectsInner> for Project {
             display_name,
             state,
             resources,
+            location_id: None,
             created_at,
             updated_at,
         })

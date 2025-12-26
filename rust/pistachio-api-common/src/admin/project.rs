@@ -400,3 +400,54 @@ pub struct SearchProjectsResponse {
     /// Pagination metadata.
     pub pagination: PaginationMeta,
 }
+
+// =============================================================================
+// GetAdminSdkConfig
+// =============================================================================
+
+#[derive(Debug, thiserror::Error)]
+pub enum GetAdminSdkConfigError {
+    #[error("Bad request: {0}")]
+    BadRequest(String),
+    #[error("Project not found")]
+    NotFound,
+    #[error("Unauthenticated: {0}")]
+    Unauthenticated(String),
+    #[error("Permission denied: {0}")]
+    PermissionDenied(String),
+    #[error("Service error: {0}")]
+    ServiceError(String),
+    #[error("Service unavailable: {0}")]
+    ServiceUnavailable(String),
+    #[error("Client error: {0}")]
+    PistachioApiClientError(#[from] PistachioApiClientError),
+    #[error("Response validation error: {0}")]
+    ResponseValidationError(#[from] ValidationError),
+    #[error("Unexpected error: {0}")]
+    Unknown(String),
+}
+
+/// Request to get Admin SDK configuration for a project.
+#[derive(Debug, Clone)]
+pub struct GetAdminSdkConfigRequest {
+    /// The project ID.
+    pub project_id: ProjectId,
+}
+
+impl GetAdminSdkConfigRequest {
+    /// Creates a new request for the given project ID.
+    pub fn new(project_id: ProjectId) -> Self {
+        Self { project_id }
+    }
+}
+
+/// Response containing the Admin SDK configuration.
+#[derive(Debug, Clone)]
+pub struct GetAdminSdkConfigResponse {
+    /// Project ID.
+    pub project_id: ProjectId,
+    /// Storage bucket name.
+    pub storage_bucket: String,
+    /// Location/region for default resources.
+    pub location_id: String,
+}

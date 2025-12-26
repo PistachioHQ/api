@@ -25,6 +25,8 @@ paths:
     $ref: './paths/admin/projects.yml#/projectById'
   /projects/{projectId}:undelete:
     $ref: './paths/admin/projects.yml#/projectUndelete'
+  /projects/{projectId}/adminSdkConfig:
+    $ref: './paths/admin/projects.yml#/projectAdminSdkConfig'
   /projects:search:
     $ref: './paths/admin/projects.yml#/projectsSearch'
 

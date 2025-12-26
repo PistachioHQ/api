@@ -205,3 +205,22 @@ SearchProjectsResponse:
         $ref: '#/Project'
     pagination:
       $ref: '../common.yml#/PaginationMeta'
+
+# GetAdminSdkConfig
+
+GetAdminSdkConfigResponse:
+  type: object
+  description: Response containing the Admin SDK configuration.
+  properties:
+    projectId:
+      type: string
+      description: The project ID.
+      example: my-project
+    storageBucket:
+      type: string
+      description: Storage bucket name.
+      example: my-project.pistachiohq.storage
+    locationId:
+      type: string
+      description: Location/region for default resources.
+      example: us-central1

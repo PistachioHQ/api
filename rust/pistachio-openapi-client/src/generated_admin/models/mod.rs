@@ -2,6 +2,8 @@ pub mod create_project_200_response;
 pub use self::create_project_200_response::CreateProject200Response;
 pub mod create_project_request;
 pub use self::create_project_request::CreateProjectRequest;
+pub mod get_admin_sdk_config_200_response;
+pub use self::get_admin_sdk_config_200_response::GetAdminSdkConfig200Response;
 pub mod get_project_200_response;
 pub use self::get_project_200_response::GetProject200Response;
 pub mod list_projects_200_response;
