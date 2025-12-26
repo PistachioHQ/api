@@ -24,6 +24,8 @@ pub mod search_projects_post_request_params_pagination;
 pub use self::search_projects_post_request_params_pagination::SearchProjectsPostRequestParamsPagination;
 pub mod search_projects_post_request_params_pagination_sort_inner;
 pub use self::search_projects_post_request_params_pagination_sort_inner::SearchProjectsPostRequestParamsPaginationSortInner;
+pub mod undelete_project_200_response;
+pub use self::undelete_project_200_response::UndeleteProject200Response;
 pub mod update_project_200_response;
 pub use self::update_project_200_response::UpdateProject200Response;
 pub mod update_project_request;

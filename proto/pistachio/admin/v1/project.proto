@@ -110,6 +110,27 @@ message DeleteProjectResponse {
 }
 
 // =============================================================================
+// UndeleteProject
+// =============================================================================
+
+// UndeleteProjectRequest restores a soft-deleted project.
+message UndeleteProjectRequest {
+  // The project ID to restore.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// UndeleteProjectResponse contains the restored project.
+message UndeleteProjectResponse {
+  // The restored project.
+  pistachio.types.v1.Project project = 1;
+}
+
+// =============================================================================
 // ListProjects
 // =============================================================================
 

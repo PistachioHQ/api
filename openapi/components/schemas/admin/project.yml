@@ -150,6 +150,15 @@ DeleteProjectResponse:
   description: Response confirming the project was deleted.
   properties: {}
 
+# UndeleteProject
+
+UndeleteProjectResponse:
+  type: object
+  description: Response containing the restored project.
+  properties:
+    project:
+      $ref: '#/Project'
+
 # ListProjects
 
 ListProjectsResponse:

@@ -6,8 +6,9 @@ use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
     GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UpdateProjectError,
-    UpdateProjectRequest, UpdateProjectResponse,
+    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
+    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
+    UpdateProjectResponse,
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
@@ -18,6 +19,7 @@ use super::delete_project::handle_delete_project;
 use super::get_project::handle_get_project;
 use super::list_projects::handle_list_projects;
 use super::search_projects::handle_search_projects;
+use super::undelete_project::handle_undelete_project;
 use super::update_project::handle_update_project;
 
 /// OpenAPI/REST client for the Pistachio Admin API.
@@ -100,6 +102,15 @@ macro_rules! impl_admin_client {
             ) -> Result<DeleteProjectResponse, DeleteProjectError> {
                 debug!("Attempting delete_project via OpenAPI");
                 handle_delete_project(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn undelete_project(
+                &mut self,
+                req: UndeleteProjectRequest,
+            ) -> Result<UndeleteProjectResponse, UndeleteProjectError> {
+                debug!("Attempting undelete_project via OpenAPI");
+                handle_undelete_project(&self.config, req).await
             }
 
             #[instrument(skip(self, req), level = "debug")]

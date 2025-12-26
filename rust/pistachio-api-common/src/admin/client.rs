@@ -5,8 +5,9 @@ use super::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
     GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UpdateProjectError,
-    UpdateProjectRequest, UpdateProjectResponse,
+    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
+    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
+    UpdateProjectResponse,
 };
 
 /// Trait for Pistachio Admin API clients.
@@ -66,6 +67,15 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: DeleteProjectRequest,
     ) -> Result<DeleteProjectResponse, DeleteProjectError>;
+
+    /// Restores a soft-deleted project.
+    ///
+    /// The project must be in the DELETED state and within the 30-day
+    /// grace period. The project will be restored to ACTIVE state.
+    async fn undelete_project(
+        &mut self,
+        req: UndeleteProjectRequest,
+    ) -> Result<UndeleteProjectResponse, UndeleteProjectError>;
 
     /// Lists all projects accessible to the service account.
     ///

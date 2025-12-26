@@ -53,6 +53,18 @@ service ProjectManagement {
   // - PERMISSION_DENIED: Insufficient permissions
   rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
 
+  // UndeleteProject restores a soft-deleted project.
+  //
+  // The project must be in the DELETED state and within the 30-day
+  // grace period. The project will be restored to ACTIVE state.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - FAILED_PRECONDITION: Project is not in DELETED state
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UndeleteProject(UndeleteProjectRequest) returns (UndeleteProjectResponse);
+
   // ListProjects lists all projects accessible to the service account.
   //
   // Results are paginated and can optionally include deleted projects.

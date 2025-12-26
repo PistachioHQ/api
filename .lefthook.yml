@@ -32,14 +32,18 @@ pre-commit:
           exit 1
         fi
 
-        if [[ ! -f ".git/allowed_signers" ]]; then
+        # Use git-common-dir to support both regular repos and worktrees
+        GIT_COMMON_DIR="$(git rev-parse --git-common-dir)"
+        ALLOWED_SIGNERS="$GIT_COMMON_DIR/allowed_signers"
+
+        if [[ ! -f "$ALLOWED_SIGNERS" ]]; then
           echo "Error: Allowed signers file missing"
           echo "Run: task setup"
           exit 1
         fi
-        
+
         CURRENT_EMAIL=$(git config user.email)
-        if ! grep -q "^$CURRENT_EMAIL " .git/allowed_signers; then
+        if ! grep -q "^$CURRENT_EMAIL " "$ALLOWED_SIGNERS"; then
           echo "Error: Git email has changed. Run: task setup"
           exit 1
         fi

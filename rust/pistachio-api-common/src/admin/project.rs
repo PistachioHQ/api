@@ -232,6 +232,55 @@ pub struct DeleteProjectResponse {
 }
 
 // =============================================================================
+// UndeleteProject
+// =============================================================================
+
+#[derive(Debug, thiserror::Error)]
+pub enum UndeleteProjectError {
+    #[error("Bad request: {0}")]
+    BadRequest(String),
+    #[error("Project not found")]
+    NotFound,
+    #[error("Project is not in DELETED state")]
+    FailedPrecondition(String),
+    #[error("Unauthenticated: {0}")]
+    Unauthenticated(String),
+    #[error("Permission denied: {0}")]
+    PermissionDenied(String),
+    #[error("Service error: {0}")]
+    ServiceError(String),
+    #[error("Service unavailable: {0}")]
+    ServiceUnavailable(String),
+    #[error("Client error: {0}")]
+    PistachioApiClientError(#[from] PistachioApiClientError),
+    #[error("Response validation error: {0}")]
+    ResponseValidationError(#[from] ValidationError),
+    #[error("Unexpected error: {0}")]
+    Unknown(String),
+}
+
+/// Request to restore a soft-deleted project.
+#[derive(Debug, Clone)]
+pub struct UndeleteProjectRequest {
+    /// The project ID to restore.
+    pub project_id: ProjectId,
+}
+
+impl UndeleteProjectRequest {
+    /// Creates a new request for the given project ID.
+    pub fn new(project_id: ProjectId) -> Self {
+        Self { project_id }
+    }
+}
+
+/// Response from restoring a project.
+#[derive(Debug, Clone)]
+pub struct UndeleteProjectResponse {
+    /// The restored project.
+    pub project: Project,
+}
+
+// =============================================================================
 // ListProjects
 // =============================================================================
 

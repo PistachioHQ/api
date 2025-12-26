@@ -3,8 +3,9 @@ use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetProjectError, GetProjectRequest,
     GetProjectResponse, ListProjectsError, ListProjectsRequest, ListProjectsResponse,
-    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UpdateProjectError,
-    UpdateProjectRequest, UpdateProjectResponse,
+    SearchProjectsError, SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError,
+    UndeleteProjectRequest, UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest,
+    UpdateProjectResponse,
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
@@ -21,6 +22,7 @@ use super::delete_project::handle_delete_project;
 use super::get_project::handle_get_project;
 use super::list_projects::handle_list_projects;
 use super::search_projects::handle_search_projects;
+use super::undelete_project::handle_undelete_project;
 use super::update_project::handle_update_project;
 
 /// Interceptor that adds admin credentials to requests.
@@ -234,6 +236,25 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted delete_project with unconnected client");
                 Err(DeleteProjectError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn undelete_project(
+        &mut self,
+        req: UndeleteProjectRequest,
+    ) -> Result<UndeleteProjectResponse, UndeleteProjectError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting undelete_project");
+                handle_undelete_project(client, req).await
+            }
+            None => {
+                warn!("Attempted undelete_project with unconnected client");
+                Err(UndeleteProjectError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }
