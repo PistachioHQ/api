@@ -13,10 +13,10 @@ use crate::generated_admin::{apis::ResponseContent, models};
 use reqwest;
 use serde::{Deserialize, Serialize, de::Error as _};
 
-/// struct for typed errors of method [`create_tenant`]
+/// struct for typed errors of method [`create_app`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum CreateTenantError {
+pub enum CreateAppError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -25,10 +25,10 @@ pub enum CreateTenantError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`delete_tenant`]
+/// struct for typed errors of method [`delete_app`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum DeleteTenantError {
+pub enum DeleteAppError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -36,10 +36,10 @@ pub enum DeleteTenantError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`get_tenant`]
+/// struct for typed errors of method [`get_app`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum GetTenantError {
+pub enum GetAppError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -47,10 +47,10 @@ pub enum GetTenantError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`list_tenants`]
+/// struct for typed errors of method [`get_app_config`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum ListTenantsError {
+pub enum GetAppConfigError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -58,10 +58,10 @@ pub enum ListTenantsError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`search_tenants`]
+/// struct for typed errors of method [`list_apps`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SearchTenantsError {
+pub enum ListAppsError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -69,10 +69,10 @@ pub enum SearchTenantsError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`search_tenants_post`]
+/// struct for typed errors of method [`search_apps`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SearchTenantsPostError {
+pub enum SearchAppsError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -80,10 +80,10 @@ pub enum SearchTenantsPostError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`update_tenant`]
+/// struct for typed errors of method [`search_apps_post`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum UpdateTenantError {
+pub enum SearchAppsPostError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
@@ -91,18 +91,41 @@ pub enum UpdateTenantError {
     UnknownValue(serde_json::Value),
 }
 
-/// Creates a new tenant within a project. Tenants provide multi-tenant isolation, allowing each tenant to have its own user pool and authentication configuration.
-pub async fn create_tenant(
+/// struct for typed errors of method [`undelete_app`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UndeleteAppError {
+    Status400(models::ListApps400Response),
+    Status401(models::ListApps400Response),
+    Status403(models::ListApps400Response),
+    Status404(models::ListApps400Response),
+    Status409(models::ListApps400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`update_app`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateAppError {
+    Status400(models::ListApps400Response),
+    Status401(models::ListApps400Response),
+    Status403(models::ListApps400Response),
+    Status404(models::ListApps400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// Registers a new app within a project. API keys are auto-generated for each app. Platform-specific configuration must match the specified platform.
+pub async fn create_app(
     configuration: &configuration::Configuration,
     project_id: &str,
-    create_tenant_request: models::CreateTenantRequest,
-) -> Result<models::CreateTenant200Response, Error<CreateTenantError>> {
+    create_app_request: models::CreateAppRequest,
+) -> Result<models::CreateApp200Response, Error<CreateAppError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_body_create_tenant_request = create_tenant_request;
+    let p_body_create_app_request = create_app_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants",
+        "{}/projects/{projectId}/apps",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -124,7 +147,7 @@ pub async fn create_tenant(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
-    req_builder = req_builder.json(&p_body_create_tenant_request);
+    req_builder = req_builder.json(&p_body_create_app_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -143,18 +166,18 @@ pub async fn create_tenant(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::CreateTenant200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::CreateApp200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateTenant200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateApp200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<CreateTenantError> = serde_json::from_str(&content).ok();
+        let entity: Option<CreateAppError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -163,21 +186,21 @@ pub async fn create_tenant(
     }
 }
 
-/// Permanently deletes a tenant. This operation is irreversible. All users and data associated with the tenant will be permanently deleted.
-pub async fn delete_tenant(
+/// Soft-deletes an app. The app enters DELETED state and will be permanently removed after 30 days. During this period, the app can be restored using the undelete operation.
+pub async fn delete_app(
     configuration: &configuration::Configuration,
     project_id: &str,
-    tenant_id: &str,
-) -> Result<serde_json::Value, Error<DeleteTenantError>> {
+    app_id: &str,
+) -> Result<serde_json::Value, Error<DeleteAppError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_tenant_id = tenant_id;
+    let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/projects/{projectId}/apps/{appId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
     );
     let mut req_builder = configuration
         .client
@@ -226,7 +249,7 @@ pub async fn delete_tenant(
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<DeleteTenantError> = serde_json::from_str(&content).ok();
+        let entity: Option<DeleteAppError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -235,21 +258,21 @@ pub async fn delete_tenant(
     }
 }
 
-/// Retrieves a tenant by its ID. Returns the tenant details including its authentication configuration.
-pub async fn get_tenant(
+/// Retrieves an app by its ID. Returns the app details including its platform configuration.
+pub async fn get_app(
     configuration: &configuration::Configuration,
     project_id: &str,
-    tenant_id: &str,
-) -> Result<models::GetTenant200Response, Error<GetTenantError>> {
+    app_id: &str,
+) -> Result<models::GetApp200Response, Error<GetAppError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_tenant_id = tenant_id;
+    let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/projects/{projectId}/apps/{appId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -285,18 +308,18 @@ pub async fn get_tenant(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::GetTenant200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::GetApp200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetTenant200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetApp200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<GetTenantError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetAppError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -305,22 +328,94 @@ pub async fn get_tenant(
     }
 }
 
-/// Lists all tenants within a project. Results are paginated with cursor-based pagination.
-pub async fn list_tenants(
+/// Retrieves the SDK configuration file for an app. Returns platform-specific configuration files: - iOS: GoogleService-Info.plist (XML plist format) - Android: google-services.json (JSON format) - macOS/Windows/Linux: pistachio-config.json (JSON format) - Web: JavaScript config object (JSON format)
+pub async fn get_app_config(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    app_id: &str,
+) -> Result<models::GetAppConfig200Response, Error<GetAppConfigError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_app_id = app_id;
+
+    let uri_str = format!(
+        "{}/projects/{projectId}/apps/{appId}/config",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetAppConfig200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetAppConfig200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<GetAppConfigError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Lists all apps within a project. Results are paginated with cursor-based pagination.
+pub async fn list_apps(
     configuration: &configuration::Configuration,
     project_id: &str,
     page_size: Option<i32>,
     cursor: Option<&str>,
     sort: Option<&str>,
-) -> Result<models::ListTenants200Response, Error<ListTenantsError>> {
+    show_deleted: Option<bool>,
+) -> Result<models::ListApps200Response, Error<ListAppsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_query_page_size = page_size;
     let p_query_cursor = cursor;
     let p_query_sort = sort;
+    let p_query_show_deleted = show_deleted;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants",
+        "{}/projects/{projectId}/apps",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -335,6 +430,9 @@ pub async fn list_tenants(
     if let Some(ref param_value) = p_query_sort {
         req_builder = req_builder.query(&[("sort", &param_value.to_string())]);
     }
+    if let Some(ref param_value) = p_query_show_deleted {
+        req_builder = req_builder.query(&[("showDeleted", &param_value.to_string())]);
+    }
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
@@ -367,18 +465,18 @@ pub async fn list_tenants(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::ListTenants200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::ListApps200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListTenants200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListApps200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<ListTenantsError> = serde_json::from_str(&content).ok();
+        let entity: Option<ListAppsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -387,15 +485,15 @@ pub async fn list_tenants(
     }
 }
 
-/// Searches for tenants within a project using full-text search.  Searchable fields: - tenant_id: The unique tenant identifier - display_name: Human-readable display name - allow_pdpka_signup: Whether PDPKA sign-up is allowed - disable_auth: Whether authentication is disabled - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_tenant\" - Search all fields - \"display_name:Production*\" - Tenants with display name starting with \"Production\" - \"allow_pdpka_signup:true\" - Tenants with PDPKA sign-up enabled  For complex queries that exceed URL length limits, use POST instead.
-pub async fn search_tenants(
+/// Searches for apps within a project using full-text search.  Searchable fields: - app_id: The unique app identifier - display_name: Human-readable display name - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB) - state: App state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_app\" - Search all fields - \"display_name:Production*\" - Apps with display name starting with \"Production\" - \"platform:IOS\" - iOS apps only - \"platform:IOS AND state:ACTIVE\" - Active iOS apps  For complex queries that exceed URL length limits, use POST instead.
+pub async fn search_apps(
     configuration: &configuration::Configuration,
     project_id: &str,
     query: Option<&str>,
     page_size: Option<i32>,
     cursor: Option<&str>,
     sort: Option<&str>,
-) -> Result<models::SearchTenants200Response, Error<SearchTenantsError>> {
+) -> Result<models::SearchApps200Response, Error<SearchAppsError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_query_query = query;
@@ -404,7 +502,7 @@ pub async fn search_tenants(
     let p_query_sort = sort;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants:search",
+        "{}/projects/{projectId}/apps:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -454,18 +552,18 @@ pub async fn search_tenants(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::SearchTenants200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::SearchApps200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchTenants200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchApps200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<SearchTenantsError> = serde_json::from_str(&content).ok();
+        let entity: Option<SearchAppsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -474,18 +572,18 @@ pub async fn search_tenants(
     }
 }
 
-/// Searches for tenants within a project using full-text search. Use this method for complex queries that exceed URL length limits.  Searchable fields: - tenant_id: The unique tenant identifier - display_name: Human-readable display name - allow_pdpka_signup: Whether PDPKA sign-up is allowed - disable_auth: Whether authentication is disabled - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_tenant\" - Search all fields - \"display_name:Production*\" - Tenants with display name starting with \"Production\" - \"allow_pdpka_signup:true\" - Tenants with PDPKA sign-up enabled
-pub async fn search_tenants_post(
+/// Searches for apps within a project using full-text search. Use this method for complex queries that exceed URL length limits.  Searchable fields: - app_id: The unique app identifier - display_name: Human-readable display name - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB) - state: App state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_app\" - Search all fields - \"display_name:Production*\" - Apps with display name starting with \"Production\" - \"platform:IOS\" - iOS apps only
+pub async fn search_apps_post(
     configuration: &configuration::Configuration,
     project_id: &str,
-    search_tenants_post_request: models::SearchTenantsPostRequest,
-) -> Result<models::SearchTenants200Response, Error<SearchTenantsPostError>> {
+    search_apps_post_request: models::SearchAppsPostRequest,
+) -> Result<models::SearchApps200Response, Error<SearchAppsPostError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_body_search_tenants_post_request = search_tenants_post_request;
+    let p_body_search_apps_post_request = search_apps_post_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants:search",
+        "{}/projects/{projectId}/apps:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -507,7 +605,7 @@ pub async fn search_tenants_post(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
-    req_builder = req_builder.json(&p_body_search_tenants_post_request);
+    req_builder = req_builder.json(&p_body_search_apps_post_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -526,18 +624,18 @@ pub async fn search_tenants_post(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::SearchTenants200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::SearchApps200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchTenants200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchApps200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<SearchTenantsPostError> = serde_json::from_str(&content).ok();
+        let entity: Option<SearchAppsPostError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -546,23 +644,95 @@ pub async fn search_tenants_post(
     }
 }
 
-/// Updates an existing tenant. Updates the tenant's display name, authentication settings, or MFA configuration.
-pub async fn update_tenant(
+/// Restores a soft-deleted app. Only works for apps in DELETED state within the 30-day grace period. The app will be restored to ACTIVE state.
+pub async fn undelete_app(
     configuration: &configuration::Configuration,
     project_id: &str,
-    tenant_id: &str,
-    update_tenant_request: models::UpdateTenantRequest,
-) -> Result<models::UpdateTenant200Response, Error<UpdateTenantError>> {
+    app_id: &str,
+) -> Result<models::UndeleteApp200Response, Error<UndeleteAppError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_tenant_id = tenant_id;
-    let p_body_update_tenant_request = update_tenant_request;
+    let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/projects/{projectId}/apps/{appId}:undelete",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::UndeleteApp200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UndeleteApp200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<UndeleteAppError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Updates an existing app. Updates the app's display name or platform-specific configuration.
+pub async fn update_app(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    app_id: &str,
+    update_app_request: models::UpdateAppRequest,
+) -> Result<models::UpdateApp200Response, Error<UpdateAppError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_app_id = app_id;
+    let p_body_update_app_request = update_app_request;
+
+    let uri_str = format!(
+        "{}/projects/{projectId}/apps/{appId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
     );
     let mut req_builder = configuration
         .client
@@ -582,7 +752,7 @@ pub async fn update_tenant(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
-    req_builder = req_builder.json(&p_body_update_tenant_request);
+    req_builder = req_builder.json(&p_body_update_app_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -601,18 +771,18 @@ pub async fn update_tenant(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::UpdateTenant200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::UpdateApp200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateTenant200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateApp200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<UpdateTenantError> = serde_json::from_str(&content).ok();
+        let entity: Option<UpdateAppError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

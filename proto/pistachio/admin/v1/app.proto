@@ -1,0 +1,279 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/app.proto";
+import "pistachio/types/v1/pagination.proto";
+import "pistachio/types/v1/search.proto";
+
+// =============================================================================
+// CreateApp
+// =============================================================================
+
+// CreateAppRequest registers a new app with the project.
+message CreateAppRequest {
+  // The project to create the app in.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Human-readable display name for the app. Required.
+  string display_name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+
+  // Target platform. Required.
+  pistachio.types.v1.Platform platform = 3 [(buf.validate.field).enum.defined_only = true];
+
+  // Platform-specific configuration. Must match platform field.
+  oneof platform_config {
+    // iOS/iPadOS app configuration.
+    pistachio.types.v1.IosAppConfig ios = 10;
+    // Android app configuration.
+    pistachio.types.v1.AndroidAppConfig android = 11;
+    // macOS app configuration.
+    pistachio.types.v1.MacosAppConfig macos = 12;
+    // Windows app configuration.
+    pistachio.types.v1.WindowsAppConfig windows = 13;
+    // Linux app configuration.
+    pistachio.types.v1.LinuxAppConfig linux = 14;
+    // Web app configuration.
+    pistachio.types.v1.WebAppConfig web = 15;
+  }
+}
+
+// CreateAppResponse contains the newly created app.
+message CreateAppResponse {
+  // The newly created app with API key.
+  pistachio.types.v1.App app = 1;
+}
+
+// =============================================================================
+// GetApp
+// =============================================================================
+
+// GetAppRequest retrieves an app by ID.
+message GetAppRequest {
+  // The project containing the app.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+  }];
+
+  // The app ID to retrieve.
+  string app_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+}
+
+// GetAppResponse contains the requested app.
+message GetAppResponse {
+  // The requested app.
+  pistachio.types.v1.App app = 1;
+}
+
+// =============================================================================
+// ListApps
+// =============================================================================
+
+// ListAppsRequest lists apps in a project.
+message ListAppsRequest {
+  // The project to list apps from.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: app_id, display_name, platform, created_at, updated_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 2;
+
+  // If true, include deleted apps in the results.
+  bool show_deleted = 3;
+}
+
+// ListAppsResponse contains a list of apps.
+message ListAppsResponse {
+  // The list of apps.
+  repeated pistachio.types.v1.App apps = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// =============================================================================
+// SearchApps
+// =============================================================================
+
+// SearchAppsRequest searches for apps within a project using full-text search.
+message SearchAppsRequest {
+  // The project ID to search apps in.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Search parameters including query, sorting, and pagination.
+  //
+  // Searchable fields for apps:
+  // - app_id: The unique app identifier
+  // - display_name: Human-readable display name
+  // - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB)
+  // - state: App state (ACTIVE, DELETED)
+  // - created_at: Timestamp when created
+  // - updated_at: Timestamp when last updated
+  //
+  // Sortable fields: app_id, display_name, platform, created_at, updated_at
+  //
+  // Example queries:
+  // - "my_app" - Search all fields
+  // - "display_name:Production*" - Apps with display name starting with "Production"
+  // - "platform:IOS" - iOS apps only
+  // - "created_at:[2024-01-01 TO *]" - Apps created in 2024
+  pistachio.types.v1.SearchParams params = 2;
+}
+
+// SearchAppsResponse contains search results for apps.
+message SearchAppsResponse {
+  // The list of apps matching the search query.
+  repeated pistachio.types.v1.App apps = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// =============================================================================
+// UpdateApp
+// =============================================================================
+
+// UpdateAppRequest updates an app's configuration.
+message UpdateAppRequest {
+  // The project containing the app.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+  }];
+
+  // The app ID to update.
+  string app_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+
+  // New display name. Empty = no change.
+  optional string display_name = 3 [(buf.validate.field).string.max_len = 64];
+
+  // Updated platform-specific configuration.
+  // Only set fields will be updated.
+  oneof platform_config {
+    // iOS/iPadOS app configuration.
+    pistachio.types.v1.IosAppConfig ios = 10;
+    // Android app configuration.
+    pistachio.types.v1.AndroidAppConfig android = 11;
+    // macOS app configuration.
+    pistachio.types.v1.MacosAppConfig macos = 12;
+    // Windows app configuration.
+    pistachio.types.v1.WindowsAppConfig windows = 13;
+    // Linux app configuration.
+    pistachio.types.v1.LinuxAppConfig linux = 14;
+    // Web app configuration.
+    pistachio.types.v1.WebAppConfig web = 15;
+  }
+}
+
+// UpdateAppResponse contains the updated app.
+message UpdateAppResponse {
+  // The updated app.
+  pistachio.types.v1.App app = 1;
+}
+
+// =============================================================================
+// DeleteApp
+// =============================================================================
+
+// DeleteAppRequest soft-deletes an app.
+message DeleteAppRequest {
+  // The project containing the app.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+  }];
+
+  // The app ID to remove.
+  string app_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+}
+
+// DeleteAppResponse is empty on success.
+message DeleteAppResponse {
+  // Empty response. The app has been soft-deleted.
+}
+
+// =============================================================================
+// UndeleteApp
+// =============================================================================
+
+// UndeleteAppRequest restores a soft-deleted app.
+message UndeleteAppRequest {
+  // The project containing the app.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+  }];
+
+  // The app ID to restore.
+  string app_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+}
+
+// UndeleteAppResponse contains the restored app.
+message UndeleteAppResponse {
+  // The restored app.
+  pistachio.types.v1.App app = 1;
+}
+
+// =============================================================================
+// GetAppConfig
+// =============================================================================
+
+// GetAppConfigRequest gets SDK configuration for an app.
+message GetAppConfigRequest {
+  // The project containing the app.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+  }];
+
+  // The app ID to get config for.
+  string app_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+}
+
+// GetAppConfigResponse contains SDK configuration.
+message GetAppConfigResponse {
+  // Contents of the platform-specific config file.
+  // - iOS: GoogleService-Info.plist
+  // - Android: google-services.json
+  // - macOS/Windows/Linux: pistachio-config.json
+  // - Web: JavaScript config object
+  string config_file_contents = 1;
+
+  // Recommended filename for the config file.
+  string config_filename = 2;
+}

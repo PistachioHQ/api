@@ -19,6 +19,8 @@ tags:
     description: Project management operations
   - name: Tenants
     description: Tenant management operations within projects
+  - name: Apps
+    description: App management operations within projects
 
 paths:
   /projects:
@@ -37,6 +39,16 @@ paths:
     $ref: './paths/admin/tenants.yml#/tenantById'
   /projects/{projectId}/tenants:search:
     $ref: './paths/admin/tenants.yml#/tenantsSearch'
+  /projects/{projectId}/apps:
+    $ref: './paths/admin/apps.yml#/apps'
+  /projects/{projectId}/apps:search:
+    $ref: './paths/admin/apps.yml#/appsSearch'
+  /projects/{projectId}/apps/{appId}:
+    $ref: './paths/admin/apps.yml#/appById'
+  /projects/{projectId}/apps/{appId}:undelete:
+    $ref: './paths/admin/apps.yml#/appUndelete'
+  /projects/{projectId}/apps/{appId}/config:
+    $ref: './paths/admin/apps.yml#/appConfig'
 
 components:
   securitySchemes:

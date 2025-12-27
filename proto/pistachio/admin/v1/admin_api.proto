@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package pistachio.admin.v1;
 
+import "pistachio/admin/v1/app.proto";
 import "pistachio/admin/v1/project.proto";
 import "pistachio/admin/v1/tenant.proto";
 
@@ -171,4 +172,94 @@ service PistachioAdmin {
   // - NOT_FOUND: Project does not exist
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchTenants(SearchTenantsRequest) returns (SearchTenantsResponse);
+
+  // =============================================================================
+  // App Operations
+  // =============================================================================
+
+  // CreateApp registers a new app in the project.
+  //
+  // API keys are auto-generated for each app.
+  // Platform-specific configuration is provided via the oneof platform_config field.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or platform config
+  // - NOT_FOUND: Project does not exist
+  // - ALREADY_EXISTS: App with same identifier exists in project
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateApp(CreateAppRequest) returns (CreateAppResponse);
+
+  // GetApp retrieves an app by ID.
+  //
+  // Errors:
+  // - NOT_FOUND: App does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetApp(GetAppRequest) returns (GetAppResponse);
+
+  // ListApps lists apps in a project.
+  //
+  // Results are paginated and sorted by creation time by default.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, page_size, or page_token
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListApps(ListAppsRequest) returns (ListAppsResponse);
+
+  // SearchApps searches for apps within a project using full-text search.
+  //
+  // Provides advanced search capabilities including:
+  // - Full-text search across app fields
+  // - Field-specific queries (e.g., display_name:Production*, platform:IOS)
+  // - Boolean operators (AND, OR, NOT)
+  // - Range queries for dates
+  // - Flexible sorting and cursor-based pagination
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or search query
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc SearchApps(SearchAppsRequest) returns (SearchAppsResponse);
+
+  // UpdateApp updates an app's mutable fields.
+  //
+  // Platform-specific fields can be updated via the oneof platform_config field.
+  //
+  // Errors:
+  // - NOT_FOUND: App does not exist
+  // - INVALID_ARGUMENT: Invalid update parameters
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateApp(UpdateAppRequest) returns (UpdateAppResponse);
+
+  // DeleteApp schedules an app for deletion (soft delete).
+  //
+  // The app enters DELETED state and will be permanently removed after 30 days.
+  //
+  // Errors:
+  // - NOT_FOUND: App does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteApp(DeleteAppRequest) returns (DeleteAppResponse);
+
+  // UndeleteApp restores a soft-deleted app.
+  //
+  // Only works for apps in DELETED state.
+  //
+  // Errors:
+  // - NOT_FOUND: App does not exist
+  // - FAILED_PRECONDITION: App is not in DELETED state
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UndeleteApp(UndeleteAppRequest) returns (UndeleteAppResponse);
+
+  // GetAppConfig retrieves the SDK configuration for an app.
+  //
+  // Returns platform-specific configuration files:
+  // - iOS: GoogleService-Info.plist
+  // - Android: google-services.json
+  // - macOS/Windows/Linux: pistachio-config.json
+  // - Web: JavaScript config object
+  //
+  // Errors:
+  // - NOT_FOUND: App does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetAppConfig(GetAppConfigRequest) returns (GetAppConfigResponse);
 }

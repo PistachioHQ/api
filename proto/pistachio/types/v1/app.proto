@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+// AppState indicates the lifecycle state of an app.
+enum AppState {
+  // Unspecified state.
+  APP_STATE_UNSPECIFIED = 0;
+
+  // The app is active and operational.
+  APP_STATE_ACTIVE = 1;
+
+  // The app has been soft-deleted.
+  // After 30 days in this state, it will be permanently deleted.
+  // Can be restored using the Undelete operation.
+  APP_STATE_DELETED = 2;
+}
+
+// Platform identifies the target platform for an app.
+enum Platform {
+  // Unspecified platform.
+  PLATFORM_UNSPECIFIED = 0;
+
+  // iOS/iPadOS (Apple mobile).
+  PLATFORM_IOS = 1;
+
+  // Android (Google mobile).
+  PLATFORM_ANDROID = 2;
+
+  // macOS (Apple desktop).
+  PLATFORM_MACOS = 3;
+
+  // Windows (Microsoft desktop).
+  PLATFORM_WINDOWS = 4;
+
+  // Linux (desktop).
+  PLATFORM_LINUX = 5;
+
+  // Web (browser/PWA).
+  PLATFORM_WEB = 6;
+}
+
+// =============================================================================
+// Platform-Specific Configuration
+// =============================================================================
+
+// IosAppConfig contains iOS-specific app configuration.
+message IosAppConfig {
+  // iOS bundle identifier (e.g., "com.example.myapp").
+  string bundle_id = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 255
+    pattern: "^[a-zA-Z][a-zA-Z0-9-]*(\\.[a-zA-Z][a-zA-Z0-9-]*)+$"
+  }];
+
+  // App Store ID (numeric). Optional.
+  string app_store_id = 2;
+
+  // Apple Team ID for code signing verification.
+  string team_id = 3 [(buf.validate.field).string.max_len = 10];
+}
+
+// AndroidAppConfig contains Android-specific app configuration.
+message AndroidAppConfig {
+  // Android package name (e.g., "com.example.myapp").
+  string package_name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 255
+    pattern: "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$"
+  }];
+
+  // SHA-1 certificate fingerprints for app verification.
+  repeated string sha1_hashes = 2;
+
+  // SHA-256 certificate fingerprints for app verification.
+  repeated string sha256_hashes = 3;
+}
+
+// MacosAppConfig contains macOS-specific app configuration.
+message MacosAppConfig {
+  // macOS bundle identifier (e.g., "com.example.myapp").
+  string bundle_id = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 255
+    pattern: "^[a-zA-Z][a-zA-Z0-9-]*(\\.[a-zA-Z][a-zA-Z0-9-]*)+$"
+  }];
+
+  // Apple Team ID for code signing verification.
+  string team_id = 2;
+
+  // Mac App Store ID. Optional.
+  string mac_app_store_id = 3;
+}
+
+// WindowsAppConfig contains Windows-specific app configuration.
+message WindowsAppConfig {
+  // MSIX package family name (e.g., "Publisher.AppName_hash").
+  string package_family_name = 1;
+
+  // Publisher ID from Windows Store.
+  string publisher_id = 2;
+
+  // Authenticode certificate SHA-256 thumbprints.
+  repeated string cert_thumbprints = 3;
+
+  // Microsoft Store product ID. Optional.
+  string microsoft_store_id = 4;
+}
+
+// LinuxAppConfig contains Linux-specific app configuration.
+message LinuxAppConfig {
+  // Application name for identification.
+  string app_name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+
+  // Flatpak app ID (e.g., "com.example.App"). Optional.
+  string flatpak_id = 2;
+
+  // Snap package name. Optional.
+  string snap_name = 3;
+}
+
+// WebAppConfig contains web-specific app configuration.
+message WebAppConfig {
+  // Authorized domains for OAuth redirects and CORS.
+  repeated string authorized_domains = 1;
+
+  // Auth domain for this app (e.g., "myapp.pistachiohq.com").
+  string auth_domain = 2;
+}
+
+// =============================================================================
+// Unified App Message
+// =============================================================================
+
+// App represents a registered application for any platform.
+//
+// Apps are platform-specific client applications within a project. Each app
+// targets a specific platform (iOS, Android, macOS, Windows, Linux, Web) and
+// shares the project's user pool.
+message App {
+  // Resource name in the format "projects/{project_id}/apps/{app_id}".
+  string name = 1;
+
+  // Globally unique app identifier assigned by the system.
+  string app_id = 2;
+
+  // Internal app identifier.
+  // Derived from project_id and app_id, assigned by the system.
+  // 16 bytes encoded as 32 hex characters ending in '03'.
+  string pistachio_id = 3;
+
+  // Human-readable display name for the app.
+  string display_name = 4;
+
+  // The project this app belongs to.
+  string project_id = 5;
+
+  // Target platform for this app.
+  Platform platform = 6;
+
+  // Auto-generated API key for this app.
+  // Only returned on app creation.
+  string api_key = 7;
+
+  // Current state of the app.
+  AppState state = 8;
+
+  // Platform-specific configuration.
+  oneof platform_config {
+    // iOS/iPadOS app configuration.
+    IosAppConfig ios = 10;
+    // Android app configuration.
+    AndroidAppConfig android = 11;
+    // macOS app configuration.
+    MacosAppConfig macos = 12;
+    // Windows app configuration.
+    WindowsAppConfig windows = 13;
+    // Linux app configuration.
+    LinuxAppConfig linux = 14;
+    // Web app configuration.
+    WebAppConfig web = 15;
+  }
+
+  // Timestamp when the app was created.
+  google.protobuf.Timestamp created_at = 16;
+
+  // Timestamp when the app was last updated.
+  google.protobuf.Timestamp updated_at = 17;
+}

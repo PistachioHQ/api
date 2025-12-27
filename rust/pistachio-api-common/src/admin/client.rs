@@ -1,6 +1,13 @@
 use crate::credentials::AdminCredentials;
 use crate::error::PistachioApiClientError;
 
+use super::app::{
+    CreateAppError, CreateAppRequest, CreateAppResponse, DeleteAppError, DeleteAppRequest,
+    DeleteAppResponse, GetAppConfigError, GetAppConfigRequest, GetAppConfigResponse, GetAppError,
+    GetAppRequest, GetAppResponse, ListAppsError, ListAppsRequest, ListAppsResponse,
+    SearchAppsError, SearchAppsRequest, SearchAppsResponse, UndeleteAppError, UndeleteAppRequest,
+    UndeleteAppResponse, UpdateAppError, UpdateAppRequest, UpdateAppResponse,
+};
 use super::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
@@ -163,4 +170,74 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: SearchTenantsRequest,
     ) -> Result<SearchTenantsResponse, SearchTenantsError>;
+
+    // =========================================================================
+    // App Operations
+    // =========================================================================
+
+    /// Registers a new app in the project.
+    ///
+    /// API keys are auto-generated for each app.
+    /// Platform-specific configuration is provided via the platform_config field.
+    async fn create_app(
+        &mut self,
+        req: CreateAppRequest,
+    ) -> Result<CreateAppResponse, CreateAppError>;
+
+    /// Retrieves an app by its ID.
+    ///
+    /// Returns the app details including its platform configuration.
+    async fn get_app(&mut self, req: GetAppRequest) -> Result<GetAppResponse, GetAppError>;
+
+    /// Updates an existing app.
+    ///
+    /// Updates the app's display name or platform-specific configuration.
+    async fn update_app(
+        &mut self,
+        req: UpdateAppRequest,
+    ) -> Result<UpdateAppResponse, UpdateAppError>;
+
+    /// Soft-deletes an app.
+    ///
+    /// The app enters DELETED state and will be permanently removed after 30 days.
+    /// During this period, the app can be restored using undelete_app.
+    async fn delete_app(
+        &mut self,
+        req: DeleteAppRequest,
+    ) -> Result<DeleteAppResponse, DeleteAppError>;
+
+    /// Restores a soft-deleted app.
+    ///
+    /// Only works for apps in DELETED state within the 30-day grace period.
+    /// The app will be restored to ACTIVE state.
+    async fn undelete_app(
+        &mut self,
+        req: UndeleteAppRequest,
+    ) -> Result<UndeleteAppResponse, UndeleteAppError>;
+
+    /// Lists all apps within a project.
+    ///
+    /// Results are paginated and can optionally include deleted apps.
+    async fn list_apps(&mut self, req: ListAppsRequest) -> Result<ListAppsResponse, ListAppsError>;
+
+    /// Searches for apps within a project using full-text search.
+    ///
+    /// Provides advanced search capabilities including field-specific queries,
+    /// boolean operators, and flexible sorting.
+    async fn search_apps(
+        &mut self,
+        req: SearchAppsRequest,
+    ) -> Result<SearchAppsResponse, SearchAppsError>;
+
+    /// Retrieves the SDK configuration for an app.
+    ///
+    /// Returns platform-specific configuration files:
+    /// - iOS: GoogleService-Info.plist
+    /// - Android: google-services.json
+    /// - macOS/Windows/Linux: pistachio-config.json
+    /// - Web: JavaScript config object
+    async fn get_app_config(
+        &mut self,
+        req: GetAppConfigRequest,
+    ) -> Result<GetAppConfigResponse, GetAppConfigError>;
 }

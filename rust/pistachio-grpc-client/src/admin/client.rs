@@ -1,3 +1,10 @@
+use pistachio_api_common::admin::app::{
+    CreateAppError, CreateAppRequest, CreateAppResponse, DeleteAppError, DeleteAppRequest,
+    DeleteAppResponse, GetAppConfigError, GetAppConfigRequest, GetAppConfigResponse, GetAppError,
+    GetAppRequest, GetAppResponse, ListAppsError, ListAppsRequest, ListAppsResponse,
+    SearchAppsError, SearchAppsRequest, SearchAppsResponse, UndeleteAppError, UndeleteAppRequest,
+    UndeleteAppResponse, UpdateAppError, UpdateAppRequest, UpdateAppResponse,
+};
 use pistachio_api_common::admin::client::PistachioAdminClient;
 use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
@@ -24,18 +31,26 @@ use tracing::{debug, error, info, instrument, warn};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient as GrpcPistachioAdminClient;
 
+use super::create_app::handle_create_app;
 use super::create_project::handle_create_project;
 use super::create_tenant::handle_create_tenant;
+use super::delete_app::handle_delete_app;
 use super::delete_project::handle_delete_project;
 use super::delete_tenant::handle_delete_tenant;
 use super::get_admin_sdk_config::handle_get_admin_sdk_config;
+use super::get_app::handle_get_app;
+use super::get_app_config::handle_get_app_config;
 use super::get_project::handle_get_project;
 use super::get_tenant::handle_get_tenant;
+use super::list_apps::handle_list_apps;
 use super::list_projects::handle_list_projects;
 use super::list_tenants::handle_list_tenants;
+use super::search_apps::handle_search_apps;
 use super::search_projects::handle_search_projects;
 use super::search_tenants::handle_search_tenants;
+use super::undelete_app::handle_undelete_app;
 use super::undelete_project::handle_undelete_project;
+use super::update_app::handle_update_app;
 use super::update_project::handle_update_project;
 use super::update_tenant::handle_update_tenant;
 
@@ -444,6 +459,156 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted search_tenants with unconnected client");
                 Err(SearchTenantsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // App Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_app(
+        &mut self,
+        req: CreateAppRequest,
+    ) -> Result<CreateAppResponse, CreateAppError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_app");
+                handle_create_app(client, req).await
+            }
+            None => {
+                warn!("Attempted create_app with unconnected client");
+                Err(CreateAppError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_app(&mut self, req: GetAppRequest) -> Result<GetAppResponse, GetAppError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_app");
+                handle_get_app(client, req).await
+            }
+            None => {
+                warn!("Attempted get_app with unconnected client");
+                Err(GetAppError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_app(
+        &mut self,
+        req: UpdateAppRequest,
+    ) -> Result<UpdateAppResponse, UpdateAppError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_app");
+                handle_update_app(client, req).await
+            }
+            None => {
+                warn!("Attempted update_app with unconnected client");
+                Err(UpdateAppError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_app(
+        &mut self,
+        req: DeleteAppRequest,
+    ) -> Result<DeleteAppResponse, DeleteAppError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_app");
+                handle_delete_app(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_app with unconnected client");
+                Err(DeleteAppError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn undelete_app(
+        &mut self,
+        req: UndeleteAppRequest,
+    ) -> Result<UndeleteAppResponse, UndeleteAppError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting undelete_app");
+                handle_undelete_app(client, req).await
+            }
+            None => {
+                warn!("Attempted undelete_app with unconnected client");
+                Err(UndeleteAppError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_apps(&mut self, req: ListAppsRequest) -> Result<ListAppsResponse, ListAppsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_apps");
+                handle_list_apps(client, req).await
+            }
+            None => {
+                warn!("Attempted list_apps with unconnected client");
+                Err(ListAppsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn search_apps(
+        &mut self,
+        req: SearchAppsRequest,
+    ) -> Result<SearchAppsResponse, SearchAppsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting search_apps");
+                handle_search_apps(client, req).await
+            }
+            None => {
+                warn!("Attempted search_apps with unconnected client");
+                Err(SearchAppsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_app_config(
+        &mut self,
+        req: GetAppConfigRequest,
+    ) -> Result<GetAppConfigResponse, GetAppConfigError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_app_config");
+                handle_get_app_config(client, req).await
+            }
+            None => {
+                warn!("Attempted get_app_config with unconnected client");
+                Err(GetAppConfigError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }

@@ -18,4 +18,6 @@ pub enum ValidationError {
     InvalidProjectId(#[from] libgn::pistachio_id::ProjectIdError),
     #[error("Invalid tenant ID: {0}")]
     InvalidTenantId(#[from] libgn::pistachio_id::TenantIdError),
+    #[error("Invalid app ID: {0}")]
+    InvalidAppId(#[from] libgn::pistachio_id::AppIdError),
 }

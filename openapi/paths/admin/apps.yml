@@ -1,0 +1,581 @@
+# App Management Endpoints
+
+apps:
+  get:
+    operationId: listApps
+    summary: List apps
+    description: |
+      Lists all apps within a project.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the apps
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+      - name: showDeleted
+        in: query
+        description: Whether to include deleted apps in the results
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: List of apps
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/ListAppsResponse'
+      '400':
+        description: Invalid pagination parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  post:
+    operationId: createApp
+    summary: Create a new app
+    description: |
+      Registers a new app within a project.
+      API keys are auto-generated for each app.
+      Platform-specific configuration must match the specified platform.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that will own the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: App creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/app.yml#/CreateAppRequest'
+    responses:
+      '200':
+        description: App created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/CreateAppResponse'
+      '400':
+        description: Invalid platform config or displayName
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '409':
+        description: App with same identifier already exists in this project
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+appById:
+  get:
+    operationId: getApp
+    summary: Get an app
+    description: |
+      Retrieves an app by its ID.
+      Returns the app details including its platform configuration.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID to retrieve
+        required: true
+        schema:
+          type: string
+          maxLength: 64
+    responses:
+      '200':
+        description: App details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/GetAppResponse'
+      '400':
+        description: Invalid projectId or appId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  patch:
+    operationId: updateApp
+    summary: Update an app
+    description: |
+      Updates an existing app.
+      Updates the app's display name or platform-specific configuration.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID to update
+        required: true
+        schema:
+          type: string
+          maxLength: 64
+    requestBody:
+      description: App update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/app.yml#/UpdateAppRequest'
+    responses:
+      '200':
+        description: App updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/UpdateAppResponse'
+      '400':
+        description: Invalid projectId, appId, or field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  delete:
+    operationId: deleteApp
+    summary: Delete an app
+    description: |
+      Soft-deletes an app.
+      The app enters DELETED state and will be permanently removed after 30 days.
+      During this period, the app can be restored using the undelete operation.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID to delete
+        required: true
+        schema:
+          type: string
+          maxLength: 64
+    responses:
+      '200':
+        description: App deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/DeleteAppResponse'
+      '400':
+        description: Invalid projectId or appId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+appsSearch:
+  get:
+    operationId: searchApps
+    summary: Search apps
+    description: |
+      Searches for apps within a project using full-text search.
+
+      Searchable fields:
+      - app_id: The unique app identifier
+      - display_name: Human-readable display name
+      - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB)
+      - state: App state (ACTIVE, DELETED)
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my_app" - Search all fields
+      - "display_name:Production*" - Apps with display name starting with "Production"
+      - "platform:IOS" - iOS apps only
+      - "platform:IOS AND state:ACTIVE" - Active iOS apps
+
+      For complex queries that exceed URL length limits, use POST instead.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search apps in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/search.yml#/Query'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/SearchAppsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  post:
+    operationId: searchAppsPost
+    summary: Search apps
+    description: |
+      Searches for apps within a project using full-text search.
+      Use this method for complex queries that exceed URL length limits.
+
+      Searchable fields:
+      - app_id: The unique app identifier
+      - display_name: Human-readable display name
+      - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB)
+      - state: App state (ACTIVE, DELETED)
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my_app" - Search all fields
+      - "display_name:Production*" - Apps with display name starting with "Production"
+      - "platform:IOS" - iOS apps only
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search apps in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Search parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/app.yml#/SearchAppsRequest'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/SearchAppsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+appUndelete:
+  post:
+    operationId: undeleteApp
+    summary: Restore a deleted app
+    description: |
+      Restores a soft-deleted app.
+      Only works for apps in DELETED state within the 30-day grace period.
+      The app will be restored to ACTIVE state.
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID to restore
+        required: true
+        schema:
+          type: string
+          maxLength: 64
+    responses:
+      '200':
+        description: App restored
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/UndeleteAppResponse'
+      '400':
+        description: Invalid projectId or appId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '409':
+        description: App is not in DELETED state
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+appConfig:
+  get:
+    operationId: getAppConfig
+    summary: Get SDK configuration
+    description: |
+      Retrieves the SDK configuration file for an app.
+      Returns platform-specific configuration files:
+      - iOS: GoogleService-Info.plist (XML plist format)
+      - Android: google-services.json (JSON format)
+      - macOS/Windows/Linux: pistachio-config.json (JSON format)
+      - Web: JavaScript config object (JSON format)
+    tags:
+      - Apps
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID to get config for
+        required: true
+        schema:
+          type: string
+          maxLength: 64
+    responses:
+      '200':
+        description: SDK configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/app.yml#/GetAppConfigResponse'
+      '400':
+        description: Invalid projectId or appId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'

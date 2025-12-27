@@ -1,0 +1,399 @@
+# App Schemas for Admin API
+
+# Enums
+
+AppState:
+  type: string
+  description: Lifecycle state of an app.
+  enum:
+    - ACTIVE
+    - DELETED
+  example: ACTIVE
+
+Platform:
+  type: string
+  description: Target platform for an app.
+  enum:
+    - IOS
+    - ANDROID
+    - MACOS
+    - WINDOWS
+    - LINUX
+    - WEB
+  example: IOS
+
+# Platform-specific configurations
+
+IosAppConfig:
+  type: object
+  description: iOS-specific app configuration.
+  required:
+    - bundleId
+  properties:
+    bundleId:
+      type: string
+      description: iOS bundle identifier (e.g., "com.example.myapp").
+      pattern: '^[a-zA-Z][a-zA-Z0-9-]*(\.[a-zA-Z][a-zA-Z0-9-]*)+$'
+      minLength: 1
+      maxLength: 255
+      example: com.example.myapp
+    appStoreId:
+      type: string
+      description: App Store ID (numeric). Optional.
+      example: "123456789"
+    teamId:
+      type: string
+      description: Apple Team ID for code signing verification.
+      maxLength: 10
+      example: ABCD1234EF
+
+AndroidAppConfig:
+  type: object
+  description: Android-specific app configuration.
+  required:
+    - packageName
+  properties:
+    packageName:
+      type: string
+      description: Android package name (e.g., "com.example.myapp").
+      pattern: '^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$'
+      minLength: 1
+      maxLength: 255
+      example: com.example.myapp
+    sha1Hashes:
+      type: array
+      description: SHA-1 certificate fingerprints for app verification.
+      items:
+        type: string
+      example:
+        - "AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90:AB:CD:EF:12"
+    sha256Hashes:
+      type: array
+      description: SHA-256 certificate fingerprints for app verification.
+      items:
+        type: string
+      example:
+        - "AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90"
+
+MacosAppConfig:
+  type: object
+  description: macOS-specific app configuration.
+  required:
+    - bundleId
+  properties:
+    bundleId:
+      type: string
+      description: macOS bundle identifier (e.g., "com.example.myapp").
+      pattern: '^[a-zA-Z][a-zA-Z0-9-]*(\.[a-zA-Z][a-zA-Z0-9-]*)+$'
+      minLength: 1
+      maxLength: 255
+      example: com.example.myapp
+    teamId:
+      type: string
+      description: Apple Team ID for code signing verification.
+      example: ABCD1234EF
+    macAppStoreId:
+      type: string
+      description: Mac App Store ID. Optional.
+      example: "123456789"
+
+WindowsAppConfig:
+  type: object
+  description: Windows-specific app configuration.
+  properties:
+    packageFamilyName:
+      type: string
+      description: MSIX package family name (e.g., "Publisher.AppName_hash").
+      example: Contoso.MyApp_8wekyb3d8bbwe
+    publisherId:
+      type: string
+      description: Publisher ID from Windows Store.
+      example: CN=Contoso
+    certThumbprints:
+      type: array
+      description: Authenticode certificate SHA-256 thumbprints.
+      items:
+        type: string
+    microsoftStoreId:
+      type: string
+      description: Microsoft Store product ID. Optional.
+      example: "9NBLGGH4R32N"
+
+LinuxAppConfig:
+  type: object
+  description: Linux-specific app configuration.
+  required:
+    - appName
+  properties:
+    appName:
+      type: string
+      description: Application name for identification.
+      minLength: 1
+      maxLength: 64
+      example: my-app
+    flatpakId:
+      type: string
+      description: Flatpak app ID (e.g., "com.example.App"). Optional.
+      example: com.example.App
+    snapName:
+      type: string
+      description: Snap package name. Optional.
+      example: my-app
+
+WebAppConfig:
+  type: object
+  description: Web-specific app configuration.
+  properties:
+    authorizedDomains:
+      type: array
+      description: Authorized domains for OAuth redirects and CORS.
+      items:
+        type: string
+      example:
+        - "https://myapp.example.com"
+        - "http://localhost:3000"
+    authDomain:
+      type: string
+      description: Auth domain for this app (e.g., "myapp.pistachiohq.com").
+      example: myapp.pistachiohq.com
+
+# Main App schema
+
+App:
+  type: object
+  description: |
+    A registered application for any platform.
+    Apps are platform-specific client applications within a project.
+    Each app targets a specific platform and shares the project's user pool.
+  properties:
+    name:
+      type: string
+      description: Resource name in the format "projects/{project_id}/apps/{app_id}".
+      example: projects/my-project/apps/my-ios-app
+    appId:
+      type: string
+      description: Globally unique app identifier assigned by the system.
+      maxLength: 64
+      example: my-ios-app
+    pistachioId:
+      type: string
+      description: |
+        Internal app identifier.
+        16 bytes encoded as 32 hex characters ending in '03'.
+      example: a1b2c3d4e5f6789012345678901234503
+    displayName:
+      type: string
+      description: Human-readable display name for the app.
+      maxLength: 64
+      example: My iOS App
+    projectId:
+      type: string
+      description: The project this app belongs to.
+      example: my-project
+    platform:
+      $ref: '#/Platform'
+    apiKey:
+      type: string
+      description: |
+        Auto-generated API key for this app.
+        Only returned on app creation.
+      example: AIzaSyB1234567890abcdefg
+    state:
+      $ref: '#/AppState'
+    ios:
+      $ref: '#/IosAppConfig'
+    android:
+      $ref: '#/AndroidAppConfig'
+    macos:
+      $ref: '#/MacosAppConfig'
+    windows:
+      $ref: '#/WindowsAppConfig'
+    linux:
+      $ref: '#/LinuxAppConfig'
+    web:
+      $ref: '#/WebAppConfig'
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the app was created.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the app was last updated.
+      example: "2024-01-15T10:30:00Z"
+
+# Request/Response Messages
+
+CreateAppRequest:
+  type: object
+  description: Request body for creating a new app.
+  required:
+    - displayName
+    - platform
+  properties:
+    displayName:
+      type: string
+      description: Human-readable display name for the app. Required.
+      minLength: 1
+      maxLength: 64
+      example: My iOS App
+    platform:
+      $ref: '#/Platform'
+    ios:
+      $ref: '#/IosAppConfig'
+    android:
+      $ref: '#/AndroidAppConfig'
+    macos:
+      $ref: '#/MacosAppConfig'
+    windows:
+      $ref: '#/WindowsAppConfig'
+    linux:
+      $ref: '#/LinuxAppConfig'
+    web:
+      $ref: '#/WebAppConfig'
+  example:
+    displayName: My iOS App
+    platform: IOS
+    ios:
+      bundleId: com.example.myapp
+      teamId: ABCD1234EF
+
+CreateAppResponse:
+  type: object
+  description: Response containing the newly created app with API key.
+  properties:
+    app:
+      $ref: '#/App'
+
+# GetApp
+
+GetAppResponse:
+  type: object
+  description: Response containing the requested app.
+  properties:
+    app:
+      $ref: '#/App'
+
+# ListApps
+
+ListAppsResponse:
+  type: object
+  description: Response containing a page of apps.
+  properties:
+    apps:
+      type: array
+      description: The list of apps.
+      items:
+        $ref: '#/App'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
+
+# SearchApps
+
+SearchAppsRequest:
+  type: object
+  description: |
+    Request body for searching apps within a project.
+  properties:
+    params:
+      $ref: '../common.yml#/SearchParams'
+  example:
+    params:
+      query: "platform:IOS AND display_name:Production*"
+      pagination:
+        pageSize: 20
+        cursor: "*"
+        sort:
+          - field: created_at
+            direction: DESC
+
+SearchAppsResponse:
+  type: object
+  description: Response containing search results for apps.
+  properties:
+    apps:
+      type: array
+      description: The list of apps matching the search query.
+      items:
+        $ref: '#/App'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
+
+# UpdateApp
+
+UpdateAppRequest:
+  type: object
+  description: Request body for updating an existing app.
+  properties:
+    displayName:
+      type: string
+      description: |
+        New display name for the app.
+        If not provided (omitted from JSON), the display name will not be changed.
+      minLength: 1
+      maxLength: 64
+      example: My Updated iOS App
+    ios:
+      $ref: '#/IosAppConfig'
+    android:
+      $ref: '#/AndroidAppConfig'
+    macos:
+      $ref: '#/MacosAppConfig'
+    windows:
+      $ref: '#/WindowsAppConfig'
+    linux:
+      $ref: '#/LinuxAppConfig'
+    web:
+      $ref: '#/WebAppConfig'
+  example:
+    displayName: My Updated iOS App
+
+UpdateAppResponse:
+  type: object
+  description: Response containing the updated app.
+  properties:
+    app:
+      $ref: '#/App'
+
+# DeleteApp
+
+DeleteAppResponse:
+  type: object
+  description: Response confirming the app was soft-deleted.
+  properties: {}
+
+# UndeleteApp
+
+UndeleteAppResponse:
+  type: object
+  description: Response containing the restored app.
+  properties:
+    app:
+      $ref: '#/App'
+
+# GetAppConfig
+
+GetAppConfigResponse:
+  type: object
+  description: |
+    Response containing SDK configuration for the app.
+    The format depends on the platform:
+    - iOS: GoogleService-Info.plist (XML plist format)
+    - Android: google-services.json (JSON format)
+    - macOS/Windows/Linux: pistachio-config.json (JSON format)
+    - Web: JavaScript config object (JSON format)
+  properties:
+    configFileContents:
+      type: string
+      description: Contents of the platform-specific config file.
+      example: |
+        {
+          "apiKey": "AIzaSyB1234567890abcdefg",
+          "projectId": "my-project",
+          "appId": "my-ios-app"
+        }
+    configFilename:
+      type: string
+      description: Recommended filename for the config file.
+      example: GoogleService-Info.plist

@@ -11,21 +11,21 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// SearchTenants200Response : Response containing search results for tenants.
+/// SearchApps200Response : Response containing search results for apps.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct SearchTenants200Response {
-    /// The list of tenants matching the search query.
-    #[serde(rename = "tenants", skip_serializing_if = "Option::is_none")]
-    pub tenants: Option<Vec<models::ListTenants200ResponseTenantsInner>>,
+pub struct SearchApps200Response {
+    /// The list of apps matching the search query.
+    #[serde(rename = "apps", skip_serializing_if = "Option::is_none")]
+    pub apps: Option<Vec<models::ListApps200ResponseAppsInner>>,
     #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
     pub pagination: Option<Box<models::ListApps200ResponsePagination>>,
 }
 
-impl SearchTenants200Response {
-    /// Response containing search results for tenants.
-    pub fn new() -> SearchTenants200Response {
-        SearchTenants200Response {
-            tenants: None,
+impl SearchApps200Response {
+    /// Response containing search results for apps.
+    pub fn new() -> SearchApps200Response {
+        SearchApps200Response {
+            apps: None,
             pagination: None,
         }
     }
