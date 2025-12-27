@@ -10,18 +10,31 @@ use pistachio_api_common::admin::project::{
     SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
     UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
+use pistachio_api_common::admin::tenant::{
+    CreateTenantError, CreateTenantRequest, CreateTenantResponse, DeleteTenantError,
+    DeleteTenantRequest, DeleteTenantResponse, GetTenantError, GetTenantRequest, GetTenantResponse,
+    ListTenantsError, ListTenantsRequest, ListTenantsResponse, SearchTenantsError,
+    SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
+    UpdateTenantResponse,
+};
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
 use tracing::{debug, instrument};
 
 use super::create_project::handle_create_project;
+use super::create_tenant::handle_create_tenant;
 use super::delete_project::handle_delete_project;
+use super::delete_tenant::handle_delete_tenant;
 use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_project::handle_get_project;
+use super::get_tenant::handle_get_tenant;
 use super::list_projects::handle_list_projects;
+use super::list_tenants::handle_list_tenants;
 use super::search_projects::handle_search_projects;
+use super::search_tenants::handle_search_tenants;
 use super::undelete_project::handle_undelete_project;
 use super::update_project::handle_update_project;
+use super::update_tenant::handle_update_tenant;
 
 /// OpenAPI/REST client for the Pistachio Admin API.
 #[derive(Debug, Clone)]
@@ -139,6 +152,60 @@ macro_rules! impl_admin_client {
             ) -> Result<GetAdminSdkConfigResponse, GetAdminSdkConfigError> {
                 debug!("Attempting get_admin_sdk_config via OpenAPI");
                 handle_get_admin_sdk_config(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn create_tenant(
+                &mut self,
+                req: CreateTenantRequest,
+            ) -> Result<CreateTenantResponse, CreateTenantError> {
+                debug!("Attempting create_tenant via OpenAPI");
+                handle_create_tenant(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn get_tenant(
+                &mut self,
+                req: GetTenantRequest,
+            ) -> Result<GetTenantResponse, GetTenantError> {
+                debug!("Attempting get_tenant via OpenAPI");
+                handle_get_tenant(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn update_tenant(
+                &mut self,
+                req: UpdateTenantRequest,
+            ) -> Result<UpdateTenantResponse, UpdateTenantError> {
+                debug!("Attempting update_tenant via OpenAPI");
+                handle_update_tenant(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn delete_tenant(
+                &mut self,
+                req: DeleteTenantRequest,
+            ) -> Result<DeleteTenantResponse, DeleteTenantError> {
+                debug!("Attempting delete_tenant via OpenAPI");
+                handle_delete_tenant(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn list_tenants(
+                &mut self,
+                req: ListTenantsRequest,
+            ) -> Result<ListTenantsResponse, ListTenantsError> {
+                debug!("Attempting list_tenants via OpenAPI");
+                handle_list_tenants(&self.config, req).await
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn search_tenants(
+                &mut self,
+                req: SearchTenantsRequest,
+            ) -> Result<SearchTenantsResponse, SearchTenantsError> {
+                debug!("Attempting search_tenants via OpenAPI");
+                handle_search_tenants(&self.config, req).await
             }
         }
     };

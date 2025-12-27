@@ -15,6 +15,8 @@ servers:
 tags:
     - name: Projects
       description: Project management operations
+    - name: Tenants
+      description: Tenant management operations within projects
 paths:
     /projects:
         get:
@@ -396,6 +398,473 @@ paths:
                                     - message
                 '409':
                     description: Project ID already exists
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+    /projects/{projectId}/tenants:
+        get:
+            operationId: listTenants
+            summary: List tenants
+            description: |
+                Lists all tenants within a project.
+                Results are paginated with cursor-based pagination.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID that owns the tenants
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                - name: pageSize
+                  in: query
+                  description: Number of results to return per page. Defaults to 20, maximum is 100.
+                  required: false
+                  schema:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    default: 20
+                    example: 20
+                - name: cursor
+                  in: query
+                  description: |
+                    Cursor for pagination. Use "*" for the first page.
+                    Use the `nextCursor` from the previous response for subsequent pages.
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 512
+                    example: "*"
+                - name: sort
+                  in: query
+                  description: |
+                    Sort specification. Format: "field:direction" (e.g., "created_at:DESC").
+                    Multiple fields can be comma-separated (e.g., "created_at:DESC,display_name:ASC").
+
+                    Valid directions: ASC, DESC (case-insensitive).
+                    Valid fields are endpoint-specific (see endpoint documentation).
+                    Default sort is endpoint-specific (typically created_at:DESC).
+                  required: false
+                  schema:
+                    type: string
+                    pattern: '^[a-z_]+:(ASC|DESC|asc|desc)(,[a-z_]+:(ASC|DESC|asc|desc))*$'
+                    example: "created_at:DESC"
+            responses:
+                '200':
+                    description: List of tenants
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing a page of tenants.
+                                properties:
+                                    tenants:
+                                        type: array
+                                        description: The list of tenants.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Multi-tenant isolation within a project.
+                                                Tenants provide isolated user pools for B2B SaaS applications
+                                                where each customer needs their own authentication configuration.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                    example: projects/my-project/tenants/MyTenant
+                                                tenantId:
+                                                    type: string
+                                                    description: |
+                                                        Unique tenant identifier within the project. Immutable after creation.
+                                                        Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                    pattern: '^[a-zA-Z0-9_]+$'
+                                                    maxLength: 128
+                                                    example: MyTenant
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal tenant identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '02'.
+                                                    example: a1b2c3d4e5f6789012345678901234502
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 256 characters.
+                                                    maxLength: 256
+                                                    example: My Tenant
+                                                allowPdpkaSignup:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                        When true, users can register using passphrase-derived keypairs.
+                                                    example: true
+                                                disableAuth:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether all authentication is disabled for this tenant.
+                                                        When true, users cannot sign in to this tenant.
+                                                    example: false
+                                                mfaConfig:
+                                                    type: array
+                                                    description: |
+                                                        Enabled MFA providers for this tenant.
+                                                        Valid values: "phone", "totp"
+                                                    items:
+                                                        type: string
+                                                        enum:
+                                                            - phone
+                                                            - totp
+                                                    example:
+                                                        - totp
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid pagination parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        post:
+            operationId: createTenant
+            summary: Create a new tenant
+            description: |
+                Creates a new tenant within a project.
+                Tenants provide multi-tenant isolation, allowing each tenant
+                to have its own user pool and authentication configuration.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID that will own the tenant
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            requestBody:
+                description: Tenant creation parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: Request body for creating a new tenant.
+                            required:
+                                - displayName
+                            properties:
+                                tenantId:
+                                    type: string
+                                    description: |
+                                        Desired tenant ID. If not provided, one will be generated.
+                                        Must be 1-128 characters, alphanumeric with underscores, case-sensitive.
+                                    pattern: '^$|^[a-zA-Z0-9_]+$'
+                                    maxLength: 128
+                                    example: MyTenant
+                                displayName:
+                                    type: string
+                                    description: Human-readable display name. Required. Max 256 characters.
+                                    minLength: 1
+                                    maxLength: 256
+                                    example: My Tenant
+                                allowPdpkaSignup:
+                                    type: boolean
+                                    description: |
+                                        Whether PDPKA sign-up is allowed.
+                                        Defaults to true if not specified.
+                                    example: true
+                                disableAuth:
+                                    type: boolean
+                                    description: |
+                                        Whether authentication is disabled.
+                                        Defaults to false if not specified.
+                                    example: false
+                                mfaConfig:
+                                    type: array
+                                    description: |
+                                        Enabled MFA providers for this tenant.
+                                        Valid values: "phone", "totp"
+                                    items:
+                                        type: string
+                                        enum:
+                                            - phone
+                                            - totp
+                                    example:
+                                        - totp
+                            example:
+                                tenantId: MyTenant
+                                displayName: My Tenant
+                                allowPdpkaSignup: true
+                                mfaConfig:
+                                    - totp
+            responses:
+                '200':
+                    description: Tenant created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the newly created tenant.
+                                properties:
+                                    tenant:
+                                        type: object
+                                        description: |
+                                            Multi-tenant isolation within a project.
+                                            Tenants provide isolated user pools for B2B SaaS applications
+                                            where each customer needs their own authentication configuration.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                example: projects/my-project/tenants/MyTenant
+                                            tenantId:
+                                                type: string
+                                                description: |
+                                                    Unique tenant identifier within the project. Immutable after creation.
+                                                    Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                pattern: '^[a-zA-Z0-9_]+$'
+                                                maxLength: 128
+                                                example: MyTenant
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal tenant identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '02'.
+                                                example: a1b2c3d4e5f6789012345678901234502
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 256 characters.
+                                                maxLength: 256
+                                                example: My Tenant
+                                            allowPdpkaSignup:
+                                                type: boolean
+                                                description: |
+                                                    Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                    When true, users can register using passphrase-derived keypairs.
+                                                example: true
+                                            disableAuth:
+                                                type: boolean
+                                                description: |
+                                                    Whether all authentication is disabled for this tenant.
+                                                    When true, users cannot sign in to this tenant.
+                                                example: false
+                                            mfaConfig:
+                                                type: array
+                                                description: |
+                                                    Enabled MFA providers for this tenant.
+                                                    Valid values: "phone", "totp"
+                                                items:
+                                                    type: string
+                                                    enum:
+                                                        - phone
+                                                        - totp
+                                                example:
+                                                    - totp
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was last updated.
+                                                example: "2024-01-15T10:30:00Z"
+                '400':
+                    description: Invalid tenantId format or displayName
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '409':
+                    description: Tenant ID already exists in this project
                     content:
                         application/json:
                             schema:
@@ -866,6 +1335,517 @@ paths:
                                 required:
                                     - code
                                     - message
+    /projects/{projectId}/tenants/{tenantId}:
+        get:
+            operationId: getTenant
+            summary: Get a tenant
+            description: |
+                Retrieves a tenant by its ID.
+                Returns the tenant details including its authentication configuration.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID that owns the tenant
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                - name: tenantId
+                  in: path
+                  description: The tenant ID to retrieve
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-zA-Z0-9_]+$'
+                    maxLength: 128
+            responses:
+                '200':
+                    description: Tenant details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the requested tenant.
+                                properties:
+                                    tenant:
+                                        type: object
+                                        description: |
+                                            Multi-tenant isolation within a project.
+                                            Tenants provide isolated user pools for B2B SaaS applications
+                                            where each customer needs their own authentication configuration.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                example: projects/my-project/tenants/MyTenant
+                                            tenantId:
+                                                type: string
+                                                description: |
+                                                    Unique tenant identifier within the project. Immutable after creation.
+                                                    Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                pattern: '^[a-zA-Z0-9_]+$'
+                                                maxLength: 128
+                                                example: MyTenant
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal tenant identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '02'.
+                                                example: a1b2c3d4e5f6789012345678901234502
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 256 characters.
+                                                maxLength: 256
+                                                example: My Tenant
+                                            allowPdpkaSignup:
+                                                type: boolean
+                                                description: |
+                                                    Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                    When true, users can register using passphrase-derived keypairs.
+                                                example: true
+                                            disableAuth:
+                                                type: boolean
+                                                description: |
+                                                    Whether all authentication is disabled for this tenant.
+                                                    When true, users cannot sign in to this tenant.
+                                                example: false
+                                            mfaConfig:
+                                                type: array
+                                                description: |
+                                                    Enabled MFA providers for this tenant.
+                                                    Valid values: "phone", "totp"
+                                                items:
+                                                    type: string
+                                                    enum:
+                                                        - phone
+                                                        - totp
+                                                example:
+                                                    - totp
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was last updated.
+                                                example: "2024-01-15T10:30:00Z"
+                '400':
+                    description: Invalid projectId or tenantId format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project or tenant not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        patch:
+            operationId: updateTenant
+            summary: Update a tenant
+            description: |
+                Updates an existing tenant.
+                Updates the tenant's display name, authentication settings, or MFA configuration.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID that owns the tenant
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                - name: tenantId
+                  in: path
+                  description: The tenant ID to update
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-zA-Z0-9_]+$'
+                    maxLength: 128
+            requestBody:
+                description: Tenant update parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: Request body for updating an existing tenant.
+                            properties:
+                                displayName:
+                                    type: string
+                                    description: |
+                                        New display name for the tenant.
+                                        If not provided (omitted from JSON), the display name will not be changed.
+                                    minLength: 1
+                                    maxLength: 256
+                                    example: My Updated Tenant
+                                allowPdpkaSignup:
+                                    type: boolean
+                                    description: |
+                                        Whether PDPKA sign-up is allowed.
+                                        If not provided, the value will not be changed.
+                                    example: true
+                                disableAuth:
+                                    type: boolean
+                                    description: |
+                                        Whether authentication is disabled.
+                                        If not provided, the value will not be changed.
+                                    example: false
+                                mfaConfig:
+                                    type: array
+                                    description: |
+                                        Enabled MFA providers for this tenant.
+                                        If provided, replaces the existing configuration.
+                                        To clear all MFA providers, send an empty array.
+                                        Valid values: "phone", "totp"
+                                    items:
+                                        type: string
+                                        enum:
+                                            - phone
+                                            - totp
+                                    example:
+                                        - totp
+                                        - phone
+                            example:
+                                displayName: My Updated Tenant
+            responses:
+                '200':
+                    description: Tenant updated
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing the updated tenant.
+                                properties:
+                                    tenant:
+                                        type: object
+                                        description: |
+                                            Multi-tenant isolation within a project.
+                                            Tenants provide isolated user pools for B2B SaaS applications
+                                            where each customer needs their own authentication configuration.
+                                        properties:
+                                            name:
+                                                type: string
+                                                description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                example: projects/my-project/tenants/MyTenant
+                                            tenantId:
+                                                type: string
+                                                description: |
+                                                    Unique tenant identifier within the project. Immutable after creation.
+                                                    Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                pattern: '^[a-zA-Z0-9_]+$'
+                                                maxLength: 128
+                                                example: MyTenant
+                                            pistachioId:
+                                                type: string
+                                                description: |
+                                                    Internal tenant identifier.
+                                                    16 bytes encoded as 32 hex characters ending in '02'.
+                                                example: a1b2c3d4e5f6789012345678901234502
+                                            displayName:
+                                                type: string
+                                                description: Human-readable display name. Max 256 characters.
+                                                maxLength: 256
+                                                example: My Tenant
+                                            allowPdpkaSignup:
+                                                type: boolean
+                                                description: |
+                                                    Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                    When true, users can register using passphrase-derived keypairs.
+                                                example: true
+                                            disableAuth:
+                                                type: boolean
+                                                description: |
+                                                    Whether all authentication is disabled for this tenant.
+                                                    When true, users cannot sign in to this tenant.
+                                                example: false
+                                            mfaConfig:
+                                                type: array
+                                                description: |
+                                                    Enabled MFA providers for this tenant.
+                                                    Valid values: "phone", "totp"
+                                                items:
+                                                    type: string
+                                                    enum:
+                                                        - phone
+                                                        - totp
+                                                example:
+                                                    - totp
+                                            createdAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was created.
+                                                example: "2024-01-15T10:30:00Z"
+                                            updatedAt:
+                                                type: string
+                                                format: date-time
+                                                description: Timestamp when the tenant was last updated.
+                                                example: "2024-01-15T10:30:00Z"
+                '400':
+                    description: Invalid projectId, tenantId, or field format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project or tenant not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        delete:
+            operationId: deleteTenant
+            summary: Delete a tenant
+            description: |
+                Permanently deletes a tenant.
+                This operation is irreversible. All users and data associated with
+                the tenant will be permanently deleted.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID that owns the tenant
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                - name: tenantId
+                  in: path
+                  description: The tenant ID to delete
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-zA-Z0-9_]+$'
+                    maxLength: 128
+            responses:
+                '200':
+                    description: Tenant deleted
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response confirming the tenant was permanently deleted.
+                '400':
+                    description: Invalid projectId or tenantId format
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project or tenant not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
     /projects/{projectId}:undelete:
         post:
             operationId: undeleteProject
@@ -1034,6 +2014,563 @@ paths:
                                     - message
                 '409':
                     description: Project is not in DELETED state
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+    /projects/{projectId}/tenants:search:
+        get:
+            operationId: searchTenants
+            summary: Search tenants
+            description: |
+                Searches for tenants within a project using full-text search.
+
+                Searchable fields:
+                - tenant_id: The unique tenant identifier
+                - display_name: Human-readable display name
+                - allow_pdpka_signup: Whether PDPKA sign-up is allowed
+                - disable_auth: Whether authentication is disabled
+                - created_at: Timestamp when created
+                - updated_at: Timestamp when last updated
+
+                Example queries:
+                - "my_tenant" - Search all fields
+                - "display_name:Production*" - Tenants with display name starting with "Production"
+                - "allow_pdpka_signup:true" - Tenants with PDPKA sign-up enabled
+
+                For complex queries that exceed URL length limits, use POST instead.
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID to search tenants in
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+                - name: query
+                  in: query
+                  description: |
+                    Search query string.
+
+                    Supports:
+                    - Terms: `alice` (searches all fields)
+                    - Phrases: `"Alice Smith"` (exact phrase match)
+                    - Field queries: `username:alice` (specific field)
+                    - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+                    - Boolean operators: `AND`, `OR`, `NOT`
+                    - Grouping: `(alice OR bob) AND email:*@corp.com`
+                    - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+                    - Boosting: `username:alice^2.0`
+
+                    Empty string or "*" returns all documents.
+                    Searchable fields are endpoint-specific (see endpoint documentation).
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 1000
+                    default: "*"
+                    example: "display_name:Production*"
+                - name: pageSize
+                  in: query
+                  description: Number of results to return per page. Defaults to 20, maximum is 100.
+                  required: false
+                  schema:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                    default: 20
+                    example: 20
+                - name: cursor
+                  in: query
+                  description: |
+                    Cursor for pagination. Use "*" for the first page.
+                    Use the `nextCursor` from the previous response for subsequent pages.
+                  required: false
+                  schema:
+                    type: string
+                    maxLength: 512
+                    example: "*"
+                - name: sort
+                  in: query
+                  description: |
+                    Sort specification. Format: "field:direction" (e.g., "created_at:DESC").
+                    Multiple fields can be comma-separated (e.g., "created_at:DESC,display_name:ASC").
+
+                    Valid directions: ASC, DESC (case-insensitive).
+                    Valid fields are endpoint-specific (see endpoint documentation).
+                    Default sort is endpoint-specific (typically created_at:DESC).
+                  required: false
+                  schema:
+                    type: string
+                    pattern: '^[a-z_]+:(ASC|DESC|asc|desc)(,[a-z_]+:(ASC|DESC|asc|desc))*$'
+                    example: "created_at:DESC"
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing search results for tenants.
+                                properties:
+                                    tenants:
+                                        type: array
+                                        description: The list of tenants matching the search query.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Multi-tenant isolation within a project.
+                                                Tenants provide isolated user pools for B2B SaaS applications
+                                                where each customer needs their own authentication configuration.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                    example: projects/my-project/tenants/MyTenant
+                                                tenantId:
+                                                    type: string
+                                                    description: |
+                                                        Unique tenant identifier within the project. Immutable after creation.
+                                                        Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                    pattern: '^[a-zA-Z0-9_]+$'
+                                                    maxLength: 128
+                                                    example: MyTenant
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal tenant identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '02'.
+                                                    example: a1b2c3d4e5f6789012345678901234502
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 256 characters.
+                                                    maxLength: 256
+                                                    example: My Tenant
+                                                allowPdpkaSignup:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                        When true, users can register using passphrase-derived keypairs.
+                                                    example: true
+                                                disableAuth:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether all authentication is disabled for this tenant.
+                                                        When true, users cannot sign in to this tenant.
+                                                    example: false
+                                                mfaConfig:
+                                                    type: array
+                                                    description: |
+                                                        Enabled MFA providers for this tenant.
+                                                        Valid values: "phone", "totp"
+                                                    items:
+                                                        type: string
+                                                        enum:
+                                                            - phone
+                                                            - totp
+                                                    example:
+                                                        - totp
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid search query or parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+        post:
+            operationId: searchTenantsPost
+            summary: Search tenants
+            description: |
+                Searches for tenants within a project using full-text search.
+                Use this method for complex queries that exceed URL length limits.
+
+                Searchable fields:
+                - tenant_id: The unique tenant identifier
+                - display_name: Human-readable display name
+                - allow_pdpka_signup: Whether PDPKA sign-up is allowed
+                - disable_auth: Whether authentication is disabled
+                - created_at: Timestamp when created
+                - updated_at: Timestamp when last updated
+
+                Example queries:
+                - "my_tenant" - Search all fields
+                - "display_name:Production*" - Tenants with display name starting with "Production"
+                - "allow_pdpka_signup:true" - Tenants with PDPKA sign-up enabled
+            tags:
+                - Tenants
+            security:
+                - ApiKeyAuth: []
+                  ServiceAccountAuth: []
+            parameters:
+                - name: projectId
+                  in: path
+                  description: The project ID to search tenants in
+                  required: true
+                  schema:
+                    type: string
+                    pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+            requestBody:
+                description: Search parameters
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: |
+                                Request body for searching tenants within a project.
+                            properties:
+                                params:
+                                    type: object
+                                    description: |
+                                        Common search parameters for search endpoints.
+                                        Extends PaginationParams with a query field for full-text search.
+                                    properties:
+                                        query:
+                                            type: string
+                                            description: |
+                                                Query string for searching.
+
+                                                Supports:
+                                                - Terms: `alice` (searches all fields with OR)
+                                                - Phrases: `"Alice Smith"` (exact phrase match)
+                                                - Field queries: `username:alice` (specific field)
+                                                - Wildcards: `ali*` (prefix), `*@example.com` (suffix)
+                                                - Boolean operators: `AND`, `OR`, `NOT`
+                                                - Grouping: `(alice OR bob) AND email:*@corp.com`
+                                                - Ranges: `created_at:[2024-01-01 TO 2024-12-31]` (inclusive)
+                                                - Boosting: `username:alice^2.0`
+
+                                                Empty string or "*" returns all documents (list semantics).
+                                            maxLength: 1000
+                                            example: "display_name:Production* AND state:ACTIVE"
+                                        pagination:
+                                            type: object
+                                            description: |
+                                                Common pagination parameters for list endpoints.
+                                                Can be embedded in list request messages or composed into SearchParams.
+                                            properties:
+                                                pageSize:
+                                                    type: integer
+                                                    description: Number of results to return per page. Defaults to 20, maximum is 100.
+                                                    minimum: 0
+                                                    maximum: 100
+                                                    default: 20
+                                                    example: 20
+                                                cursor:
+                                                    type: string
+                                                    description: |
+                                                        Cursor for pagination.
+                                                        Use "*" for the first page of results.
+                                                        Use the `nextCursor` from the previous response for subsequent pages.
+                                                        When cursor is provided (and not "*"), the sort parameter is ignored.
+                                                    maxLength: 512
+                                                    example: "*"
+                                                sort:
+                                                    type: array
+                                                    description: |
+                                                        Sort specification as an ordered list of fields.
+                                                        Each endpoint defines its own default sort and valid fields.
+                                                        Ignored when cursor is provided (except for "*").
+                                                    maxItems: 5
+                                                    items:
+                                                        type: object
+                                                        description: Specifies a field and direction for sorting.
+                                                        properties:
+                                                            field:
+                                                                type: string
+                                                                description: The field name to sort by. Valid fields are endpoint-specific.
+                                                                minLength: 1
+                                                                maxLength: 64
+                                                                example: created_at
+                                                            direction:
+                                                                type: string
+                                                                description: Sort direction for ordering results.
+                                                                enum:
+                                                                    - ASC
+                                                                    - DESC
+                                                                example: DESC
+                                                        required:
+                                                            - field
+                                                    example:
+                                                        - field: created_at
+                                                          direction: DESC
+                            example:
+                                params:
+                                    query: "display_name:Production*"
+                                    pagination:
+                                        pageSize: 20
+                                        cursor: "*"
+                                        sort:
+                                            - field: created_at
+                                              direction: DESC
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Response containing search results for tenants.
+                                properties:
+                                    tenants:
+                                        type: array
+                                        description: The list of tenants matching the search query.
+                                        items:
+                                            type: object
+                                            description: |
+                                                Multi-tenant isolation within a project.
+                                                Tenants provide isolated user pools for B2B SaaS applications
+                                                where each customer needs their own authentication configuration.
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+                                                    example: projects/my-project/tenants/MyTenant
+                                                tenantId:
+                                                    type: string
+                                                    description: |
+                                                        Unique tenant identifier within the project. Immutable after creation.
+                                                        Case-sensitive, 1-128 characters, alphanumeric with underscores.
+                                                    pattern: '^[a-zA-Z0-9_]+$'
+                                                    maxLength: 128
+                                                    example: MyTenant
+                                                pistachioId:
+                                                    type: string
+                                                    description: |
+                                                        Internal tenant identifier.
+                                                        16 bytes encoded as 32 hex characters ending in '02'.
+                                                    example: a1b2c3d4e5f6789012345678901234502
+                                                displayName:
+                                                    type: string
+                                                    description: Human-readable display name. Max 256 characters.
+                                                    maxLength: 256
+                                                    example: My Tenant
+                                                allowPdpkaSignup:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+                                                        When true, users can register using passphrase-derived keypairs.
+                                                    example: true
+                                                disableAuth:
+                                                    type: boolean
+                                                    description: |
+                                                        Whether all authentication is disabled for this tenant.
+                                                        When true, users cannot sign in to this tenant.
+                                                    example: false
+                                                mfaConfig:
+                                                    type: array
+                                                    description: |
+                                                        Enabled MFA providers for this tenant.
+                                                        Valid values: "phone", "totp"
+                                                    items:
+                                                        type: string
+                                                        enum:
+                                                            - phone
+                                                            - totp
+                                                    example:
+                                                        - totp
+                                                createdAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was created.
+                                                    example: "2024-01-15T10:30:00Z"
+                                                updatedAt:
+                                                    type: string
+                                                    format: date-time
+                                                    description: Timestamp when the tenant was last updated.
+                                                    example: "2024-01-15T10:30:00Z"
+                                    pagination:
+                                        type: object
+                                        description: Pagination metadata for list and search responses.
+                                        properties:
+                                            nextCursor:
+                                                type: string
+                                                description: |
+                                                    Cursor for fetching the next page of results.
+                                                    Pass this value as the `cursor` parameter in the next request.
+                                                    When `nextCursor` equals the input `cursor`, there are no more results.
+                                                example: eyJwYWdlIjogMn0
+                                            totalCount:
+                                                type: integer
+                                                format: int64
+                                                description: |
+                                                    Total number of items matching the request.
+                                                    May be omitted for performance reasons on large result sets.
+                                                example: 42
+                '400':
+                    description: Invalid search query or parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '401':
+                    description: Invalid or missing credentials
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '403':
+                    description: Permission denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Standard error response
+                                properties:
+                                    code:
+                                        type: string
+                                        description: Machine-readable error code
+                                        example: INVALID_ARGUMENT
+                                    message:
+                                        type: string
+                                        description: Human-readable error message
+                                        example: The provided value is invalid
+                                required:
+                                    - code
+                                    - message
+                '404':
+                    description: Project not found
                     content:
                         application/json:
                             schema:

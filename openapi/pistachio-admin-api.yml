@@ -17,6 +17,8 @@ servers:
 tags:
   - name: Projects
     description: Project management operations
+  - name: Tenants
+    description: Tenant management operations within projects
 
 paths:
   /projects:
@@ -29,6 +31,12 @@ paths:
     $ref: './paths/admin/projects.yml#/projectAdminSdkConfig'
   /projects:search:
     $ref: './paths/admin/projects.yml#/projectsSearch'
+  /projects/{projectId}/tenants:
+    $ref: './paths/admin/tenants.yml#/tenants'
+  /projects/{projectId}/tenants/{tenantId}:
+    $ref: './paths/admin/tenants.yml#/tenantById'
+  /projects/{projectId}/tenants:search:
+    $ref: './paths/admin/tenants.yml#/tenantsSearch'
 
 components:
   securitySchemes:

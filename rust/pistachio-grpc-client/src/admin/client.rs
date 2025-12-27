@@ -7,6 +7,13 @@ use pistachio_api_common::admin::project::{
     SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
     UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
+use pistachio_api_common::admin::tenant::{
+    CreateTenantError, CreateTenantRequest, CreateTenantResponse, DeleteTenantError,
+    DeleteTenantRequest, DeleteTenantResponse, GetTenantError, GetTenantRequest, GetTenantResponse,
+    ListTenantsError, ListTenantsRequest, ListTenantsResponse, SearchTenantsError,
+    SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
+    UpdateTenantResponse,
+};
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
 use tonic::service::Interceptor;
@@ -15,16 +22,22 @@ use tonic::transport::Channel;
 use tonic::{Request, Status};
 use tracing::{debug, error, info, instrument, warn};
 
-use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManagementClient;
+use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient as GrpcPistachioAdminClient;
 
 use super::create_project::handle_create_project;
+use super::create_tenant::handle_create_tenant;
 use super::delete_project::handle_delete_project;
+use super::delete_tenant::handle_delete_tenant;
 use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_project::handle_get_project;
+use super::get_tenant::handle_get_tenant;
 use super::list_projects::handle_list_projects;
+use super::list_tenants::handle_list_tenants;
 use super::search_projects::handle_search_projects;
+use super::search_tenants::handle_search_tenants;
 use super::undelete_project::handle_undelete_project;
 use super::update_project::handle_update_project;
+use super::update_tenant::handle_update_tenant;
 
 /// Interceptor that adds admin credentials to requests.
 #[derive(Debug, Clone)]
@@ -52,7 +65,7 @@ impl Interceptor for AdminAuthInterceptor {
 }
 
 type AuthenticatedClient =
-    ProjectManagementClient<InterceptedService<Channel, AdminAuthInterceptor>>;
+    GrpcPistachioAdminClient<InterceptedService<Channel, AdminAuthInterceptor>>;
 
 /// gRPC client for the Pistachio Admin API.
 #[derive(Debug, Clone)]
@@ -84,7 +97,7 @@ impl AdminClient {
             api_key: credentials.api_key().to_string(),
             service_account_token: credentials.service_account_token().to_string(),
         };
-        let client = ProjectManagementClient::with_interceptor(channel, interceptor);
+        let client = GrpcPistachioAdminClient::with_interceptor(channel, interceptor);
 
         Self {
             endpoint: None,
@@ -147,7 +160,7 @@ impl PistachioAdminClient for AdminClient {
                                 .to_string(),
                         };
                         let client =
-                            ProjectManagementClient::with_interceptor(channel, interceptor);
+                            GrpcPistachioAdminClient::with_interceptor(channel, interceptor);
                         Ok(Self {
                             endpoint: self.endpoint,
                             credentials: self.credentials,
@@ -313,6 +326,124 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted get_admin_sdk_config with unconnected client");
                 Err(GetAdminSdkConfigError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // Tenant Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_tenant(
+        &mut self,
+        req: CreateTenantRequest,
+    ) -> Result<CreateTenantResponse, CreateTenantError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_tenant");
+                handle_create_tenant(client, req).await
+            }
+            None => {
+                warn!("Attempted create_tenant with unconnected client");
+                Err(CreateTenantError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_tenant(
+        &mut self,
+        req: GetTenantRequest,
+    ) -> Result<GetTenantResponse, GetTenantError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_tenant");
+                handle_get_tenant(client, req).await
+            }
+            None => {
+                warn!("Attempted get_tenant with unconnected client");
+                Err(GetTenantError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_tenant(
+        &mut self,
+        req: UpdateTenantRequest,
+    ) -> Result<UpdateTenantResponse, UpdateTenantError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_tenant");
+                handle_update_tenant(client, req).await
+            }
+            None => {
+                warn!("Attempted update_tenant with unconnected client");
+                Err(UpdateTenantError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_tenant(
+        &mut self,
+        req: DeleteTenantRequest,
+    ) -> Result<DeleteTenantResponse, DeleteTenantError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_tenant");
+                handle_delete_tenant(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_tenant with unconnected client");
+                Err(DeleteTenantError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_tenants(
+        &mut self,
+        req: ListTenantsRequest,
+    ) -> Result<ListTenantsResponse, ListTenantsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_tenants");
+                handle_list_tenants(client, req).await
+            }
+            None => {
+                warn!("Attempted list_tenants with unconnected client");
+                Err(ListTenantsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn search_tenants(
+        &mut self,
+        req: SearchTenantsRequest,
+    ) -> Result<SearchTenantsResponse, SearchTenantsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting search_tenants");
+                handle_search_tenants(client, req).await
+            }
+            None => {
+                warn!("Attempted search_tenants with unconnected client");
+                Err(SearchTenantsError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }

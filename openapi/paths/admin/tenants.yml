@@ -1,0 +1,448 @@
+# Tenant Management Endpoints
+
+tenants:
+  get:
+    operationId: listTenants
+    summary: List tenants
+    description: |
+      Lists all tenants within a project.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenants
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: List of tenants
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/ListTenantsResponse'
+      '400':
+        description: Invalid pagination parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  post:
+    operationId: createTenant
+    summary: Create a new tenant
+    description: |
+      Creates a new tenant within a project.
+      Tenants provide multi-tenant isolation, allowing each tenant
+      to have its own user pool and authentication configuration.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that will own the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Tenant creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/tenant.yml#/CreateTenantRequest'
+    responses:
+      '200':
+        description: Tenant created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/CreateTenantResponse'
+      '400':
+        description: Invalid tenantId format or displayName
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '409':
+        description: Tenant ID already exists in this project
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+tenantById:
+  get:
+    operationId: getTenant
+    summary: Get a tenant
+    description: |
+      Retrieves a tenant by its ID.
+      Returns the tenant details including its authentication configuration.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to retrieve
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    responses:
+      '200':
+        description: Tenant details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/GetTenantResponse'
+      '400':
+        description: Invalid projectId or tenantId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  patch:
+    operationId: updateTenant
+    summary: Update a tenant
+    description: |
+      Updates an existing tenant.
+      Updates the tenant's display name, authentication settings, or MFA configuration.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to update
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    requestBody:
+      description: Tenant update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/tenant.yml#/UpdateTenantRequest'
+    responses:
+      '200':
+        description: Tenant updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/UpdateTenantResponse'
+      '400':
+        description: Invalid projectId, tenantId, or field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  delete:
+    operationId: deleteTenant
+    summary: Delete a tenant
+    description: |
+      Permanently deletes a tenant.
+      This operation is irreversible. All users and data associated with
+      the tenant will be permanently deleted.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to delete
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    responses:
+      '200':
+        description: Tenant deleted
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/DeleteTenantResponse'
+      '400':
+        description: Invalid projectId or tenantId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+tenantsSearch:
+  get:
+    operationId: searchTenants
+    summary: Search tenants
+    description: |
+      Searches for tenants within a project using full-text search.
+
+      Searchable fields:
+      - tenant_id: The unique tenant identifier
+      - display_name: Human-readable display name
+      - allow_pdpka_signup: Whether PDPKA sign-up is allowed
+      - disable_auth: Whether authentication is disabled
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my_tenant" - Search all fields
+      - "display_name:Production*" - Tenants with display name starting with "Production"
+      - "allow_pdpka_signup:true" - Tenants with PDPKA sign-up enabled
+
+      For complex queries that exceed URL length limits, use POST instead.
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search tenants in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/search.yml#/Query'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/SearchTenantsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+
+  post:
+    operationId: searchTenantsPost
+    summary: Search tenants
+    description: |
+      Searches for tenants within a project using full-text search.
+      Use this method for complex queries that exceed URL length limits.
+
+      Searchable fields:
+      - tenant_id: The unique tenant identifier
+      - display_name: Human-readable display name
+      - allow_pdpka_signup: Whether PDPKA sign-up is allowed
+      - disable_auth: Whether authentication is disabled
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "my_tenant" - Search all fields
+      - "display_name:Production*" - Tenants with display name starting with "Production"
+      - "allow_pdpka_signup:true" - Tenants with PDPKA sign-up enabled
+    tags:
+      - Tenants
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search tenants in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Search parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/tenant.yml#/SearchTenantsRequest'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/tenant.yml#/SearchTenantsResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/Error'

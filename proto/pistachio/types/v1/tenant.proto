@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Tenant provides multi-tenant isolation within a project.
+//
+// Tenants are an optional feature for B2B SaaS applications where each
+// customer needs their own isolated user pool. When multi-tenancy is enabled,
+// each tenant has its own user pool and authentication configuration.
+message Tenant {
+  // Unique tenant identifier within the project.
+  // Assigned at creation, immutable after creation.
+  // Format: alphanumeric with underscores, 1-128 characters, case-sensitive.
+  string tenant_id = 1;
+
+  // Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+  string name = 2;
+
+  // Internal tenant identifier.
+  // Derived from project_id and tenant_id, assigned by the system.
+  // 16 bytes encoded as 32 hex characters ending in '02'.
+  string pistachio_id = 3;
+
+  // Human-readable display name for the tenant.
+  // Max 256 characters.
+  string display_name = 4;
+
+  // Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+  // When true, users can register using passphrase-derived keypairs.
+  bool allow_pdpka_signup = 5;
+
+  // Whether all authentication is disabled for this tenant.
+  // When true, users cannot sign in to this tenant.
+  bool disable_auth = 6;
+
+  // Enabled MFA providers for this tenant.
+  // Valid values: "phone", "totp"
+  repeated string mfa_config = 7;
+
+  // Timestamp when the tenant was created.
+  google.protobuf.Timestamp created_at = 8;
+
+  // Timestamp when the tenant was last updated.
+  google.protobuf.Timestamp updated_at = 9;
+}

@@ -1,0 +1,238 @@
+# Tenant Schemas for Admin API
+
+Tenant:
+  type: object
+  description: |
+    Multi-tenant isolation within a project.
+    Tenants provide isolated user pools for B2B SaaS applications
+    where each customer needs their own authentication configuration.
+  properties:
+    name:
+      type: string
+      description: Resource name in the format "projects/{project_id}/tenants/{tenant_id}".
+      example: projects/my-project/tenants/MyTenant
+    tenantId:
+      type: string
+      description: |
+        Unique tenant identifier within the project. Immutable after creation.
+        Case-sensitive, 1-128 characters, alphanumeric with underscores.
+      pattern: '^[a-zA-Z0-9_]+$'
+      maxLength: 128
+      example: MyTenant
+    pistachioId:
+      type: string
+      description: |
+        Internal tenant identifier.
+        16 bytes encoded as 32 hex characters ending in '02'.
+      example: a1b2c3d4e5f6789012345678901234502
+    displayName:
+      type: string
+      description: Human-readable display name. Max 256 characters.
+      maxLength: 256
+      example: My Tenant
+    allowPdpkaSignup:
+      type: boolean
+      description: |
+        Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+        When true, users can register using passphrase-derived keypairs.
+      example: true
+    disableAuth:
+      type: boolean
+      description: |
+        Whether all authentication is disabled for this tenant.
+        When true, users cannot sign in to this tenant.
+      example: false
+    mfaConfig:
+      type: array
+      description: |
+        Enabled MFA providers for this tenant.
+        Valid values: "phone", "totp"
+      items:
+        type: string
+        enum:
+          - phone
+          - totp
+      example:
+        - totp
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the tenant was created.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the tenant was last updated.
+      example: "2024-01-15T10:30:00Z"
+
+# Request/Response Messages
+
+CreateTenantRequest:
+  type: object
+  description: Request body for creating a new tenant.
+  required:
+    - displayName
+  properties:
+    tenantId:
+      type: string
+      description: |
+        Desired tenant ID. If not provided, one will be generated.
+        Must be 1-128 characters, alphanumeric with underscores, case-sensitive.
+      pattern: '^$|^[a-zA-Z0-9_]+$'
+      maxLength: 128
+      example: MyTenant
+    displayName:
+      type: string
+      description: Human-readable display name. Required. Max 256 characters.
+      minLength: 1
+      maxLength: 256
+      example: My Tenant
+    allowPdpkaSignup:
+      type: boolean
+      description: |
+        Whether PDPKA sign-up is allowed.
+        Defaults to true if not specified.
+      example: true
+    disableAuth:
+      type: boolean
+      description: |
+        Whether authentication is disabled.
+        Defaults to false if not specified.
+      example: false
+    mfaConfig:
+      type: array
+      description: |
+        Enabled MFA providers for this tenant.
+        Valid values: "phone", "totp"
+      items:
+        type: string
+        enum:
+          - phone
+          - totp
+      example:
+        - totp
+  example:
+    tenantId: MyTenant
+    displayName: My Tenant
+    allowPdpkaSignup: true
+    mfaConfig:
+      - totp
+
+CreateTenantResponse:
+  type: object
+  description: Response containing the newly created tenant.
+  properties:
+    tenant:
+      $ref: '#/Tenant'
+
+# GetTenant
+
+GetTenantResponse:
+  type: object
+  description: Response containing the requested tenant.
+  properties:
+    tenant:
+      $ref: '#/Tenant'
+
+# UpdateTenant
+
+UpdateTenantRequest:
+  type: object
+  description: Request body for updating an existing tenant.
+  properties:
+    displayName:
+      type: string
+      description: |
+        New display name for the tenant.
+        If not provided (omitted from JSON), the display name will not be changed.
+      minLength: 1
+      maxLength: 256
+      example: My Updated Tenant
+    allowPdpkaSignup:
+      type: boolean
+      description: |
+        Whether PDPKA sign-up is allowed.
+        If not provided, the value will not be changed.
+      example: true
+    disableAuth:
+      type: boolean
+      description: |
+        Whether authentication is disabled.
+        If not provided, the value will not be changed.
+      example: false
+    mfaConfig:
+      type: array
+      description: |
+        Enabled MFA providers for this tenant.
+        If provided, replaces the existing configuration.
+        To clear all MFA providers, send an empty array.
+        Valid values: "phone", "totp"
+      items:
+        type: string
+        enum:
+          - phone
+          - totp
+      example:
+        - totp
+        - phone
+  example:
+    displayName: My Updated Tenant
+
+UpdateTenantResponse:
+  type: object
+  description: Response containing the updated tenant.
+  properties:
+    tenant:
+      $ref: '#/Tenant'
+
+# DeleteTenant
+
+DeleteTenantResponse:
+  type: object
+  description: Response confirming the tenant was permanently deleted.
+  properties: {}
+
+# ListTenants
+
+ListTenantsResponse:
+  type: object
+  description: Response containing a page of tenants.
+  properties:
+    tenants:
+      type: array
+      description: The list of tenants.
+      items:
+        $ref: '#/Tenant'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
+
+# SearchTenants
+
+SearchTenantsRequest:
+  type: object
+  description: |
+    Request body for searching tenants within a project.
+  properties:
+    params:
+      $ref: '../common.yml#/SearchParams'
+  example:
+    params:
+      query: "display_name:Production*"
+      pagination:
+        pageSize: 20
+        cursor: "*"
+        sort:
+          - field: created_at
+            direction: DESC
+
+SearchTenantsResponse:
+  type: object
+  description: Response containing search results for tenants.
+  properties:
+    tenants:
+      type: array
+      description: The list of tenants matching the search query.
+      items:
+        $ref: '#/Tenant'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'

@@ -16,4 +16,6 @@ pub enum ValidationError {
     InvalidValue(&'static str),
     #[error("Invalid project ID: {0}")]
     InvalidProjectId(#[from] libgn::pistachio_id::ProjectIdError),
+    #[error("Invalid tenant ID: {0}")]
+    InvalidTenantId(#[from] libgn::pistachio_id::TenantIdError),
 }

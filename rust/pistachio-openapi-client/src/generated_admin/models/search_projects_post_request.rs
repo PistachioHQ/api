@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SearchProjectsPostRequest {
     #[serde(rename = "params", skip_serializing_if = "Option::is_none")]
-    pub params: Option<Box<models::SearchProjectsPostRequestParams>>,
+    pub params: Option<Box<models::SearchTenantsPostRequestParams>>,
 }
 
 impl SearchProjectsPostRequest {

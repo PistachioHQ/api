@@ -12,12 +12,12 @@ use tonic::service::interceptor::InterceptedService;
 use tonic::transport::Channel;
 use tracing::{debug, error};
 
-use pistachio_api::pistachio::admin::v1::project_management_client::ProjectManagementClient;
+use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
 use crate::types::{FromProto, IntoProto, timestamp_to_datetime};
 
 pub(crate) async fn handle_create_project<I: Interceptor>(
-    client: &mut ProjectManagementClient<InterceptedService<Channel, I>>,
+    client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
     req: CreateProjectRequest,
 ) -> Result<CreateProjectResponse, CreateProjectError> {
     debug!("creating proto request");

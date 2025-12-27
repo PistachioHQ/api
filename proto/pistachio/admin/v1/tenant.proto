@@ -1,0 +1,243 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/pagination.proto";
+import "pistachio/types/v1/search.proto";
+import "pistachio/types/v1/tenant.proto";
+
+// =============================================================================
+// CreateTenant
+// =============================================================================
+
+// CreateTenantRequest creates a new tenant within a project.
+message CreateTenantRequest {
+  // The project ID that will own this tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Desired tenant ID.
+  // If not provided, a unique ID will be generated.
+  // Must be 1-128 characters, alphanumeric with underscores, case-sensitive.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    max_len: 128
+    pattern: "^$|^[a-zA-Z0-9_]+$"
+  }];
+
+  // Human-readable display name for the tenant.
+  // Required. Max 256 characters.
+  string display_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 256
+  }];
+
+  // Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+  // Defaults to true if not specified.
+  optional bool allow_pdpka_signup = 4;
+
+  // Whether all authentication is disabled for this tenant.
+  // Defaults to false if not specified.
+  optional bool disable_auth = 5;
+
+  // Enabled MFA providers for this tenant.
+  // Valid values: "phone", "totp"
+  repeated string mfa_config = 6;
+}
+
+// CreateTenantResponse contains the newly created tenant.
+message CreateTenantResponse {
+  // The created tenant.
+  pistachio.types.v1.Tenant tenant = 1;
+}
+
+// =============================================================================
+// GetTenant
+// =============================================================================
+
+// GetTenantRequest retrieves a tenant by its ID.
+message GetTenantRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to retrieve.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+}
+
+// GetTenantResponse contains the requested tenant.
+message GetTenantResponse {
+  // The retrieved tenant.
+  pistachio.types.v1.Tenant tenant = 1;
+}
+
+// =============================================================================
+// UpdateTenant
+// =============================================================================
+
+// UpdateTenantRequest updates an existing tenant.
+message UpdateTenantRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to update.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // New display name for the tenant.
+  // If not provided (None/null), the display name will not be changed.
+  // Max 256 characters.
+  optional string display_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 256
+  }];
+
+  // Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
+  // If not provided, the value will not be changed.
+  optional bool allow_pdpka_signup = 4;
+
+  // Whether all authentication is disabled for this tenant.
+  // If not provided, the value will not be changed.
+  optional bool disable_auth = 5;
+
+  // Enabled MFA providers for this tenant.
+  // If not provided, the value will not be changed.
+  // To clear all MFA providers, send an empty array.
+  // Valid values: "phone", "totp"
+  MfaConfigUpdate mfa_config = 6;
+}
+
+// MfaConfigUpdate represents an optional update to MFA configuration.
+message MfaConfigUpdate {
+  // The new MFA providers. An empty array clears all providers.
+  repeated string providers = 1;
+}
+
+// UpdateTenantResponse contains the updated tenant.
+message UpdateTenantResponse {
+  // The updated tenant.
+  pistachio.types.v1.Tenant tenant = 1;
+}
+
+// =============================================================================
+// DeleteTenant
+// =============================================================================
+
+// DeleteTenantRequest permanently deletes a tenant.
+message DeleteTenantRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to delete.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+}
+
+// DeleteTenantResponse is returned after a tenant is deleted.
+message DeleteTenantResponse {
+  // Empty response. The tenant has been permanently deleted.
+}
+
+// =============================================================================
+// ListTenants
+// =============================================================================
+
+// ListTenantsRequest lists tenants within a project with optional pagination.
+message ListTenantsRequest {
+  // The project ID to list tenants from.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: tenant_id, display_name, created_at, updated_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 2;
+}
+
+// ListTenantsResponse contains a page of tenants.
+message ListTenantsResponse {
+  // The list of tenants.
+  repeated pistachio.types.v1.Tenant tenants = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// =============================================================================
+// SearchTenants
+// =============================================================================
+
+// SearchTenantsRequest searches for tenants within a project using full-text search.
+message SearchTenantsRequest {
+  // The project ID to search tenants in.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Search parameters including query, sorting, and pagination.
+  //
+  // Searchable fields for tenants:
+  // - tenant_id: The unique tenant identifier
+  // - display_name: Human-readable display name
+  // - allow_pdpka_signup: Whether PDPKA sign-up is allowed
+  // - disable_auth: Whether authentication is disabled
+  // - created_at: Timestamp when created
+  // - updated_at: Timestamp when last updated
+  //
+  // Sortable fields: tenant_id, display_name, created_at, updated_at
+  //
+  // Example queries:
+  // - "my_tenant" - Search all fields
+  // - "display_name:Production*" - Tenants with display name starting with "Production"
+  // - "allow_pdpka_signup:true" - Tenants with PDPKA sign-up enabled
+  // - "created_at:[2024-01-01 TO *]" - Tenants created in 2024
+  pistachio.types.v1.SearchParams params = 2;
+}
+
+// SearchTenantsResponse contains search results for tenants.
+message SearchTenantsResponse {
+  // The list of tenants matching the search query.
+  repeated pistachio.types.v1.Tenant tenants = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
