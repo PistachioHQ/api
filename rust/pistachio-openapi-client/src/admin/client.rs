@@ -26,7 +26,7 @@ use pistachio_api_common::admin::tenant::{
 };
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
-use tracing::{debug, instrument};
+use tracing::{debug, info, instrument, warn};
 
 use super::create_app::handle_create_app;
 use super::create_project::handle_create_project;
@@ -52,9 +52,15 @@ use super::update_project::handle_update_project;
 use super::update_tenant::handle_update_tenant;
 
 /// OpenAPI/REST client for the Pistachio Admin API.
+///
+/// Like the gRPC client, this client requires calling `connect()` after `new()`
+/// before making API calls. This ensures a consistent initialization pattern
+/// across all transport types.
 #[derive(Debug, Clone)]
 pub struct AdminClient {
-    config: Arc<crate::generated_admin::apis::configuration::Configuration>,
+    endpoint: String,
+    credentials: AdminCredentials,
+    config: Option<Arc<crate::generated_admin::apis::configuration::Configuration>>,
 }
 
 /// Macro to implement PistachioAdminClient trait with the appropriate async_trait attribute.
@@ -73,28 +79,44 @@ macro_rules! impl_admin_client {
                     endpoint.as_ref()
                 );
 
-                let mut config = crate::generated_admin::apis::configuration::Configuration::new();
-                config.base_path = endpoint.as_ref().to_string();
-
-                // Set up API key authentication
-                config.api_key = Some(crate::generated_admin::apis::configuration::ApiKey {
-                    prefix: None,
-                    key: credentials.api_key().to_string(),
-                });
-
-                // Set up bearer token authentication for service account
-                config.bearer_access_token = Some(credentials.service_account_token().to_string());
-
                 Ok(Self {
-                    config: Arc::new(config),
+                    endpoint: endpoint.as_ref().to_string(),
+                    credentials,
+                    config: None,
                 })
             }
 
             #[instrument(skip(self), level = "debug")]
             async fn connect(self) -> Result<Self, PistachioApiClientError> {
-                // HTTP client doesn't need explicit connection
-                debug!("OpenAPI client ready (no connection needed for HTTP)");
-                Ok(self)
+                match self.config {
+                    Some(_) => {
+                        debug!("Client already connected");
+                        Ok(self)
+                    }
+                    None => {
+                        debug!("Initializing OpenAPI client configuration");
+
+                        let mut config = crate::generated_admin::apis::configuration::Configuration::new();
+                        config.base_path = self.endpoint.clone();
+
+                        // Set up API key authentication
+                        config.api_key = Some(crate::generated_admin::apis::configuration::ApiKey {
+                            prefix: None,
+                            key: self.credentials.api_key().to_string(),
+                        });
+
+                        // Set up bearer token authentication for service account
+                        config.bearer_access_token = Some(self.credentials.service_account_token().to_string());
+
+                        info!("OpenAPI client connected to {}", self.endpoint);
+
+                        Ok(Self {
+                            endpoint: self.endpoint,
+                            credentials: self.credentials,
+                            config: Some(Arc::new(config)),
+                        })
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -102,8 +124,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: CreateProjectRequest,
             ) -> Result<CreateProjectResponse, CreateProjectError> {
-                debug!("Attempting create_project via OpenAPI");
-                handle_create_project(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting create_project via OpenAPI");
+                        handle_create_project(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted create_project with unconnected client");
+                        Err(CreateProjectError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -111,8 +143,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: GetProjectRequest,
             ) -> Result<GetProjectResponse, GetProjectError> {
-                debug!("Attempting get_project via OpenAPI");
-                handle_get_project(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_project via OpenAPI");
+                        handle_get_project(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_project with unconnected client");
+                        Err(GetProjectError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -120,8 +162,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: UpdateProjectRequest,
             ) -> Result<UpdateProjectResponse, UpdateProjectError> {
-                debug!("Attempting update_project via OpenAPI");
-                handle_update_project(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting update_project via OpenAPI");
+                        handle_update_project(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted update_project with unconnected client");
+                        Err(UpdateProjectError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -129,8 +181,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: DeleteProjectRequest,
             ) -> Result<DeleteProjectResponse, DeleteProjectError> {
-                debug!("Attempting delete_project via OpenAPI");
-                handle_delete_project(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting delete_project via OpenAPI");
+                        handle_delete_project(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted delete_project with unconnected client");
+                        Err(DeleteProjectError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -138,8 +200,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: UndeleteProjectRequest,
             ) -> Result<UndeleteProjectResponse, UndeleteProjectError> {
-                debug!("Attempting undelete_project via OpenAPI");
-                handle_undelete_project(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting undelete_project via OpenAPI");
+                        handle_undelete_project(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted undelete_project with unconnected client");
+                        Err(UndeleteProjectError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -147,8 +219,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: ListProjectsRequest,
             ) -> Result<ListProjectsResponse, ListProjectsError> {
-                debug!("Attempting list_projects via OpenAPI");
-                handle_list_projects(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting list_projects via OpenAPI");
+                        handle_list_projects(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted list_projects with unconnected client");
+                        Err(ListProjectsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -156,8 +238,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: SearchProjectsRequest,
             ) -> Result<SearchProjectsResponse, SearchProjectsError> {
-                debug!("Attempting search_projects via OpenAPI");
-                handle_search_projects(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting search_projects via OpenAPI");
+                        handle_search_projects(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted search_projects with unconnected client");
+                        Err(SearchProjectsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -165,8 +257,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: GetAdminSdkConfigRequest,
             ) -> Result<GetAdminSdkConfigResponse, GetAdminSdkConfigError> {
-                debug!("Attempting get_admin_sdk_config via OpenAPI");
-                handle_get_admin_sdk_config(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_admin_sdk_config via OpenAPI");
+                        handle_get_admin_sdk_config(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_admin_sdk_config with unconnected client");
+                        Err(GetAdminSdkConfigError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -174,8 +276,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: CreateTenantRequest,
             ) -> Result<CreateTenantResponse, CreateTenantError> {
-                debug!("Attempting create_tenant via OpenAPI");
-                handle_create_tenant(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting create_tenant via OpenAPI");
+                        handle_create_tenant(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted create_tenant with unconnected client");
+                        Err(CreateTenantError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -183,8 +295,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: GetTenantRequest,
             ) -> Result<GetTenantResponse, GetTenantError> {
-                debug!("Attempting get_tenant via OpenAPI");
-                handle_get_tenant(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_tenant via OpenAPI");
+                        handle_get_tenant(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_tenant with unconnected client");
+                        Err(GetTenantError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -192,8 +314,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: UpdateTenantRequest,
             ) -> Result<UpdateTenantResponse, UpdateTenantError> {
-                debug!("Attempting update_tenant via OpenAPI");
-                handle_update_tenant(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting update_tenant via OpenAPI");
+                        handle_update_tenant(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted update_tenant with unconnected client");
+                        Err(UpdateTenantError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -201,8 +333,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: DeleteTenantRequest,
             ) -> Result<DeleteTenantResponse, DeleteTenantError> {
-                debug!("Attempting delete_tenant via OpenAPI");
-                handle_delete_tenant(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting delete_tenant via OpenAPI");
+                        handle_delete_tenant(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted delete_tenant with unconnected client");
+                        Err(DeleteTenantError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -210,8 +352,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: ListTenantsRequest,
             ) -> Result<ListTenantsResponse, ListTenantsError> {
-                debug!("Attempting list_tenants via OpenAPI");
-                handle_list_tenants(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting list_tenants via OpenAPI");
+                        handle_list_tenants(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted list_tenants with unconnected client");
+                        Err(ListTenantsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -219,8 +371,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: SearchTenantsRequest,
             ) -> Result<SearchTenantsResponse, SearchTenantsError> {
-                debug!("Attempting search_tenants via OpenAPI");
-                handle_search_tenants(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting search_tenants via OpenAPI");
+                        handle_search_tenants(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted search_tenants with unconnected client");
+                        Err(SearchTenantsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -228,8 +390,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: CreateAppRequest,
             ) -> Result<CreateAppResponse, CreateAppError> {
-                debug!("Attempting create_app via OpenAPI");
-                handle_create_app(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting create_app via OpenAPI");
+                        handle_create_app(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted create_app with unconnected client");
+                        Err(CreateAppError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -237,8 +409,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: GetAppRequest,
             ) -> Result<GetAppResponse, GetAppError> {
-                debug!("Attempting get_app via OpenAPI");
-                handle_get_app(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_app via OpenAPI");
+                        handle_get_app(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_app with unconnected client");
+                        Err(GetAppError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -246,8 +428,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: UpdateAppRequest,
             ) -> Result<UpdateAppResponse, UpdateAppError> {
-                debug!("Attempting update_app via OpenAPI");
-                handle_update_app(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting update_app via OpenAPI");
+                        handle_update_app(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted update_app with unconnected client");
+                        Err(UpdateAppError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -255,8 +447,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: DeleteAppRequest,
             ) -> Result<DeleteAppResponse, DeleteAppError> {
-                debug!("Attempting delete_app via OpenAPI");
-                handle_delete_app(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting delete_app via OpenAPI");
+                        handle_delete_app(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted delete_app with unconnected client");
+                        Err(DeleteAppError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -264,8 +466,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: UndeleteAppRequest,
             ) -> Result<UndeleteAppResponse, UndeleteAppError> {
-                debug!("Attempting undelete_app via OpenAPI");
-                handle_undelete_app(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting undelete_app via OpenAPI");
+                        handle_undelete_app(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted undelete_app with unconnected client");
+                        Err(UndeleteAppError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -273,8 +485,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: ListAppsRequest,
             ) -> Result<ListAppsResponse, ListAppsError> {
-                debug!("Attempting list_apps via OpenAPI");
-                handle_list_apps(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting list_apps via OpenAPI");
+                        handle_list_apps(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted list_apps with unconnected client");
+                        Err(ListAppsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -282,8 +504,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: SearchAppsRequest,
             ) -> Result<SearchAppsResponse, SearchAppsError> {
-                debug!("Attempting search_apps via OpenAPI");
-                handle_search_apps(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting search_apps via OpenAPI");
+                        handle_search_apps(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted search_apps with unconnected client");
+                        Err(SearchAppsError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
 
             #[instrument(skip(self, req), level = "debug")]
@@ -291,8 +523,18 @@ macro_rules! impl_admin_client {
                 &mut self,
                 req: GetAppConfigRequest,
             ) -> Result<GetAppConfigResponse, GetAppConfigError> {
-                debug!("Attempting get_app_config via OpenAPI");
-                handle_get_app_config(&self.config, req).await
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_app_config via OpenAPI");
+                        handle_get_app_config(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_app_config with unconnected client");
+                        Err(GetAppConfigError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
             }
         }
     };
