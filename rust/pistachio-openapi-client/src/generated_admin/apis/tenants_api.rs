@@ -102,7 +102,7 @@ pub async fn create_tenant(
     let p_body_create_tenant_request = create_tenant_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants",
+        "{}/admin/v1/projects/{projectId}/tenants",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -174,7 +174,7 @@ pub async fn delete_tenant(
     let p_path_tenant_id = tenant_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
@@ -246,7 +246,7 @@ pub async fn get_tenant(
     let p_path_tenant_id = tenant_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
@@ -320,7 +320,7 @@ pub async fn list_tenants(
     let p_query_sort = sort;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants",
+        "{}/admin/v1/projects/{projectId}/tenants",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -404,7 +404,7 @@ pub async fn search_tenants(
     let p_query_sort = sort;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants:search",
+        "{}/admin/v1/projects/{projectId}/tenants:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -485,7 +485,7 @@ pub async fn search_tenants_post(
     let p_body_search_tenants_post_request = search_tenants_post_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants:search",
+        "{}/admin/v1/projects/{projectId}/tenants:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -559,7 +559,7 @@ pub async fn update_tenant(
     let p_body_update_tenant_request = update_tenant_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/tenants/{tenantId}",
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)

@@ -125,7 +125,7 @@ pub async fn create_app(
     let p_body_create_app_request = create_app_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps",
+        "{}/admin/v1/projects/{projectId}/apps",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -197,7 +197,7 @@ pub async fn delete_app(
     let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/apps/{appId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         appId = crate::generated_admin::apis::urlencode(p_path_app_id)
@@ -269,7 +269,7 @@ pub async fn get_app(
     let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/apps/{appId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         appId = crate::generated_admin::apis::urlencode(p_path_app_id)
@@ -339,7 +339,7 @@ pub async fn get_app_config(
     let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps/{appId}/config",
+        "{}/admin/v1/projects/{projectId}/apps/{appId}/config",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         appId = crate::generated_admin::apis::urlencode(p_path_app_id)
@@ -415,7 +415,7 @@ pub async fn list_apps(
     let p_query_show_deleted = show_deleted;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps",
+        "{}/admin/v1/projects/{projectId}/apps",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -502,7 +502,7 @@ pub async fn search_apps(
     let p_query_sort = sort;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps:search",
+        "{}/admin/v1/projects/{projectId}/apps:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -583,7 +583,7 @@ pub async fn search_apps_post(
     let p_body_search_apps_post_request = search_apps_post_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps:search",
+        "{}/admin/v1/projects/{projectId}/apps:search",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -655,7 +655,7 @@ pub async fn undelete_app(
     let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps/{appId}:undelete",
+        "{}/admin/v1/projects/{projectId}/apps/{appId}:undelete",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         appId = crate::generated_admin::apis::urlencode(p_path_app_id)
@@ -729,7 +729,7 @@ pub async fn update_app(
     let p_body_update_app_request = update_app_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/apps/{appId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         appId = crate::generated_admin::apis::urlencode(p_path_app_id)

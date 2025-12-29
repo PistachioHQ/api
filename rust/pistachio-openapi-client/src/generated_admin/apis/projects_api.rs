@@ -118,7 +118,7 @@ pub async fn create_project(
     // add a prefix to parameters to efficiently prevent name collisions
     let p_body_create_project_request = create_project_request;
 
-    let uri_str = format!("{}/projects", configuration.base_path);
+    let uri_str = format!("{}/admin/v1/projects", configuration.base_path);
     let mut req_builder = configuration
         .client
         .request(reqwest::Method::POST, &uri_str);
@@ -185,7 +185,7 @@ pub async fn delete_project(
     let p_path_project_id = project_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}",
+        "{}/admin/v1/projects/{projectId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -254,7 +254,7 @@ pub async fn get_admin_sdk_config(
     let p_path_project_id = project_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}/adminSdkConfig",
+        "{}/admin/v1/projects/{projectId}/adminSdkConfig",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -321,7 +321,7 @@ pub async fn get_project(
     let p_path_project_id = project_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}",
+        "{}/admin/v1/projects/{projectId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -393,7 +393,7 @@ pub async fn list_projects(
     let p_query_sort = sort;
     let p_query_show_deleted = show_deleted;
 
-    let uri_str = format!("{}/projects", configuration.base_path);
+    let uri_str = format!("{}/admin/v1/projects", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(ref param_value) = p_query_page_size {
@@ -474,7 +474,7 @@ pub async fn search_projects(
     let p_query_cursor = cursor;
     let p_query_sort = sort;
 
-    let uri_str = format!("{}/projects:search", configuration.base_path);
+    let uri_str = format!("{}/admin/v1/projects:search", configuration.base_path);
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
     if let Some(ref param_value) = p_query_query {
@@ -549,7 +549,7 @@ pub async fn search_projects_post(
     // add a prefix to parameters to efficiently prevent name collisions
     let p_body_search_projects_post_request = search_projects_post_request;
 
-    let uri_str = format!("{}/projects:search", configuration.base_path);
+    let uri_str = format!("{}/admin/v1/projects:search", configuration.base_path);
     let mut req_builder = configuration
         .client
         .request(reqwest::Method::POST, &uri_str);
@@ -616,7 +616,7 @@ pub async fn undelete_project(
     let p_path_project_id = project_id;
 
     let uri_str = format!(
-        "{}/projects/{projectId}:undelete",
+        "{}/admin/v1/projects/{projectId}:undelete",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
@@ -687,7 +687,7 @@ pub async fn update_project(
     let p_body_update_project_request = update_project_request;
 
     let uri_str = format!(
-        "{}/projects/{projectId}",
+        "{}/admin/v1/projects/{projectId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );

@@ -20,7 +20,7 @@ tags:
     - name: Apps
       description: App management operations within projects
 paths:
-    /projects/{projectId}/apps:
+    /admin/v1/projects/{projectId}/apps:
         get:
             operationId: listApps
             summary: List apps
@@ -856,7 +856,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects:
+    /admin/v1/projects:
         get:
             operationId: listProjects
             summary: List projects
@@ -1253,7 +1253,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/tenants:
+    /admin/v1/projects/{projectId}/tenants:
         get:
             operationId: listTenants
             summary: List tenants
@@ -1720,7 +1720,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}:
+    /admin/v1/projects/{projectId}:
         get:
             operationId: getProject
             summary: Get a project
@@ -2173,7 +2173,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/tenants/{tenantId}:
+    /admin/v1/projects/{projectId}/tenants/{tenantId}:
         get:
             operationId: getTenant
             summary: Get a tenant
@@ -2684,7 +2684,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/apps/{appId}:
+    /admin/v1/projects/{projectId}/apps/{appId}:
         get:
             operationId: getApp
             summary: Get an app
@@ -3548,7 +3548,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}:undelete:
+    /admin/v1/projects/{projectId}:undelete:
         post:
             operationId: undeleteProject
             summary: Restore a deleted project
@@ -3733,7 +3733,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/tenants:search:
+    /admin/v1/projects/{projectId}/tenants:search:
         get:
             operationId: searchTenants
             summary: Search tenants
@@ -4290,7 +4290,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/apps:search:
+    /admin/v1/projects/{projectId}/apps:search:
         get:
             operationId: searchApps
             summary: Search apps
@@ -5104,7 +5104,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects:search:
+    /admin/v1/projects:search:
         get:
             operationId: searchProjects
             summary: Search projects
@@ -5606,7 +5606,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/adminSdkConfig:
+    /admin/v1/projects/{projectId}/adminSdkConfig:
         get:
             operationId: getAdminSdkConfig
             summary: Get Admin SDK configuration
@@ -5723,7 +5723,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/apps/{appId}:undelete:
+    /admin/v1/projects/{projectId}/apps/{appId}:undelete:
         post:
             operationId: undeleteApp
             summary: Restore a deleted app
@@ -6047,7 +6047,7 @@ paths:
                                 required:
                                     - code
                                     - message
-    /projects/{projectId}/apps/{appId}/config:
+    /admin/v1/projects/{projectId}/apps/{appId}/config:
         get:
             operationId: getAppConfig
             summary: Get SDK configuration
