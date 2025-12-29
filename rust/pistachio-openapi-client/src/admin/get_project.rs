@@ -38,9 +38,26 @@ pub(crate) async fn handle_get_project(
         error!(?e, "Error in get_project response");
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
-                resp.entity.map(Into::into).unwrap_or_else(|| {
-                    GetProjectError::Unknown(format!("HTTP {}: {}", resp.status, resp.content))
-                })
+                // First try to use the parsed entity if it's a known error type
+                // (not UnknownValue, which just means the error body didn't match expected schema)
+                if let Some(entity) = resp.entity
+                    && !matches!(entity, GenError::UnknownValue(_))
+                {
+                    return entity.into();
+                }
+
+                // Fall back to status code mapping if entity parsing failed or was UnknownValue
+                // (e.g., RFC 7807 Problem Details format vs expected error model)
+                match resp.status.as_u16() {
+                    400 => GetProjectError::BadRequest(resp.content),
+                    401 => GetProjectError::Unauthenticated(resp.content),
+                    403 => GetProjectError::PermissionDenied(resp.content),
+                    404 => GetProjectError::NotFound,
+                    500..=599 => GetProjectError::ServiceError(resp.content),
+                    _ => {
+                        GetProjectError::Unknown(format!("HTTP {}: {}", resp.status, resp.content))
+                    }
+                }
             }
             crate::generated_admin::apis::Error::Reqwest(e) => {
                 GetProjectError::ServiceUnavailable(e.to_string())
