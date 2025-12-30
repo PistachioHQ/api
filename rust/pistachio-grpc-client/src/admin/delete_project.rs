@@ -1,3 +1,4 @@
+use libgn::project::Project;
 use pistachio_api_common::admin::project::{
     DeleteProjectError, DeleteProjectRequest, DeleteProjectResponse,
 };
@@ -9,7 +10,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::IntoProto;
+use crate::types::{FromProto, IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_delete_project<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -19,16 +20,18 @@ pub(crate) async fn handle_delete_project<I: Interceptor>(
     let request = req.into_proto();
     debug!(?request, "created proto request");
 
-    let _response = client
+    let response = client
         .delete_project(request)
         .await
         .map_err(|status| {
             error!(?status, "Error in delete_project response");
             match status.code() {
                 Code::InvalidArgument => {
-                    DeleteProjectError::BadRequest(status.message().to_string())
+                    DeleteProjectError::BadRequest(problem_details_from_status(&status, 400))
                 }
-                Code::NotFound => DeleteProjectError::NotFound,
+                Code::NotFound => {
+                    DeleteProjectError::NotFound(problem_details_from_status(&status, 404))
+                }
                 Code::Unauthenticated => {
                     DeleteProjectError::Unauthenticated(status.message().to_string())
                 }
@@ -44,7 +47,7 @@ pub(crate) async fn handle_delete_project<I: Interceptor>(
         })?
         .into_inner();
 
-    Ok(DeleteProjectResponse {})
+    DeleteProjectResponse::from_proto(response).map_err(DeleteProjectError::ResponseValidationError)
 }
 
 // =============================================================================
@@ -56,5 +59,26 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::DeleteProjectRequest> for De
         pistachio_api::pistachio::admin::v1::DeleteProjectRequest {
             project_id: self.project_id.to_string(),
         }
+    }
+}
+
+impl FromProto<pistachio_api::pistachio::admin::v1::DeleteProjectResponse>
+    for DeleteProjectResponse
+{
+    type Error = pistachio_api_common::error::ValidationError;
+
+    fn from_proto(
+        proto: pistachio_api::pistachio::admin::v1::DeleteProjectResponse,
+    ) -> Result<Self, Self::Error> {
+        let project_proto =
+            proto
+                .project
+                .ok_or(pistachio_api_common::error::ValidationError::MissingField(
+                    "project",
+                ))?;
+
+        let project = Project::from_proto(project_proto)?;
+
+        Ok(Self { project })
     }
 }

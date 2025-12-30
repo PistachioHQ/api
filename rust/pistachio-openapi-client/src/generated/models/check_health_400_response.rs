@@ -11,9 +11,9 @@
 use crate::generated::models;
 use serde::{Deserialize, Serialize};
 
-/// ValidateApiKey401Response : RFC 7807 Problem Details error response
+/// CheckHealth400Response : RFC 7807 Problem Details error response
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct ValidateApiKey401Response {
+pub struct CheckHealth400Response {
     /// A URI reference that identifies the problem type
     #[serde(rename = "type")]
     pub r#type: String,
@@ -31,13 +31,13 @@ pub struct ValidateApiKey401Response {
     pub instance: Option<String>,
     /// Extension member for validation errors. Contains details about which parameters failed validation and why.
     #[serde(rename = "invalidParams", skip_serializing_if = "Option::is_none")]
-    pub invalid_params: Option<Vec<models::ValidateApiKey401ResponseInvalidParamsInner>>,
+    pub invalid_params: Option<Vec<models::CheckHealth400ResponseInvalidParamsInner>>,
 }
 
-impl ValidateApiKey401Response {
+impl CheckHealth400Response {
     /// RFC 7807 Problem Details error response
-    pub fn new(r#type: String, title: String, status: i32) -> ValidateApiKey401Response {
-        ValidateApiKey401Response {
+    pub fn new(r#type: String, title: String, status: i32) -> CheckHealth400Response {
+        CheckHealth400Response {
             r#type,
             title,
             status,

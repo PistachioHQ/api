@@ -216,9 +216,10 @@ message DeleteAppRequest {
   }];
 }
 
-// DeleteAppResponse is empty on success.
+// DeleteAppResponse contains the soft-deleted app.
 message DeleteAppResponse {
-  // Empty response. The app has been soft-deleted.
+  // The soft-deleted app.
+  pistachio.types.v1.App app = 1;
 }
 
 // =============================================================================

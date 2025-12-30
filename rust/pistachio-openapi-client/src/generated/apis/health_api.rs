@@ -17,6 +17,9 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CheckHealthError {
+    Status400(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
 }
 

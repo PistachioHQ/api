@@ -18,6 +18,7 @@ mod generated;
 #[allow(clippy::enum_variant_names)]
 mod generated_admin;
 
+mod problem_details;
 mod types;
 
 mod admin;

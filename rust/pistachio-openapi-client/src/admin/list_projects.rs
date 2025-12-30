@@ -9,14 +9,25 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::projects_api::{ListProjectsError as GenError, list_projects};
 use crate::generated_admin::models::ListProjects200Response;
-use crate::types::FromJson;
+use crate::problem_details::{fallback_problem_details, parse_problem_details};
+use crate::types::{FromJson, convert_problem_details};
 
 impl From<GenError> for ListProjectsError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(format!("{}: {}", e.code, e.message)),
-            GenError::Status401(e) => Self::Unauthenticated(format!("{}: {}", e.code, e.message)),
-            GenError::Status403(e) => Self::PermissionDenied(format!("{}: {}", e.code, e.message)),
+            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status401(e) => {
+                Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status403(e) => {
+                Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status500(e) => {
+                Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status503(e) => {
+                Self::ServiceUnavailable(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
             GenError::UnknownValue(v) => {
                 Self::Unknown(format!("Server returned an unexpected response: {}.", v))
             }
@@ -55,9 +66,46 @@ pub(crate) async fn handle_list_projects(
         error!(?e, "Error in list_projects response");
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
-                resp.entity.map(Into::into).unwrap_or_else(|| {
-                    ListProjectsError::Unknown(format!("HTTP {}: {}", resp.status, resp.content))
-                })
+                let status = resp.status.as_u16();
+
+                // Try to parse RFC 7807 Problem Details from the response content
+                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    return match status {
+                        400 => ListProjectsError::BadRequest(problem),
+                        401 => ListProjectsError::Unauthenticated(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        403 => ListProjectsError::PermissionDenied(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        500..=599 => {
+                            ListProjectsError::ServiceError(problem.detail.unwrap_or(problem.title))
+                        }
+                        _ => ListProjectsError::Unknown(format!(
+                            "HTTP {}: {}",
+                            status,
+                            problem.detail.unwrap_or(problem.title)
+                        )),
+                    };
+                }
+
+                // Fall back to entity parsing if RFC 7807 parsing failed
+                if let Some(entity) = resp.entity
+                    && !matches!(entity, GenError::UnknownValue(_))
+                {
+                    return entity.into();
+                }
+
+                // Last resort: status code mapping with raw content
+                match status {
+                    400 => {
+                        ListProjectsError::BadRequest(fallback_problem_details(400, resp.content))
+                    }
+                    401 => ListProjectsError::Unauthenticated(resp.content),
+                    403 => ListProjectsError::PermissionDenied(resp.content),
+                    500..=599 => ListProjectsError::ServiceError(resp.content),
+                    _ => ListProjectsError::Unknown(format!("HTTP {}: {}", status, resp.content)),
+                }
             }
             crate::generated_admin::apis::Error::Reqwest(e) => {
                 ListProjectsError::ServiceUnavailable(e.to_string())

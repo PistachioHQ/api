@@ -35,25 +35,29 @@ tenants:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
   post:
     operationId: createTenant
@@ -94,31 +98,35 @@ tenants:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '409':
         description: Tenant ID already exists in this project
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
 tenantById:
   get:
@@ -160,25 +168,29 @@ tenantById:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project or tenant not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
   patch:
     operationId: updateTenant
@@ -226,25 +238,29 @@ tenantById:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project or tenant not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
   delete:
     operationId: deleteTenant
@@ -286,25 +302,29 @@ tenantById:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project or tenant not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
 tenantsSearch:
   get:
@@ -356,25 +376,29 @@ tenantsSearch:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
   post:
     operationId: searchTenantsPost
@@ -427,22 +451,26 @@ tenantsSearch:
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '401':
         description: Invalid or missing credentials
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '403':
         description: Permission denied
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project not found
         content:
           application/json:
             schema:
-              $ref: '../../components/schemas/error.yml#/Error'
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

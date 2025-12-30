@@ -1,6 +1,6 @@
 use libgn::project::{Project, ProjectDisplayName, ProjectId, ProjectInvitationCode};
 
-use crate::error::{PistachioApiClientError, ValidationError};
+use crate::error::{PistachioApiClientError, ProblemDetails, ValidationError};
 use crate::pagination::{PaginationMeta, PaginationParams};
 use crate::search::SearchParams;
 
@@ -10,8 +10,8 @@ use crate::search::SearchParams;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CreateProjectError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
     #[error("Project ID already exists")]
     AlreadyExists,
     #[error("Unauthenticated: {0}")]
@@ -83,10 +83,10 @@ pub struct CreateProjectResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GetProjectError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -130,10 +130,10 @@ pub struct GetProjectResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateProjectError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -187,16 +187,12 @@ pub struct UpdateProjectResponse {
 // DeleteProject
 // =============================================================================
 
-/// Error type for delete project operations.
-///
-/// Note: Unlike other error types, this intentionally omits `ResponseValidationError`
-/// because delete operations return an empty response body with no fields to validate.
 #[derive(Debug, thiserror::Error)]
 pub enum DeleteProjectError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -207,6 +203,8 @@ pub enum DeleteProjectError {
     ServiceUnavailable(String),
     #[error("Client error: {0}")]
     PistachioApiClientError(#[from] PistachioApiClientError),
+    #[error("Response validation error: {0}")]
+    ResponseValidationError(#[from] ValidationError),
     #[error("Unexpected error: {0}")]
     Unknown(String),
 }
@@ -228,7 +226,8 @@ impl DeleteProjectRequest {
 /// Response from deleting a project.
 #[derive(Debug, Clone)]
 pub struct DeleteProjectResponse {
-    // Empty response - the project has been soft-deleted.
+    /// The soft-deleted project with updated state.
+    pub project: Project,
 }
 
 // =============================================================================
@@ -237,10 +236,10 @@ pub struct DeleteProjectResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UndeleteProjectError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Project is not in DELETED state")]
     FailedPrecondition(String),
     #[error("Unauthenticated: {0}")]
@@ -286,8 +285,8 @@ pub struct UndeleteProjectResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ListProjectsError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -348,8 +347,8 @@ pub struct ListProjectsResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchProjectsError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -407,10 +406,10 @@ pub struct SearchProjectsResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GetAdminSdkConfigError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]

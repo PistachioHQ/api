@@ -22,3 +22,18 @@ health:
               $ref: '../components/schemas/health.yml#/CheckResponse'
             example:
               status: SERVING_STATUS_SERVING
+      '400':
+        description: Invalid service parameter
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+            example:
+              type: https://docs.pistachiohq.com/errors/invalid_argument
+              title: Invalid Argument
+              status: 400
+              detail: "service: unknown service name"
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'

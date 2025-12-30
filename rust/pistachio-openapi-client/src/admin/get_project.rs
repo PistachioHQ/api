@@ -8,15 +8,26 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::projects_api::{GetProjectError as GenError, get_project};
 use crate::generated_admin::models::GetProject200Response;
-use crate::types::FromJson;
+use crate::problem_details::{fallback_problem_details, parse_problem_details};
+use crate::types::{FromJson, convert_problem_details};
 
 impl From<GenError> for GetProjectError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(format!("{}: {}", e.code, e.message)),
-            GenError::Status401(e) => Self::Unauthenticated(format!("{}: {}", e.code, e.message)),
-            GenError::Status403(e) => Self::PermissionDenied(format!("{}: {}", e.code, e.message)),
-            GenError::Status404(_) => Self::NotFound,
+            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status401(e) => {
+                Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status403(e) => {
+                Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status500(e) => {
+                Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status503(e) => {
+                Self::ServiceUnavailable(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
             GenError::UnknownValue(v) => {
                 Self::Unknown(format!("Server returned an unexpected response: {}.", v))
             }
@@ -38,25 +49,39 @@ pub(crate) async fn handle_get_project(
         error!(?e, "Error in get_project response");
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
-                // First try to use the parsed entity if it's a known error type
-                // (not UnknownValue, which just means the error body didn't match expected schema)
+                let status = resp.status.as_u16();
+                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    return match status {
+                        400 => GetProjectError::BadRequest(problem),
+                        401 => GetProjectError::Unauthenticated(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        403 => GetProjectError::PermissionDenied(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        404 => GetProjectError::NotFound(problem),
+                        500..=599 => {
+                            GetProjectError::ServiceError(problem.detail.unwrap_or(problem.title))
+                        }
+                        _ => GetProjectError::Unknown(format!(
+                            "HTTP {}: {}",
+                            status,
+                            problem.detail.unwrap_or(problem.title)
+                        )),
+                    };
+                }
                 if let Some(entity) = resp.entity
                     && !matches!(entity, GenError::UnknownValue(_))
                 {
                     return entity.into();
                 }
-
-                // Fall back to status code mapping if entity parsing failed or was UnknownValue
-                // (e.g., RFC 7807 Problem Details format vs expected error model)
-                match resp.status.as_u16() {
-                    400 => GetProjectError::BadRequest(resp.content),
+                match status {
+                    400 => GetProjectError::BadRequest(fallback_problem_details(400, resp.content)),
                     401 => GetProjectError::Unauthenticated(resp.content),
                     403 => GetProjectError::PermissionDenied(resp.content),
-                    404 => GetProjectError::NotFound,
+                    404 => GetProjectError::NotFound(fallback_problem_details(404, resp.content)),
                     500..=599 => GetProjectError::ServiceError(resp.content),
-                    _ => {
-                        GetProjectError::Unknown(format!("HTTP {}: {}", resp.status, resp.content))
-                    }
+                    _ => GetProjectError::Unknown(format!("HTTP {}: {}", status, resp.content)),
                 }
             }
             crate::generated_admin::apis::Error::Reqwest(e) => {

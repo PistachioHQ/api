@@ -53,6 +53,213 @@ paths:
                                     - status
                             example:
                                 status: SERVING_STATUS_SERVING
+                '400':
+                    description: Invalid service parameter
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/invalid_argument
+                                title: Invalid Argument
+                                status: 400
+                                detail: "service: unknown service name"
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/internal
+                                title: Internal Server Error
+                                status: 500
+                                detail: An unexpected error occurred. Please try again later.
+                '503':
+                    description: Service temporarily unavailable
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/unavailable
+                                title: Service Unavailable
+                                status: 503
+                                detail: The service is temporarily unavailable. Please try again later.
     /auth/validate-key:
         get:
             operationId: validateApiKey
@@ -85,22 +292,207 @@ paths:
                         application/json:
                             schema:
                                 type: object
-                                description: Standard error response
+                                description: RFC 7807 Problem Details error response
                                 properties:
-                                    code:
+                                    type:
                                         type: string
-                                        description: Machine-readable error code
-                                        example: INVALID_ARGUMENT
-                                    message:
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
                                         type: string
-                                        description: Human-readable error message
-                                        example: The provided value is invalid
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
                                 required:
-                                    - code
-                                    - message
+                                    - type
+                                    - title
+                                    - status
                             example:
-                                code: UNAUTHENTICATED
-                                message: Invalid or missing API key
+                                type: https://docs.pistachiohq.com/errors/unauthenticated
+                                title: Unauthenticated
+                                status: 401
+                                detail: Invalid or missing API key
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/internal
+                                title: Internal Server Error
+                                status: 500
+                                detail: An unexpected error occurred. Please try again later.
+                '503':
+                    description: Service temporarily unavailable
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/unavailable
+                                title: Service Unavailable
+                                status: 503
+                                detail: The service is temporarily unavailable. Please try again later.
     /auth/validate-token:
         get:
             operationId: validateToken
@@ -133,22 +525,207 @@ paths:
                         application/json:
                             schema:
                                 type: object
-                                description: Standard error response
+                                description: RFC 7807 Problem Details error response
                                 properties:
-                                    code:
+                                    type:
                                         type: string
-                                        description: Machine-readable error code
-                                        example: INVALID_ARGUMENT
-                                    message:
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
                                         type: string
-                                        description: Human-readable error message
-                                        example: The provided value is invalid
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
                                 required:
-                                    - code
-                                    - message
+                                    - type
+                                    - title
+                                    - status
                             example:
-                                code: UNAUTHENTICATED
-                                message: Invalid or missing token
+                                type: https://docs.pistachiohq.com/errors/unauthenticated
+                                title: Unauthenticated
+                                status: 401
+                                detail: Invalid or missing token
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/internal
+                                title: Internal Server Error
+                                status: 500
+                                detail: An unexpected error occurred. Please try again later.
+                '503':
+                    description: Service temporarily unavailable
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/unavailable
+                                title: Service Unavailable
+                                status: 503
+                                detail: The service is temporarily unavailable. Please try again later.
     /auth/validate-service-account:
         get:
             operationId: validateServiceAccount
@@ -181,22 +758,207 @@ paths:
                         application/json:
                             schema:
                                 type: object
-                                description: Standard error response
+                                description: RFC 7807 Problem Details error response
                                 properties:
-                                    code:
+                                    type:
                                         type: string
-                                        description: Machine-readable error code
-                                        example: INVALID_ARGUMENT
-                                    message:
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
                                         type: string
-                                        description: Human-readable error message
-                                        example: The provided value is invalid
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
                                 required:
-                                    - code
-                                    - message
+                                    - type
+                                    - title
+                                    - status
                             example:
-                                code: UNAUTHENTICATED
-                                message: Invalid or missing service account credential
+                                type: https://docs.pistachiohq.com/errors/unauthenticated
+                                title: Unauthenticated
+                                status: 401
+                                detail: Invalid or missing service account credential
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/internal
+                                title: Internal Server Error
+                                status: 500
+                                detail: An unexpected error occurred. Please try again later.
+                '503':
+                    description: Service temporarily unavailable
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                            example:
+                                type: https://docs.pistachiohq.com/errors/unavailable
+                                title: Service Unavailable
+                                status: 503
+                                detail: The service is temporarily unavailable. Please try again later.
 components:
     securitySchemes:
         ApiKeyAuth:

@@ -9,7 +9,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::IntoProto;
+use crate::types::{IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_delete_tenant<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -26,9 +26,11 @@ pub(crate) async fn handle_delete_tenant<I: Interceptor>(
             error!(?status, "Error in delete_tenant response");
             match status.code() {
                 Code::InvalidArgument => {
-                    DeleteTenantError::BadRequest(status.message().to_string())
+                    DeleteTenantError::BadRequest(problem_details_from_status(&status, 400))
                 }
-                Code::NotFound => DeleteTenantError::NotFound,
+                Code::NotFound => {
+                    DeleteTenantError::NotFound(problem_details_from_status(&status, 404))
+                }
                 Code::Unauthenticated => {
                     DeleteTenantError::Unauthenticated(status.message().to_string())
                 }

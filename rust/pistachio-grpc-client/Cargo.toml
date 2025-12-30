@@ -23,6 +23,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 tonic = "0.14"
+tonic-types = "0.14"
 
 # Transitive dependency minimum versions
 # These are not used directly but constrain the resolver to compatible versions

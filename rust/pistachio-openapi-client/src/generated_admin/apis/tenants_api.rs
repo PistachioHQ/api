@@ -22,6 +22,8 @@ pub enum CreateTenantError {
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
     Status409(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -33,6 +35,8 @@ pub enum DeleteTenantError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -44,6 +48,8 @@ pub enum GetTenantError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -55,6 +61,8 @@ pub enum ListTenantsError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -66,6 +74,8 @@ pub enum SearchTenantsError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -77,6 +87,8 @@ pub enum SearchTenantsPostError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -88,6 +100,8 @@ pub enum UpdateTenantError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 

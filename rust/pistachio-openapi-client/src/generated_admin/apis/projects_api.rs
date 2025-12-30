@@ -21,6 +21,8 @@ pub enum CreateProjectError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status409(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -32,6 +34,8 @@ pub enum DeleteProjectError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -43,6 +47,8 @@ pub enum GetAdminSdkConfigError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -54,6 +60,8 @@ pub enum GetProjectError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -64,6 +72,8 @@ pub enum ListProjectsError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -74,6 +84,8 @@ pub enum SearchProjectsError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -84,6 +96,8 @@ pub enum SearchProjectsPostError {
     Status400(models::ListApps400Response),
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -96,6 +110,8 @@ pub enum UndeleteProjectError {
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
     Status409(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -107,6 +123,8 @@ pub enum UpdateProjectError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -180,7 +198,7 @@ pub async fn create_project(
 pub async fn delete_project(
     configuration: &configuration::Configuration,
     project_id: &str,
-) -> Result<serde_json::Value, Error<DeleteProjectError>> {
+) -> Result<models::DeleteProject200Response, Error<DeleteProjectError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
 
@@ -225,12 +243,12 @@ pub async fn delete_project(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                    "Received `text/plain` content type response that cannot be converted to `models::DeleteProject200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::DeleteProject200Response`"
                 ))));
             }
         }

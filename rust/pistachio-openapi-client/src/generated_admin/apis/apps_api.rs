@@ -22,6 +22,8 @@ pub enum CreateAppError {
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
     Status409(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -33,6 +35,8 @@ pub enum DeleteAppError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -44,6 +48,8 @@ pub enum GetAppError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -55,6 +61,8 @@ pub enum GetAppConfigError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -66,6 +74,8 @@ pub enum ListAppsError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -77,6 +87,8 @@ pub enum SearchAppsError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -88,6 +100,8 @@ pub enum SearchAppsPostError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -100,6 +114,8 @@ pub enum UndeleteAppError {
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
     Status409(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -111,6 +127,8 @@ pub enum UpdateAppError {
     Status401(models::ListApps400Response),
     Status403(models::ListApps400Response),
     Status404(models::ListApps400Response),
+    Status500(models::ListApps400Response),
+    Status503(models::ListApps400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -191,7 +209,7 @@ pub async fn delete_app(
     configuration: &configuration::Configuration,
     project_id: &str,
     app_id: &str,
-) -> Result<serde_json::Value, Error<DeleteAppError>> {
+) -> Result<models::DeleteApp200Response, Error<DeleteAppError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_path_app_id = app_id;
@@ -238,12 +256,12 @@ pub async fn delete_app(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
+                    "Received `text/plain` content type response that cannot be converted to `models::DeleteApp200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::DeleteApp200Response`"
                 ))));
             }
         }

@@ -17,7 +17,9 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ValidateApiKeyError {
-    Status401(models::ValidateApiKey401Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -25,7 +27,9 @@ pub enum ValidateApiKeyError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ValidateServiceAccountError {
-    Status401(models::ValidateApiKey401Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -33,7 +37,9 @@ pub enum ValidateServiceAccountError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ValidateTokenError {
-    Status401(models::ValidateApiKey401Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
 }
 

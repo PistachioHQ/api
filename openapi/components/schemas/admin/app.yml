@@ -360,8 +360,10 @@ UpdateAppResponse:
 
 DeleteAppResponse:
   type: object
-  description: Response confirming the app was soft-deleted.
-  properties: {}
+  description: Response containing the soft-deleted app.
+  properties:
+    app:
+      $ref: '#/App'
 
 # UndeleteApp
 

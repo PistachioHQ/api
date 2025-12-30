@@ -1,0 +1,105 @@
+# Reusable error responses for RFC 7807 Problem Details
+
+BadRequest:
+  description: Invalid request parameters
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      examples:
+        validation_error:
+          summary: Validation error with invalid parameters
+          value:
+            type: https://docs.pistachiohq.com/errors/invalid_argument
+            title: Invalid Argument
+            status: 400
+            detail: One or more request parameters failed validation
+            invalidParams:
+              - name: sort
+                reason: Invalid sort field value
+                value: foo
+                expectedValues: ["created_at", "updated_at", "display_name"]
+        format_error:
+          summary: Invalid format error
+          value:
+            type: https://docs.pistachiohq.com/errors/invalid_argument
+            title: Invalid Argument
+            status: 400
+            detail: "projectId: must match pattern ^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+            invalidParams:
+              - name: projectId
+                reason: Invalid format
+                value: "My-Project!"
+                expectedValues: ["lowercase letters, numbers, and hyphens only"]
+
+Unauthenticated:
+  description: Invalid or missing credentials
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/unauthenticated
+        title: Unauthenticated
+        status: 401
+        detail: Invalid or missing API key
+
+PermissionDenied:
+  description: Permission denied
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/permission_denied
+        title: Permission Denied
+        status: 403
+        detail: You do not have permission to access this resource
+
+NotFound:
+  description: Resource not found
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/not_found
+        title: Not Found
+        status: 404
+        detail: The requested resource was not found
+
+Conflict:
+  description: Resource conflict
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/already_exists
+        title: Already Exists
+        status: 409
+        detail: A resource with this identifier already exists
+
+InternalServerError:
+  description: Internal server error
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/internal
+        title: Internal Server Error
+        status: 500
+        detail: An unexpected error occurred. Please try again later.
+
+ServiceUnavailable:
+  description: Service temporarily unavailable
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      example:
+        type: https://docs.pistachiohq.com/errors/unavailable
+        title: Service Unavailable
+        status: 503
+        detail: The service is temporarily unavailable. Please try again later.

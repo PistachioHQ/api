@@ -14,15 +14,26 @@ use crate::generated_admin::models::{
     CreateProject200Response, CreateProjectRequest as GenCreateProjectRequest,
     ListProjects200ResponseProjectsInner, ListProjects200ResponseProjectsInnerResources,
 };
-use crate::types::{FromJson, parse_timestamp};
+use crate::problem_details::{fallback_problem_details, parse_problem_details};
+use crate::types::{FromJson, convert_problem_details, parse_timestamp};
 
 impl From<GenError> for CreateProjectError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(format!("{}: {}", e.code, e.message)),
-            GenError::Status401(e) => Self::Unauthenticated(format!("{}: {}", e.code, e.message)),
-            GenError::Status403(e) => Self::PermissionDenied(format!("{}: {}", e.code, e.message)),
+            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status401(e) => {
+                Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status403(e) => {
+                Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
             GenError::Status409(_) => Self::AlreadyExists,
+            GenError::Status500(e) => {
+                Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
+            GenError::Status503(e) => {
+                Self::ServiceUnavailable(e.detail.unwrap_or_else(|| e.title.clone()))
+            }
             GenError::UnknownValue(v) => {
                 Self::Unknown(format!("Server returned an unexpected response: {}.", v))
             }
@@ -48,9 +59,48 @@ pub(crate) async fn handle_create_project(
         error!(?e, "Error in create_project response");
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
-                resp.entity.map(Into::into).unwrap_or_else(|| {
-                    CreateProjectError::Unknown(format!("HTTP {}: {}", resp.status, resp.content))
-                })
+                let status = resp.status.as_u16();
+
+                // Try to parse RFC 7807 Problem Details from the response content
+                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    return match status {
+                        400 => CreateProjectError::BadRequest(problem),
+                        401 => CreateProjectError::Unauthenticated(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        403 => CreateProjectError::PermissionDenied(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        409 => CreateProjectError::AlreadyExists,
+                        500..=599 => CreateProjectError::ServiceError(
+                            problem.detail.unwrap_or(problem.title),
+                        ),
+                        _ => CreateProjectError::Unknown(format!(
+                            "HTTP {}: {}",
+                            status,
+                            problem.detail.unwrap_or(problem.title)
+                        )),
+                    };
+                }
+
+                // Fall back to entity parsing if RFC 7807 parsing failed
+                if let Some(entity) = resp.entity
+                    && !matches!(entity, GenError::UnknownValue(_))
+                {
+                    return entity.into();
+                }
+
+                // Last resort: status code mapping with raw content
+                match status {
+                    400 => {
+                        CreateProjectError::BadRequest(fallback_problem_details(400, resp.content))
+                    }
+                    401 => CreateProjectError::Unauthenticated(resp.content),
+                    403 => CreateProjectError::PermissionDenied(resp.content),
+                    409 => CreateProjectError::AlreadyExists,
+                    500..=599 => CreateProjectError::ServiceError(resp.content),
+                    _ => CreateProjectError::Unknown(format!("HTTP {}: {}", status, resp.content)),
+                }
             }
             crate::generated_admin::apis::Error::Reqwest(e) => {
                 CreateProjectError::ServiceUnavailable(e.to_string())

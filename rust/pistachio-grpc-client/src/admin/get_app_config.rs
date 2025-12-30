@@ -9,7 +9,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto};
+use crate::types::{FromProto, IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_get_app_config<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -26,9 +26,11 @@ pub(crate) async fn handle_get_app_config<I: Interceptor>(
             error!(?status, "Error in get_app_config response");
             match status.code() {
                 Code::InvalidArgument => {
-                    GetAppConfigError::BadRequest(status.message().to_string())
+                    GetAppConfigError::BadRequest(problem_details_from_status(&status, 400))
                 }
-                Code::NotFound => GetAppConfigError::NotFound,
+                Code::NotFound => {
+                    GetAppConfigError::NotFound(problem_details_from_status(&status, 404))
+                }
                 Code::Unauthenticated => {
                     GetAppConfigError::Unauthenticated(status.message().to_string())
                 }

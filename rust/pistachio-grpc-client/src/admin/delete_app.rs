@@ -1,3 +1,4 @@
+use libgn::app::App;
 use pistachio_api_common::admin::app::{DeleteAppError, DeleteAppRequest, DeleteAppResponse};
 use tonic::Code;
 use tonic::service::Interceptor;
@@ -7,7 +8,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::IntoProto;
+use crate::types::{FromProto, IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_delete_app<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -17,14 +18,18 @@ pub(crate) async fn handle_delete_app<I: Interceptor>(
     let request = req.into_proto();
     debug!(?request, "created proto request");
 
-    let _response = client
+    let response = client
         .delete_app(request)
         .await
         .map_err(|status| {
             error!(?status, "Error in delete_app response");
             match status.code() {
-                Code::InvalidArgument => DeleteAppError::BadRequest(status.message().to_string()),
-                Code::NotFound => DeleteAppError::NotFound,
+                Code::InvalidArgument => {
+                    DeleteAppError::BadRequest(problem_details_from_status(&status, 400))
+                }
+                Code::NotFound => {
+                    DeleteAppError::NotFound(problem_details_from_status(&status, 404))
+                }
                 Code::Unauthenticated => {
                     DeleteAppError::Unauthenticated(status.message().to_string())
                 }
@@ -40,7 +45,7 @@ pub(crate) async fn handle_delete_app<I: Interceptor>(
         })?
         .into_inner();
 
-    Ok(DeleteAppResponse {})
+    DeleteAppResponse::from_proto(response).map_err(DeleteAppError::ResponseValidationError)
 }
 
 // =============================================================================
@@ -53,5 +58,24 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::DeleteAppRequest> for Delete
             project_id: self.project_id.to_string(),
             app_id: self.app_id.to_string(),
         }
+    }
+}
+
+impl FromProto<pistachio_api::pistachio::admin::v1::DeleteAppResponse> for DeleteAppResponse {
+    type Error = pistachio_api_common::error::ValidationError;
+
+    fn from_proto(
+        proto: pistachio_api::pistachio::admin::v1::DeleteAppResponse,
+    ) -> Result<Self, Self::Error> {
+        let app_proto =
+            proto
+                .app
+                .ok_or(pistachio_api_common::error::ValidationError::MissingField(
+                    "app",
+                ))?;
+
+        let app = App::from_proto(app_proto)?;
+
+        Ok(Self { app })
     }
 }

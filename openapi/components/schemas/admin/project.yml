@@ -147,8 +147,10 @@ UpdateProjectResponse:
 
 DeleteProjectResponse:
   type: object
-  description: Response confirming the project was deleted.
-  properties: {}
+  description: Response containing the soft-deleted project.
+  properties:
+    project:
+      $ref: '#/Project'
 
 # UndeleteProject
 

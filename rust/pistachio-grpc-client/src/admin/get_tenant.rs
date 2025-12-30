@@ -8,7 +8,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto};
+use crate::types::{FromProto, IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_get_tenant<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -24,8 +24,12 @@ pub(crate) async fn handle_get_tenant<I: Interceptor>(
         .map_err(|status| {
             error!(?status, "Error in get_tenant response");
             match status.code() {
-                Code::InvalidArgument => GetTenantError::BadRequest(status.message().to_string()),
-                Code::NotFound => GetTenantError::NotFound,
+                Code::InvalidArgument => {
+                    GetTenantError::BadRequest(problem_details_from_status(&status, 400))
+                }
+                Code::NotFound => {
+                    GetTenantError::NotFound(problem_details_from_status(&status, 404))
+                }
                 Code::Unauthenticated => {
                     GetTenantError::Unauthenticated(status.message().to_string())
                 }

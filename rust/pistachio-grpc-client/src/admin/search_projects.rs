@@ -11,7 +11,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto};
+use crate::types::{FromProto, IntoProto, problem_details_from_status};
 
 pub(crate) async fn handle_search_projects<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -28,7 +28,7 @@ pub(crate) async fn handle_search_projects<I: Interceptor>(
             error!(?status, "Error in search_projects response");
             match status.code() {
                 Code::InvalidArgument => {
-                    SearchProjectsError::BadRequest(status.message().to_string())
+                    SearchProjectsError::BadRequest(problem_details_from_status(&status, 400))
                 }
                 Code::Unauthenticated => {
                     SearchProjectsError::Unauthenticated(status.message().to_string())

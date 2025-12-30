@@ -104,9 +104,10 @@ message DeleteProjectRequest {
   }];
 }
 
-// DeleteProjectResponse is returned after a project is deleted.
+// DeleteProjectResponse contains the soft-deleted project.
 message DeleteProjectResponse {
-  // Empty response. The project has been soft-deleted.
+  // The soft-deleted project.
+  pistachio.types.v1.Project project = 1;
 }
 
 // =============================================================================

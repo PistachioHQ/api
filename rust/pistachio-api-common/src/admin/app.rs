@@ -1,7 +1,7 @@
 use libgn::app::{App, AppDisplayName, AppId, Platform, PlatformConfig};
 use libgn::project::ProjectId;
 
-use crate::error::{PistachioApiClientError, ValidationError};
+use crate::error::{PistachioApiClientError, ProblemDetails, ValidationError};
 use crate::pagination::{PaginationMeta, PaginationParams};
 use crate::search::SearchParams;
 
@@ -11,12 +11,12 @@ use crate::search::SearchParams;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CreateAppError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
     #[error("App with same identifier already exists in this project")]
     AlreadyExists,
-    #[error("Project not found")]
-    NotFound,
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -75,10 +75,10 @@ pub struct CreateAppResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GetAppError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("App not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("App not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -124,10 +124,10 @@ pub struct GetAppResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateAppError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("App not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("App not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -194,16 +194,12 @@ pub struct UpdateAppResponse {
 // DeleteApp
 // =============================================================================
 
-/// Error type for delete app operations.
-///
-/// Note: Unlike other error types, this intentionally omits `ResponseValidationError`
-/// because delete operations return an empty response body with no fields to validate.
 #[derive(Debug, thiserror::Error)]
 pub enum DeleteAppError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("App not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("App not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -214,6 +210,8 @@ pub enum DeleteAppError {
     ServiceUnavailable(String),
     #[error("Client error: {0}")]
     PistachioApiClientError(#[from] PistachioApiClientError),
+    #[error("Response validation error: {0}")]
+    ResponseValidationError(#[from] ValidationError),
     #[error("Unexpected error: {0}")]
     Unknown(String),
 }
@@ -237,7 +235,8 @@ impl DeleteAppRequest {
 /// Response from deleting an app.
 #[derive(Debug, Clone)]
 pub struct DeleteAppResponse {
-    // Empty response - the app has been soft-deleted.
+    /// The soft-deleted app with updated state.
+    pub app: App,
 }
 
 // =============================================================================
@@ -246,10 +245,10 @@ pub struct DeleteAppResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UndeleteAppError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("App not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("App not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("App is not in DELETED state")]
     FailedPrecondition,
     #[error("Unauthenticated: {0}")]
@@ -297,10 +296,10 @@ pub struct UndeleteAppResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ListAppsError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -366,10 +365,10 @@ pub struct ListAppsResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchAppsError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("Project not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -432,10 +431,10 @@ pub struct SearchAppsResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GetAppConfigError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
-    #[error("App not found")]
-    NotFound,
+    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ProblemDetails),
+    #[error("App not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
+    NotFound(ProblemDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]

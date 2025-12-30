@@ -21,10 +21,16 @@ validate-key:
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/error.yml#/Error'
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
             example:
-              code: UNAUTHENTICATED
-              message: Invalid or missing API key
+              type: https://docs.pistachiohq.com/errors/unauthenticated
+              title: Unauthenticated
+              status: 401
+              detail: Invalid or missing API key
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
 
 validate-token:
   get:
@@ -49,10 +55,16 @@ validate-token:
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/error.yml#/Error'
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
             example:
-              code: UNAUTHENTICATED
-              message: Invalid or missing token
+              type: https://docs.pistachiohq.com/errors/unauthenticated
+              title: Unauthenticated
+              status: 401
+              detail: Invalid or missing token
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
 
 validate-service-account:
   get:
@@ -77,7 +89,13 @@ validate-service-account:
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/error.yml#/Error'
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
             example:
-              code: UNAUTHENTICATED
-              message: Invalid or missing service account credential
+              type: https://docs.pistachiohq.com/errors/unauthenticated
+              title: Unauthenticated
+              status: 401
+              detail: Invalid or missing service account credential
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'

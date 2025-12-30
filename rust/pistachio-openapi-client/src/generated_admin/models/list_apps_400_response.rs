@@ -11,20 +11,39 @@
 use crate::generated_admin::models;
 use serde::{Deserialize, Serialize};
 
-/// ListApps400Response : Standard error response
+/// ListApps400Response : RFC 7807 Problem Details error response
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ListApps400Response {
-    /// Machine-readable error code
-    #[serde(rename = "code")]
-    pub code: String,
-    /// Human-readable error message
-    #[serde(rename = "message")]
-    pub message: String,
+    /// A URI reference that identifies the problem type
+    #[serde(rename = "type")]
+    pub r#type: String,
+    /// A short, human-readable summary of the problem type
+    #[serde(rename = "title")]
+    pub title: String,
+    /// The HTTP status code
+    #[serde(rename = "status")]
+    pub status: i32,
+    /// A human-readable explanation specific to this occurrence
+    #[serde(rename = "detail", skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+    /// A URI reference that identifies the specific occurrence
+    #[serde(rename = "instance", skip_serializing_if = "Option::is_none")]
+    pub instance: Option<String>,
+    /// Extension member for validation errors. Contains details about which parameters failed validation and why.
+    #[serde(rename = "invalidParams", skip_serializing_if = "Option::is_none")]
+    pub invalid_params: Option<Vec<models::ListApps400ResponseInvalidParamsInner>>,
 }
 
 impl ListApps400Response {
-    /// Standard error response
-    pub fn new(code: String, message: String) -> ListApps400Response {
-        ListApps400Response { code, message }
+    /// RFC 7807 Problem Details error response
+    pub fn new(r#type: String, title: String, status: i32) -> ListApps400Response {
+        ListApps400Response {
+            r#type,
+            title,
+            status,
+            detail: None,
+            instance: None,
+            invalid_params: None,
+        }
     }
 }
