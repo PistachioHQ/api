@@ -14,13 +14,13 @@ use crate::generated_admin::models::{
     CreateProject200Response, CreateProjectRequest as GenCreateProjectRequest,
     ListProjects200ResponseProjectsInner, ListProjects200ResponseProjectsInnerResources,
 };
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details, parse_timestamp};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details, parse_timestamp};
 
 impl From<GenError> for CreateProjectError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
@@ -62,23 +62,23 @@ pub(crate) async fn handle_create_project(
                 let status = resp.status.as_u16();
 
                 // Try to parse RFC 7807 Problem Details from the response content
-                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                if let Some(problem) = parse_error_details(&resp.content) {
                     return match status {
                         400 => CreateProjectError::BadRequest(problem),
                         401 => CreateProjectError::Unauthenticated(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         403 => CreateProjectError::PermissionDenied(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         409 => CreateProjectError::AlreadyExists,
                         500..=599 => CreateProjectError::ServiceError(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         _ => CreateProjectError::Unknown(format!(
                             "HTTP {}: {}",
                             status,
-                            problem.detail.unwrap_or(problem.title)
+                            problem.message.unwrap_or(problem.title)
                         )),
                     };
                 }
@@ -92,9 +92,7 @@ pub(crate) async fn handle_create_project(
 
                 // Last resort: status code mapping with raw content
                 match status {
-                    400 => {
-                        CreateProjectError::BadRequest(fallback_problem_details(400, resp.content))
-                    }
+                    400 => CreateProjectError::BadRequest(fallback_error_details(resp.content)),
                     401 => CreateProjectError::Unauthenticated(resp.content),
                     403 => CreateProjectError::PermissionDenied(resp.content),
                     409 => CreateProjectError::AlreadyExists,

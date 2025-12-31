@@ -1,66 +1,13 @@
 //! RFC 7807 Problem Details parsing.
+//!
+//! This module parses RFC 7807 Problem Details from HTTP responses
+//! and converts them to protocol-agnostic ErrorDetails for the public API.
 
-use pistachio_api_common::error::{InvalidParam, ProblemDetails};
+use pistachio_api_common::error::{ErrorDetails, InvalidParam};
 use serde::Deserialize;
 
-/// Create a fallback ProblemDetails when parsing fails.
-///
-/// Uses appropriate error types based on HTTP status code rather than
-/// a hardcoded error type, preserving more context about the error.
-pub fn fallback_problem_details(status: u16, content: String) -> ProblemDetails {
-    let (problem_type, title) = match status {
-        400 => (
-            "https://docs.pistachiohq.com/errors/invalid_argument",
-            "Invalid Argument",
-        ),
-        401 => (
-            "https://docs.pistachiohq.com/errors/unauthenticated",
-            "Unauthenticated",
-        ),
-        403 => (
-            "https://docs.pistachiohq.com/errors/permission_denied",
-            "Permission Denied",
-        ),
-        404 => ("https://docs.pistachiohq.com/errors/not_found", "Not Found"),
-        409 => (
-            "https://docs.pistachiohq.com/errors/already_exists",
-            "Already Exists",
-        ),
-        429 => (
-            "https://docs.pistachiohq.com/errors/resource_exhausted",
-            "Resource Exhausted",
-        ),
-        500 => (
-            "https://docs.pistachiohq.com/errors/internal",
-            "Internal Server Error",
-        ),
-        501 => (
-            "https://docs.pistachiohq.com/errors/unimplemented",
-            "Not Implemented",
-        ),
-        503 => (
-            "https://docs.pistachiohq.com/errors/unavailable",
-            "Service Unavailable",
-        ),
-        504 => (
-            "https://docs.pistachiohq.com/errors/deadline_exceeded",
-            "Deadline Exceeded",
-        ),
-        _ => (
-            "https://docs.pistachiohq.com/errors/unknown",
-            "Unknown Error",
-        ),
-    };
-
-    ProblemDetails {
-        problem_type: problem_type.to_string(),
-        title: title.to_string(),
-        status,
-        detail: Some(content),
-        instance: None,
-        invalid_params: Vec::new(),
-    }
-}
+/// Base URL for error type documentation.
+const ERROR_TYPE_BASE_URL: &str = "https://docs.pistachiohq.com/errors/";
 
 /// JSON structure for an invalid parameter in RFC 7807 Problem Details.
 #[derive(Debug, Deserialize)]
@@ -81,18 +28,30 @@ struct ProblemDetailsJson {
     #[serde(rename = "type")]
     problem_type: Option<String>,
     title: Option<String>,
+    #[allow(dead_code)]
     status: Option<u16>,
     detail: Option<String>,
+    #[allow(dead_code)]
     instance: Option<String>,
     #[serde(default)]
     invalid_params: Vec<InvalidParamJson>,
 }
 
-/// Parse RFC 7807 Problem Details from a JSON response body.
+/// Extract the error type slug from a full error type URL.
 ///
-/// Returns `Some(ProblemDetails)` if the content is valid RFC 7807 JSON,
+/// Example: "https://docs.pistachiohq.com/errors/not_found" -> "not_found"
+fn extract_error_type_slug(url: &str) -> String {
+    url.strip_prefix(ERROR_TYPE_BASE_URL)
+        .unwrap_or(url)
+        .to_string()
+}
+
+/// Parse RFC 7807 Problem Details from a JSON response body
+/// into protocol-agnostic ErrorDetails.
+///
+/// Returns `Some(ErrorDetails)` if the content is valid RFC 7807 JSON,
 /// or `None` if parsing fails.
-pub fn parse_problem_details(content: &str, status: u16) -> Option<ProblemDetails> {
+pub fn parse_error_details(content: &str) -> Option<ErrorDetails> {
     let json: ProblemDetailsJson = serde_json::from_str(content).ok()?;
 
     // RFC 7807 requires at least a "type" field (though it can be "about:blank")
@@ -109,14 +68,24 @@ pub fn parse_problem_details(content: &str, status: u16) -> Option<ProblemDetail
         })
         .collect();
 
-    Some(ProblemDetails {
-        problem_type,
+    Some(ErrorDetails {
+        error_type: extract_error_type_slug(&problem_type),
         title: json.title.unwrap_or_else(|| "Error".to_string()),
-        status: json.status.unwrap_or(status),
-        detail: json.detail,
-        instance: json.instance,
+        message: json.detail,
         invalid_params,
     })
+}
+
+/// Create fallback ErrorDetails when parsing fails.
+///
+/// Used when the response body is not valid RFC 7807 JSON.
+pub fn fallback_error_details(message: impl Into<String>) -> ErrorDetails {
+    ErrorDetails {
+        error_type: "unknown".to_string(),
+        title: "Error".to_string(),
+        message: Some(message.into()),
+        invalid_params: Vec::new(),
+    }
 }
 
 #[cfg(test)]
@@ -132,18 +101,14 @@ mod tests {
             "detail": "Project not found: my-project"
         }"#;
 
-        let result = parse_problem_details(json, 404);
+        let result = parse_error_details(json);
         assert!(result.is_some());
 
-        let problem = result.unwrap();
+        let details = result.unwrap();
+        assert_eq!(details.error_type, "project_not_found");
+        assert_eq!(details.title, "Not Found");
         assert_eq!(
-            problem.problem_type,
-            "https://docs.pistachiohq.com/errors/project_not_found"
-        );
-        assert_eq!(problem.title, "Not Found");
-        assert_eq!(problem.status, 404);
-        assert_eq!(
-            problem.detail,
+            details.message,
             Some("Project not found: my-project".to_string())
         );
     }
@@ -152,29 +117,39 @@ mod tests {
     fn test_parse_minimal_problem_details() {
         let json = r#"{"type": "https://docs.pistachiohq.com/errors/unknown"}"#;
 
-        let result = parse_problem_details(json, 500);
+        let result = parse_error_details(json);
         assert!(result.is_some());
 
-        let problem = result.unwrap();
-        assert_eq!(
-            problem.problem_type,
-            "https://docs.pistachiohq.com/errors/unknown"
-        );
-        assert_eq!(problem.title, "Error"); // default
-        assert_eq!(problem.status, 500); // fallback to provided status
-        assert_eq!(problem.detail, None);
+        let details = result.unwrap();
+        assert_eq!(details.error_type, "unknown");
+        assert_eq!(details.title, "Error"); // default
+        assert_eq!(details.message, None);
     }
 
     #[test]
     fn test_parse_invalid_json() {
-        let result = parse_problem_details("not json", 500);
+        let result = parse_error_details("not json");
         assert!(result.is_none());
     }
 
     #[test]
     fn test_parse_missing_type() {
         let json = r#"{"title": "Error", "status": 500}"#;
-        let result = parse_problem_details(json, 500);
+        let result = parse_error_details(json);
         assert!(result.is_none()); // type is required
+    }
+
+    #[test]
+    fn test_extract_error_type_slug() {
+        assert_eq!(
+            extract_error_type_slug("https://docs.pistachiohq.com/errors/not_found"),
+            "not_found"
+        );
+        assert_eq!(
+            extract_error_type_slug("https://docs.pistachiohq.com/errors/already_exists"),
+            "already_exists"
+        );
+        // If not a valid URL, return as-is
+        assert_eq!(extract_error_type_slug("some_error"), "some_error");
     }
 }

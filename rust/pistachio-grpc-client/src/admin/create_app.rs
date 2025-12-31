@@ -14,7 +14,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status, timestamp_to_datetime};
+use crate::types::{FromProto, IntoProto, error_details_from_status, timestamp_to_datetime};
 
 pub(crate) async fn handle_create_app<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -31,12 +31,10 @@ pub(crate) async fn handle_create_app<I: Interceptor>(
             error!(?status, "Error in create_app response");
             match status.code() {
                 Code::InvalidArgument => {
-                    CreateAppError::BadRequest(problem_details_from_status(&status, 400))
+                    CreateAppError::BadRequest(error_details_from_status(&status))
                 }
                 Code::AlreadyExists => CreateAppError::AlreadyExists,
-                Code::NotFound => {
-                    CreateAppError::NotFound(problem_details_from_status(&status, 404))
-                }
+                Code::NotFound => CreateAppError::NotFound(error_details_from_status(&status)),
                 Code::Unauthenticated => {
                     CreateAppError::Unauthenticated(status.message().to_string())
                 }

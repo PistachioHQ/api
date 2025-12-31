@@ -9,7 +9,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status};
+use crate::types::{FromProto, IntoProto, error_details_from_status};
 
 pub(crate) async fn handle_search_apps<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -26,11 +26,9 @@ pub(crate) async fn handle_search_apps<I: Interceptor>(
             error!(?status, "Error in search_apps response");
             match status.code() {
                 Code::InvalidArgument => {
-                    SearchAppsError::BadRequest(problem_details_from_status(&status, 400))
+                    SearchAppsError::BadRequest(error_details_from_status(&status))
                 }
-                Code::NotFound => {
-                    SearchAppsError::NotFound(problem_details_from_status(&status, 404))
-                }
+                Code::NotFound => SearchAppsError::NotFound(error_details_from_status(&status)),
                 Code::Unauthenticated => {
                     SearchAppsError::Unauthenticated(status.message().to_string())
                 }

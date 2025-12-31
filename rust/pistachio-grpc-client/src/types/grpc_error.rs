@@ -1,17 +1,14 @@
-//! gRPC error to RFC 7807 ProblemDetails conversion utilities.
+//! gRPC error to ErrorDetails conversion utilities.
 //!
 //! This module provides shared functionality for converting gRPC Status errors
-//! into RFC 7807 ProblemDetails responses, including parsing of structured
+//! into protocol-agnostic ErrorDetails responses, including parsing of structured
 //! error details from gRPC ErrorInfo metadata.
 
 use std::collections::HashMap;
 
-use pistachio_api_common::error::{InvalidParam, ProblemDetails};
+use pistachio_api_common::error::{ErrorDetails, InvalidParam};
 use tonic::Code;
 use tonic_types::StatusExt;
-
-/// Base URL for error type documentation.
-const ERROR_TYPE_BASE_URL: &str = "https://docs.pistachiohq.com/errors/";
 
 /// Map an error slug to a human-readable title.
 ///
@@ -57,11 +54,11 @@ fn fallback_title_from_code(code: Code) -> &'static str {
     }
 }
 
-/// Extract a single RFC 7807 `invalidParam` from `ErrorInfo.metadata`.
+/// Extract a single `InvalidParam` from `ErrorInfo.metadata`.
 ///
 /// This performs a mechanical transformation of the structured metadata format
-/// used by api-gateway into an RFC 7807 invalid param. The metadata format uses
-/// generic `field.*` keys (transformed from `grpc.field.*` by api-gateway):
+/// used by the server into an invalid param. The metadata format uses
+/// generic `field.*` keys:
 ///
 /// - `field.key` - The field path with the violation
 /// - `field.reason` - Human-readable reason for the violation
@@ -85,23 +82,18 @@ fn extract_invalid_param(metadata: &HashMap<String, String>) -> Option<InvalidPa
     })
 }
 
-/// Create a ProblemDetails from a gRPC Status.
+/// Create protocol-agnostic ErrorDetails from a gRPC Status.
 ///
 /// This function extracts structured error information from gRPC status details
-/// and converts it to an RFC 7807 ProblemDetails response. It handles:
+/// and converts it to an ErrorDetails response. It handles:
 ///
-/// - Error type URL from ErrorInfo.reason
+/// - Error type slug from ErrorInfo.reason
 /// - Title from ErrorInfo.metadata["title"] or fallback slug mapping
 /// - Invalid parameters from ErrorInfo.metadata["field.*"] entries
 ///
-/// # Arguments
-///
-/// * `status` - The gRPC status containing error details
-/// * `http_status` - The HTTP status code to use in the ProblemDetails
-pub(crate) fn problem_details_from_status(
-    status: &tonic::Status,
-    http_status: u16,
-) -> ProblemDetails {
+/// This is transport-agnostic: no HTTP status codes or other transport-specific
+/// details are exposed.
+pub(crate) fn error_details_from_status(status: &tonic::Status) -> ErrorDetails {
     // Get all error details from the status (supports multiple ErrorInfo entries)
     let error_details = status.get_error_details_vec();
 
@@ -117,14 +109,14 @@ pub(crate) fn problem_details_from_status(
         })
         .collect();
 
-    // Extract problem type and title from the first ErrorInfo
-    let (problem_type, title) = error_infos
+    // Extract error type and title from the first ErrorInfo
+    let (error_type, title) = error_infos
         .first()
         .filter(|info| !info.reason.is_empty())
         .map_or_else(
             || {
                 (
-                    format!("{ERROR_TYPE_BASE_URL}unknown"),
+                    "unknown".to_string(),
                     fallback_title_from_code(status.code()).to_string(),
                 )
             },
@@ -135,7 +127,7 @@ pub(crate) fn problem_details_from_status(
                     .metadata
                     .get("title")
                     .map_or_else(|| error_slug_to_title(slug).to_string(), Clone::clone);
-                (format!("{ERROR_TYPE_BASE_URL}{slug}"), title)
+                (slug.clone(), title)
             },
         );
 
@@ -145,12 +137,10 @@ pub(crate) fn problem_details_from_status(
         .filter_map(|info| extract_invalid_param(&info.metadata))
         .collect();
 
-    ProblemDetails {
-        problem_type,
+    ErrorDetails {
+        error_type,
         title,
-        status: http_status,
-        detail: Some(status.message().to_string()),
-        instance: None,
+        message: Some(status.message().to_string()),
         invalid_params,
     }
 }

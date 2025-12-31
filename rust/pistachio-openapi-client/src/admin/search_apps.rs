@@ -7,20 +7,20 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::apps_api::{SearchAppsError as GenError, search_apps};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::models::SearchApps200Response;
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details};
 
 impl From<GenError> for SearchAppsError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
             GenError::Status403(e) => {
                 Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
             }
-            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status404(e) => Self::NotFound(convert_error_details(e)),
             GenError::Status500(e) => {
                 Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
             }
@@ -73,23 +73,23 @@ pub(crate) async fn handle_search_apps(
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
                 let status = resp.status.as_u16();
-                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                if let Some(problem) = parse_error_details(&resp.content) {
                     return match status {
                         400 => SearchAppsError::BadRequest(problem),
                         401 => SearchAppsError::Unauthenticated(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         403 => SearchAppsError::PermissionDenied(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         404 => SearchAppsError::NotFound(problem),
                         500..=599 => {
-                            SearchAppsError::ServiceError(problem.detail.unwrap_or(problem.title))
+                            SearchAppsError::ServiceError(problem.message.unwrap_or(problem.title))
                         }
                         _ => SearchAppsError::Unknown(format!(
                             "HTTP {}: {}",
                             status,
-                            problem.detail.unwrap_or(problem.title)
+                            problem.message.unwrap_or(problem.title)
                         )),
                     };
                 }
@@ -99,10 +99,10 @@ pub(crate) async fn handle_search_apps(
                     return entity.into();
                 }
                 match status {
-                    400 => SearchAppsError::BadRequest(fallback_problem_details(400, resp.content)),
+                    400 => SearchAppsError::BadRequest(fallback_error_details(resp.content)),
                     401 => SearchAppsError::Unauthenticated(resp.content),
                     403 => SearchAppsError::PermissionDenied(resp.content),
-                    404 => SearchAppsError::NotFound(fallback_problem_details(404, resp.content)),
+                    404 => SearchAppsError::NotFound(fallback_error_details(resp.content)),
                     500..=599 => SearchAppsError::ServiceError(resp.content),
                     _ => SearchAppsError::Unknown(format!("HTTP {}: {}", status, resp.content)),
                 }

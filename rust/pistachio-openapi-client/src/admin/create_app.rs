@@ -13,20 +13,20 @@ use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::models::{
     CreateApp200Response, CreateAppRequest as GenRequest, ListApps200ResponseAppsInner,
 };
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details, parse_timestamp};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details, parse_timestamp};
 
 impl From<GenError> for CreateAppError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
             GenError::Status403(e) => {
                 Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
             }
-            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status404(e) => Self::NotFound(convert_error_details(e)),
             GenError::Status409(_) => Self::AlreadyExists,
             GenError::Status500(e) => {
                 Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
@@ -59,24 +59,24 @@ pub(crate) async fn handle_create_app(
             match e {
                 crate::generated_admin::apis::Error::ResponseError(resp) => {
                     let status = resp.status.as_u16();
-                    if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    if let Some(problem) = parse_error_details(&resp.content) {
                         return match status {
                             400 => CreateAppError::BadRequest(problem),
                             401 => CreateAppError::Unauthenticated(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             403 => CreateAppError::PermissionDenied(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             404 => CreateAppError::NotFound(problem),
                             409 => CreateAppError::AlreadyExists,
                             500..=599 => CreateAppError::ServiceError(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             _ => CreateAppError::Unknown(format!(
                                 "HTTP {}: {}",
                                 status,
-                                problem.detail.unwrap_or(problem.title)
+                                problem.message.unwrap_or(problem.title)
                             )),
                         };
                     }
@@ -86,14 +86,10 @@ pub(crate) async fn handle_create_app(
                         return entity.into();
                     }
                     match status {
-                        400 => {
-                            CreateAppError::BadRequest(fallback_problem_details(400, resp.content))
-                        }
+                        400 => CreateAppError::BadRequest(fallback_error_details(resp.content)),
                         401 => CreateAppError::Unauthenticated(resp.content),
                         403 => CreateAppError::PermissionDenied(resp.content),
-                        404 => {
-                            CreateAppError::NotFound(fallback_problem_details(404, resp.content))
-                        }
+                        404 => CreateAppError::NotFound(fallback_error_details(resp.content)),
                         409 => CreateAppError::AlreadyExists,
                         500..=599 => CreateAppError::ServiceError(resp.content),
                         _ => CreateAppError::Unknown(format!("HTTP {}: {}", status, resp.content)),

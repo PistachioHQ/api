@@ -6,20 +6,20 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::tenants_api::{GetTenantError as GenError, get_tenant};
 use crate::generated_admin::models::GetTenant200Response;
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details};
 
 impl From<GenError> for GetTenantError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
             GenError::Status403(e) => {
                 Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
             }
-            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status404(e) => Self::NotFound(convert_error_details(e)),
             GenError::Status500(e) => {
                 Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
             }
@@ -51,23 +51,23 @@ pub(crate) async fn handle_get_tenant(
             match e {
                 crate::generated_admin::apis::Error::ResponseError(resp) => {
                     let status = resp.status.as_u16();
-                    if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    if let Some(problem) = parse_error_details(&resp.content) {
                         return match status {
                             400 => GetTenantError::BadRequest(problem),
                             401 => GetTenantError::Unauthenticated(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             403 => GetTenantError::PermissionDenied(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             404 => GetTenantError::NotFound(problem),
                             500..=599 => GetTenantError::ServiceError(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             _ => GetTenantError::Unknown(format!(
                                 "HTTP {}: {}",
                                 status,
-                                problem.detail.unwrap_or(problem.title)
+                                problem.message.unwrap_or(problem.title)
                             )),
                         };
                     }
@@ -77,14 +77,10 @@ pub(crate) async fn handle_get_tenant(
                         return entity.into();
                     }
                     match status {
-                        400 => {
-                            GetTenantError::BadRequest(fallback_problem_details(400, resp.content))
-                        }
+                        400 => GetTenantError::BadRequest(fallback_error_details(resp.content)),
                         401 => GetTenantError::Unauthenticated(resp.content),
                         403 => GetTenantError::PermissionDenied(resp.content),
-                        404 => {
-                            GetTenantError::NotFound(fallback_problem_details(404, resp.content))
-                        }
+                        404 => GetTenantError::NotFound(fallback_error_details(resp.content)),
                         500..=599 => GetTenantError::ServiceError(resp.content),
                         _ => GetTenantError::Unknown(format!("HTTP {}: {}", status, resp.content)),
                     }

@@ -10,7 +10,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status};
+use crate::types::{FromProto, IntoProto, error_details_from_status};
 
 pub(crate) async fn handle_update_project<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -27,11 +27,9 @@ pub(crate) async fn handle_update_project<I: Interceptor>(
             error!(?status, "Error in update_project response");
             match status.code() {
                 Code::InvalidArgument => {
-                    UpdateProjectError::BadRequest(problem_details_from_status(&status, 400))
+                    UpdateProjectError::BadRequest(error_details_from_status(&status))
                 }
-                Code::NotFound => {
-                    UpdateProjectError::NotFound(problem_details_from_status(&status, 404))
-                }
+                Code::NotFound => UpdateProjectError::NotFound(error_details_from_status(&status)),
                 Code::Unauthenticated => {
                     UpdateProjectError::Unauthenticated(status.message().to_string())
                 }

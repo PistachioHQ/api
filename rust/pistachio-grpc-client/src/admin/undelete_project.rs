@@ -10,7 +10,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status};
+use crate::types::{FromProto, IntoProto, error_details_from_status};
 
 pub(crate) async fn handle_undelete_project<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -27,10 +27,10 @@ pub(crate) async fn handle_undelete_project<I: Interceptor>(
             error!(?status, "Error in undelete_project response");
             match status.code() {
                 Code::InvalidArgument => {
-                    UndeleteProjectError::BadRequest(problem_details_from_status(&status, 400))
+                    UndeleteProjectError::BadRequest(error_details_from_status(&status))
                 }
                 Code::NotFound => {
-                    UndeleteProjectError::NotFound(problem_details_from_status(&status, 404))
+                    UndeleteProjectError::NotFound(error_details_from_status(&status))
                 }
                 Code::FailedPrecondition => {
                     UndeleteProjectError::FailedPrecondition(status.message().to_string())

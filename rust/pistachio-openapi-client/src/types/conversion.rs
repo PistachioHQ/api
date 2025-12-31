@@ -1,7 +1,10 @@
 use chrono::{DateTime, Utc};
-use pistachio_api_common::error::{InvalidParam, ProblemDetails, ValidationError};
+use pistachio_api_common::error::{ErrorDetails, InvalidParam, ValidationError};
 
 use crate::generated_admin::models::{ListApps400Response, ListApps400ResponseInvalidParamsInner};
+
+/// Base URL for error type documentation.
+const ERROR_TYPE_BASE_URL: &str = "https://docs.pistachiohq.com/errors/";
 
 /// Trait for converting JSON response types to domain types.
 pub(crate) trait FromJson<T>: Sized {
@@ -17,16 +20,24 @@ pub(crate) fn parse_timestamp(s: Option<String>) -> Result<DateTime<Utc>, Valida
         .map_err(|_| ValidationError::InvalidValue("timestamp"))
 }
 
-/// Convert a generated OpenAPI error response to a domain ProblemDetails.
+/// Extract the error type slug from a full error type URL.
 ///
-/// This function handles the RFC 7807 Problem Details format.
-pub(crate) fn convert_problem_details(e: ListApps400Response) -> ProblemDetails {
-    ProblemDetails {
-        problem_type: e.r#type,
+/// Example: "https://docs.pistachiohq.com/errors/not_found" -> "not_found"
+fn extract_error_type_slug(url: &str) -> String {
+    url.strip_prefix(ERROR_TYPE_BASE_URL)
+        .unwrap_or(url)
+        .to_string()
+}
+
+/// Convert a generated OpenAPI error response to protocol-agnostic ErrorDetails.
+///
+/// This function handles the RFC 7807 Problem Details format and converts it
+/// to a protocol-agnostic representation.
+pub(crate) fn convert_error_details(e: ListApps400Response) -> ErrorDetails {
+    ErrorDetails {
+        error_type: extract_error_type_slug(&e.r#type),
         title: e.title,
-        status: e.status as u16,
-        detail: e.detail,
-        instance: e.instance,
+        message: e.detail,
         invalid_params: e
             .invalid_params
             .map(|params| params.into_iter().map(convert_invalid_param).collect())

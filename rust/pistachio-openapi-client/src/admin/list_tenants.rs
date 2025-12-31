@@ -9,20 +9,20 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::tenants_api::{ListTenantsError as GenError, list_tenants};
 use crate::generated_admin::models::ListTenants200Response;
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details};
 
 impl From<GenError> for ListTenantsError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
             GenError::Status403(e) => {
                 Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
             }
-            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status404(e) => Self::NotFound(convert_error_details(e)),
             GenError::Status500(e) => {
                 Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
             }
@@ -68,23 +68,23 @@ pub(crate) async fn handle_list_tenants(
         match e {
             crate::generated_admin::apis::Error::ResponseError(resp) => {
                 let status = resp.status.as_u16();
-                if let Some(problem) = parse_problem_details(&resp.content, status) {
+                if let Some(problem) = parse_error_details(&resp.content) {
                     return match status {
                         400 => ListTenantsError::BadRequest(problem),
                         401 => ListTenantsError::Unauthenticated(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         403 => ListTenantsError::PermissionDenied(
-                            problem.detail.unwrap_or(problem.title),
+                            problem.message.unwrap_or(problem.title),
                         ),
                         404 => ListTenantsError::NotFound(problem),
                         500..=599 => {
-                            ListTenantsError::ServiceError(problem.detail.unwrap_or(problem.title))
+                            ListTenantsError::ServiceError(problem.message.unwrap_or(problem.title))
                         }
                         _ => ListTenantsError::Unknown(format!(
                             "HTTP {}: {}",
                             status,
-                            problem.detail.unwrap_or(problem.title)
+                            problem.message.unwrap_or(problem.title)
                         )),
                     };
                 }
@@ -94,12 +94,10 @@ pub(crate) async fn handle_list_tenants(
                     return entity.into();
                 }
                 match status {
-                    400 => {
-                        ListTenantsError::BadRequest(fallback_problem_details(400, resp.content))
-                    }
+                    400 => ListTenantsError::BadRequest(fallback_error_details(resp.content)),
                     401 => ListTenantsError::Unauthenticated(resp.content),
                     403 => ListTenantsError::PermissionDenied(resp.content),
-                    404 => ListTenantsError::NotFound(fallback_problem_details(404, resp.content)),
+                    404 => ListTenantsError::NotFound(fallback_error_details(resp.content)),
                     500..=599 => ListTenantsError::ServiceError(resp.content),
                     _ => ListTenantsError::Unknown(format!("HTTP {}: {}", status, resp.content)),
                 }

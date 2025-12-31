@@ -10,7 +10,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status};
+use crate::types::{FromProto, IntoProto, error_details_from_status};
 
 pub(crate) async fn handle_get_admin_sdk_config<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -27,10 +27,10 @@ pub(crate) async fn handle_get_admin_sdk_config<I: Interceptor>(
             error!(?status, "Error in get_admin_sdk_config response");
             match status.code() {
                 Code::InvalidArgument => {
-                    GetAdminSdkConfigError::BadRequest(problem_details_from_status(&status, 400))
+                    GetAdminSdkConfigError::BadRequest(error_details_from_status(&status))
                 }
                 Code::NotFound => {
-                    GetAdminSdkConfigError::NotFound(problem_details_from_status(&status, 404))
+                    GetAdminSdkConfigError::NotFound(error_details_from_status(&status))
                 }
                 Code::Unauthenticated => {
                     GetAdminSdkConfigError::Unauthenticated(status.message().to_string())

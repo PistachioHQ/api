@@ -1,7 +1,7 @@
 use libgn::project::ProjectId;
 use libgn::tenant::{Tenant, TenantDisplayName, TenantId};
 
-use crate::error::{PistachioApiClientError, ProblemDetails, ValidationError};
+use crate::error::{ErrorDetails, PistachioApiClientError, ValidationError};
 use crate::pagination::{PaginationMeta, PaginationParams};
 use crate::search::SearchParams;
 
@@ -11,12 +11,12 @@ use crate::search::SearchParams;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CreateTenantError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
     #[error("Tenant ID already exists in this project")]
     AlreadyExists,
-    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Project not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -106,10 +106,10 @@ pub struct CreateTenantResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum GetTenantError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
-    #[error("Tenant not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
+    #[error("Tenant not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -158,10 +158,10 @@ pub struct GetTenantResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateTenantError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
-    #[error("Tenant not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
+    #[error("Tenant not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -255,10 +255,10 @@ pub struct UpdateTenantResponse {
 /// because delete operations return an empty response body with no fields to validate.
 #[derive(Debug, thiserror::Error)]
 pub enum DeleteTenantError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
-    #[error("Tenant not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
+    #[error("Tenant not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -304,10 +304,10 @@ pub struct DeleteTenantResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ListTenantsError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
-    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
+    #[error("Project not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]
@@ -364,10 +364,10 @@ pub struct ListTenantsResponse {
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchTenantsError {
-    #[error("Bad request: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    BadRequest(ProblemDetails),
-    #[error("Project not found: {}", .0.detail.as_deref().unwrap_or(&.0.title))]
-    NotFound(ProblemDetails),
+    #[error("Bad request: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    BadRequest(ErrorDetails),
+    #[error("Project not found: {}", .0.message.as_deref().unwrap_or(&.0.title))]
+    NotFound(ErrorDetails),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Permission denied: {0}")]

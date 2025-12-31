@@ -8,7 +8,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, problem_details_from_status};
+use crate::types::{FromProto, IntoProto, error_details_from_status};
 
 pub(crate) async fn handle_delete_app<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -25,11 +25,9 @@ pub(crate) async fn handle_delete_app<I: Interceptor>(
             error!(?status, "Error in delete_app response");
             match status.code() {
                 Code::InvalidArgument => {
-                    DeleteAppError::BadRequest(problem_details_from_status(&status, 400))
+                    DeleteAppError::BadRequest(error_details_from_status(&status))
                 }
-                Code::NotFound => {
-                    DeleteAppError::NotFound(problem_details_from_status(&status, 404))
-                }
+                Code::NotFound => DeleteAppError::NotFound(error_details_from_status(&status)),
                 Code::Unauthenticated => {
                     DeleteAppError::Unauthenticated(status.message().to_string())
                 }

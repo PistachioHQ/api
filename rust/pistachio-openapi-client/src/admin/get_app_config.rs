@@ -7,20 +7,20 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::apps_api::{GetAppConfigError as GenError, get_app_config};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::models::GetAppConfig200Response;
-use crate::problem_details::{fallback_problem_details, parse_problem_details};
-use crate::types::{FromJson, convert_problem_details};
+use crate::problem_details::{fallback_error_details, parse_error_details};
+use crate::types::{FromJson, convert_error_details};
 
 impl From<GenError> for GetAppConfigError {
     fn from(error: GenError) -> Self {
         match error {
-            GenError::Status400(e) => Self::BadRequest(convert_problem_details(e)),
+            GenError::Status400(e) => Self::BadRequest(convert_error_details(e)),
             GenError::Status401(e) => {
                 Self::Unauthenticated(e.detail.unwrap_or_else(|| e.title.clone()))
             }
             GenError::Status403(e) => {
                 Self::PermissionDenied(e.detail.unwrap_or_else(|| e.title.clone()))
             }
-            GenError::Status404(e) => Self::NotFound(convert_problem_details(e)),
+            GenError::Status404(e) => Self::NotFound(convert_error_details(e)),
             GenError::Status500(e) => {
                 Self::ServiceError(e.detail.unwrap_or_else(|| e.title.clone()))
             }
@@ -52,23 +52,23 @@ pub(crate) async fn handle_get_app_config(
             match e {
                 crate::generated_admin::apis::Error::ResponseError(resp) => {
                     let status = resp.status.as_u16();
-                    if let Some(problem) = parse_problem_details(&resp.content, status) {
+                    if let Some(problem) = parse_error_details(&resp.content) {
                         return match status {
                             400 => GetAppConfigError::BadRequest(problem),
                             401 => GetAppConfigError::Unauthenticated(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             403 => GetAppConfigError::PermissionDenied(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             404 => GetAppConfigError::NotFound(problem),
                             500..=599 => GetAppConfigError::ServiceError(
-                                problem.detail.unwrap_or(problem.title),
+                                problem.message.unwrap_or(problem.title),
                             ),
                             _ => GetAppConfigError::Unknown(format!(
                                 "HTTP {}: {}",
                                 status,
-                                problem.detail.unwrap_or(problem.title)
+                                problem.message.unwrap_or(problem.title)
                             )),
                         };
                     }
@@ -78,15 +78,10 @@ pub(crate) async fn handle_get_app_config(
                         return entity.into();
                     }
                     match status {
-                        400 => GetAppConfigError::BadRequest(fallback_problem_details(
-                            400,
-                            resp.content,
-                        )),
+                        400 => GetAppConfigError::BadRequest(fallback_error_details(resp.content)),
                         401 => GetAppConfigError::Unauthenticated(resp.content),
                         403 => GetAppConfigError::PermissionDenied(resp.content),
-                        404 => {
-                            GetAppConfigError::NotFound(fallback_problem_details(404, resp.content))
-                        }
+                        404 => GetAppConfigError::NotFound(fallback_error_details(resp.content)),
                         500..=599 => GetAppConfigError::ServiceError(resp.content),
                         _ => {
                             GetAppConfigError::Unknown(format!("HTTP {}: {}", status, resp.content))

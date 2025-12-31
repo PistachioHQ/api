@@ -16,6 +16,7 @@ pub mod error_type {
 
     // Conflict errors
     pub const ALREADY_EXISTS: &str = "already_exists";
+    pub const ALREADY_USED: &str = "already_used";
 
     // State errors
     pub const NOT_DELETED: &str = "not_deleted";
@@ -27,37 +28,6 @@ pub mod error_type {
     // Auth errors
     pub const UNAUTHENTICATED: &str = "unauthenticated";
     pub const PERMISSION_DENIED: &str = "permission_denied";
-}
-
-/// RFC 7807 Problem Details response.
-///
-/// This structure represents a standardized error response format as defined
-/// in RFC 7807 (Problem Details for HTTP APIs). It provides a consistent way
-/// to communicate error information to API consumers.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ProblemDetails {
-    /// A URI reference that identifies the problem type.
-    /// Example: `https://docs.pistachiohq.com/errors/not_found`
-    pub problem_type: String,
-
-    /// A short, human-readable summary of the problem type.
-    /// Example: "Project not found"
-    pub title: String,
-
-    /// The HTTP status code for this occurrence of the problem.
-    pub status: u16,
-
-    /// A human-readable explanation specific to this occurrence.
-    /// Example: "Project 'my-project' not found"
-    pub detail: Option<String>,
-
-    /// A URI reference that identifies the specific occurrence of the problem.
-    /// Example: "/admin/v1/projects/my-project"
-    pub instance: Option<String>,
-
-    /// Extension member for validation errors containing details about
-    /// which parameters failed validation and why.
-    pub invalid_params: Vec<InvalidParam>,
 }
 
 /// Details about an invalid parameter in a validation error.
@@ -81,6 +51,79 @@ pub struct InvalidParam {
     /// The list of valid/expected values for this parameter (if applicable).
     /// Example: ["project_id", "created_at", "display_name"]
     pub expected_values: Vec<String>,
+}
+
+/// Protocol-agnostic error details.
+///
+/// Contains semantic information about an error without exposing
+/// transport-specific details (HTTP status codes, gRPC codes, etc.).
+///
+/// SDK users care about:
+/// - What kind of error occurred (via enum variant: `NotFound`, `FailedPrecondition`, etc.)
+/// - Semantic details to understand/fix the problem
+///
+/// SDK users should NOT see:
+/// - HTTP status codes
+/// - gRPC status codes (tonic::Code)
+/// - Any hint of which transport is being used
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ErrorDetails {
+    /// Error type slug for programmatic handling.
+    ///
+    /// Example: "not_found", "already_used", "invalid_request"
+    pub error_type: String,
+
+    /// Human-readable error title.
+    ///
+    /// Example: "Project not found"
+    pub title: String,
+
+    /// Detailed error message specific to this occurrence.
+    ///
+    /// Example: "No project exists with ID proj_123abc"
+    pub message: Option<String>,
+
+    /// Invalid parameters for validation errors.
+    pub invalid_params: Vec<InvalidParam>,
+}
+
+impl ErrorDetails {
+    /// Create error details from a message string.
+    ///
+    /// Used as a fallback when structured error details are not available.
+    pub fn from_message(message: impl Into<String>) -> Self {
+        let msg = message.into();
+        Self {
+            error_type: error_type::INTERNAL_ERROR.to_string(),
+            title: "Error".to_string(),
+            message: Some(msg),
+            invalid_params: Vec::new(),
+        }
+    }
+
+    /// Create error details with a specific type and title.
+    pub fn new(error_type: impl Into<String>, title: impl Into<String>) -> Self {
+        Self {
+            error_type: error_type.into(),
+            title: title.into(),
+            message: None,
+            invalid_params: Vec::new(),
+        }
+    }
+
+    /// Set the detail message.
+    #[must_use]
+    pub fn with_message(mut self, message: impl Into<String>) -> Self {
+        self.message = Some(message.into());
+        self
+    }
+
+    /// Add an invalid parameter.
+    #[must_use]
+    pub fn with_invalid_param(mut self, param: InvalidParam) -> Self {
+        self.invalid_params.push(param);
+        self
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
