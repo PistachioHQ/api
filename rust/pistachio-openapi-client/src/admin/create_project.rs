@@ -11,7 +11,7 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::projects_api::{CreateProjectError as GenError, create_project};
 use crate::generated_admin::models::{
-    CreateProject200Response, CreateProjectRequest as GenCreateProjectRequest,
+    CreateProject201Response, CreateProjectRequest as GenCreateProjectRequest,
     ListProjects200ResponseProjectsInner, ListProjects200ResponseProjectsInnerResources,
 };
 use crate::problem_details::{fallback_error_details, parse_error_details};
@@ -114,10 +114,10 @@ pub(crate) async fn handle_create_project(
 // JSON conversions
 // =============================================================================
 
-impl FromJson<CreateProject200Response> for CreateProjectResponse {
+impl FromJson<CreateProject201Response> for CreateProjectResponse {
     type Error = ValidationError;
 
-    fn from_json(json: CreateProject200Response) -> Result<Self, Self::Error> {
+    fn from_json(json: CreateProject201Response) -> Result<Self, Self::Error> {
         let project = json
             .project
             .map(|p| Project::from_json(*p))

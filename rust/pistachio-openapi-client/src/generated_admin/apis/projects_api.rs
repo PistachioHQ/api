@@ -132,7 +132,7 @@ pub enum UpdateProjectError {
 pub async fn create_project(
     configuration: &configuration::Configuration,
     create_project_request: models::CreateProjectRequest,
-) -> Result<models::CreateProject200Response, Error<CreateProjectError>> {
+) -> Result<models::CreateProject201Response, Error<CreateProjectError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_body_create_project_request = create_project_request;
 
@@ -174,12 +174,12 @@ pub async fn create_project(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::CreateProject200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::CreateProject201Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateProject200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateProject201Response`"
                 ))));
             }
         }
