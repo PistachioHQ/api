@@ -72,7 +72,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::CreateAppRequest> for Create
 
         pistachio_api::pistachio::admin::v1::CreateAppRequest {
             project_id: self.project_id.to_string(),
-            display_name: self.display_name.to_string(),
+            display_name: self.display_name,
             platform: self.platform.to_i32(),
             platform_config,
         }

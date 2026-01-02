@@ -20,11 +20,9 @@ message CreateAppRequest {
     pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
   }];
 
-  // Human-readable display name for the app. Required.
-  string display_name = 2 [(buf.validate.field).string = {
-    min_len: 1
-    max_len: 64
-  }];
+  // Human-readable display name for the app.
+  // If not provided, a default name will be generated based on the platform.
+  optional string display_name = 2 [(buf.validate.field).string.max_len = 64];
 
   // Target platform. Required.
   pistachio.types.v1.Platform platform = 3 [(buf.validate.field).enum.defined_only = true];

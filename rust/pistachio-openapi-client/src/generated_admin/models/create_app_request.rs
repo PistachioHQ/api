@@ -14,9 +14,14 @@ use serde::{Deserialize, Serialize};
 /// CreateAppRequest : Request body for creating a new app.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CreateAppRequest {
-    /// Human-readable display name for the app. Required.
-    #[serde(rename = "displayName")]
-    pub display_name: String,
+    /// Human-readable display name for the app. If not provided, a default name will be generated based on the platform.
+    #[serde(
+        rename = "displayName",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub display_name: Option<Option<String>>,
     /// Target platform for an app.
     #[serde(rename = "platform")]
     pub platform: Platform,
@@ -36,9 +41,9 @@ pub struct CreateAppRequest {
 
 impl CreateAppRequest {
     /// Request body for creating a new app.
-    pub fn new(display_name: String, platform: Platform) -> CreateAppRequest {
+    pub fn new(platform: Platform) -> CreateAppRequest {
         CreateAppRequest {
-            display_name,
+            display_name: None,
             platform,
             ios: None,
             android: None,

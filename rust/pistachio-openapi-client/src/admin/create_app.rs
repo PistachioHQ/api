@@ -218,7 +218,7 @@ fn build_create_request(req: CreateAppRequest) -> GenRequest {
     };
 
     GenRequest {
-        display_name: req.display_name.to_string(),
+        display_name: req.display_name.map(Some),
         platform,
         ios,
         android,

@@ -38,8 +38,9 @@ pub enum CreateAppError {
 pub struct CreateAppRequest {
     /// The project ID that will own this app.
     pub project_id: ProjectId,
-    /// Human-readable display name for the app. Required.
-    pub display_name: AppDisplayName,
+    /// Human-readable display name for the app.
+    /// If not provided, a default name will be generated based on the platform.
+    pub display_name: Option<String>,
     /// Target platform for the app. Required.
     pub platform: Platform,
     /// Platform-specific configuration. Required.
@@ -48,17 +49,22 @@ pub struct CreateAppRequest {
 
 impl CreateAppRequest {
     /// Creates a new request with required fields.
-    pub fn new(
-        project_id: ProjectId,
-        display_name: AppDisplayName,
-        platform_config: PlatformConfig,
-    ) -> Self {
+    ///
+    /// The `display_name` is optional; if not provided, the backend will generate
+    /// a default based on the platform.
+    pub fn new(project_id: ProjectId, platform_config: PlatformConfig) -> Self {
         Self {
             project_id,
-            display_name,
+            display_name: None,
             platform: platform_config.platform(),
             platform_config,
         }
+    }
+
+    /// Sets the display name for the app.
+    pub fn with_display_name(mut self, display_name: impl Into<String>) -> Self {
+        self.display_name = Some(display_name.into());
+        self
     }
 }
 

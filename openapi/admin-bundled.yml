@@ -725,13 +725,15 @@ paths:
                             type: object
                             description: Request body for creating a new app.
                             required:
-                                - displayName
                                 - platform
                             properties:
                                 displayName:
-                                    type: string
-                                    description: Human-readable display name for the app. Required.
-                                    minLength: 1
+                                    type:
+                                        - string
+                                        - 'null'
+                                    description: |
+                                        Human-readable display name for the app.
+                                        If not provided, a default name will be generated based on the platform.
                                     maxLength: 64
                                     example: My iOS App
                                 platform:
