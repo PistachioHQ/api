@@ -44,19 +44,25 @@ pub(crate) async fn handle_update_tenant(
     let project_id = req.project_id.to_string();
     let tenant_id = req.tenant_id.to_string();
     // Convert string MFA config to enum values
+    // The generated model uses Option<Option<Vec<MfaConfig>>> to represent nullable arrays:
+    // - None (outer) = field omitted, don't change
+    // - Some(Some([])) = explicitly set to empty, clear all MFA
+    // - Some(Some([Phone])) = set MFA providers
     let mfa_config = req.mfa_config.map(|configs| {
-        configs
-            .into_iter()
-            .filter_map(|s| match s.as_str() {
-                "phone" => {
-                    Some(crate::generated_admin::models::update_tenant_request::MfaConfig::Phone)
-                }
-                "totp" => {
-                    Some(crate::generated_admin::models::update_tenant_request::MfaConfig::Totp)
-                }
-                _ => None,
-            })
-            .collect()
+        Some(
+            configs
+                .into_iter()
+                .filter_map(|s| match s.as_str() {
+                    "phone" => Some(
+                        crate::generated_admin::models::update_tenant_request::MfaConfig::Phone,
+                    ),
+                    "totp" => {
+                        Some(crate::generated_admin::models::update_tenant_request::MfaConfig::Totp)
+                    }
+                    _ => None,
+                })
+                .collect(),
+        )
     });
 
     let gen_request = GenRequest {

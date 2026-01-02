@@ -3095,8 +3095,6 @@ paths:
                         schema:
                             type: object
                             description: Request body for creating a new tenant.
-                            required:
-                                - displayName
                             properties:
                                 tenantId:
                                     type: string
@@ -3107,9 +3105,13 @@ paths:
                                     maxLength: 128
                                     example: MyTenant
                                 displayName:
-                                    type: string
-                                    description: Human-readable display name. Required. Max 256 characters.
-                                    minLength: 1
+                                    type:
+                                        - string
+                                        - 'null'
+                                    description: |
+                                        Human-readable display name. Max 256 characters.
+                                        If not provided or null, a friendly name will be generated based on the
+                                        tenant ID, or a random adjective-noun pair if the tenant ID is auto-generated.
                                     maxLength: 256
                                     example: My Tenant
                                 allowPdpkaSignup:
@@ -3138,12 +3140,11 @@ paths:
                                         - totp
                             example:
                                 tenantId: MyTenant
-                                displayName: My Tenant
                                 allowPdpkaSignup: true
                                 mfaConfig:
                                     - totp
             responses:
-                '200':
+                '201':
                     description: Tenant created
                     content:
                         application/json:
@@ -5693,11 +5694,14 @@ paths:
                                         If not provided, the value will not be changed.
                                     example: false
                                 mfaConfig:
-                                    type: array
+                                    type:
+                                        - array
+                                        - 'null'
                                     description: |
                                         Enabled MFA providers for this tenant.
-                                        If provided, replaces the existing configuration.
-                                        To clear all MFA providers, send an empty array.
+                                        If not provided (omitted) or null, the configuration will not be changed.
+                                        If provided as an empty array [], clears all MFA providers.
+                                        If provided with values, replaces the existing configuration.
                                         Valid values: "phone", "totp"
                                     items:
                                         type: string
@@ -6205,13 +6209,8 @@ paths:
                     pattern: '^[a-zA-Z0-9_]+$'
                     maxLength: 128
             responses:
-                '200':
-                    description: Tenant deleted
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                description: Response confirming the tenant was permanently deleted.
+                '204':
+                    description: Tenant permanently deleted
                 '400':
                     description: Invalid projectId or tenantId format
                     content:

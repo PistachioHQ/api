@@ -1,7 +1,26 @@
 # Reusable error responses for RFC 7807 Problem Details
+#
+# Error Status Code Guidelines:
+# -----------------------------
+# This API uses two status codes for client input errors:
+#
+# - 400 Bad Request: The request was understood but failed business validation.
+#   Examples: invalid tenant ID format, display name too long, invalid enum value
+#   that the server recognizes but rejects.
+#
+# - 422 Unprocessable Entity: The request body could not be parsed into the
+#   expected schema. This occurs when the JSON structure doesn't match what
+#   the endpoint expects.
+#   Examples: missing required fields, wrong field types, unknown field structure.
+#
+# In both cases, the response body contains RFC 7807 Problem Details with
+# information to help diagnose the issue.
 
 BadRequest:
-  description: Invalid request parameters
+  description: |
+    The request was understood but failed business validation.
+    This occurs when the request structure is correct but the values don't meet
+    validation requirements (e.g., invalid ID format, value out of range).
   content:
     application/json:
       schema:
@@ -31,6 +50,32 @@ BadRequest:
                 reason: Invalid format
                 value: "My-Project!"
                 expectedValues: ["lowercase letters, numbers, and hyphens only"]
+
+UnprocessableEntity:
+  description: |
+    The request body could not be parsed into the expected schema.
+    This occurs when the JSON structure doesn't match what the endpoint expects
+    (e.g., missing required fields, wrong field types, unknown nested structure).
+    Check the API documentation for the correct request body format.
+  content:
+    application/json:
+      schema:
+        $ref: '../schemas/error.yml#/ProblemDetails'
+      examples:
+        missing_field:
+          summary: Required field missing
+          value:
+            type: https://docs.pistachiohq.com/errors/invalid_request
+            title: Invalid Request
+            status: 422
+            detail: "missing field `displayName` at line 1 column 42"
+        wrong_type:
+          summary: Wrong field type
+          value:
+            type: https://docs.pistachiohq.com/errors/invalid_request
+            title: Invalid Request
+            status: 422
+            detail: "invalid type: expected array, found object at line 1 column 30"
 
 Unauthenticated:
   description: Invalid or missing credentials

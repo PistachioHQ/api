@@ -110,7 +110,7 @@ pub async fn create_tenant(
     configuration: &configuration::Configuration,
     project_id: &str,
     create_tenant_request: models::CreateTenantRequest,
-) -> Result<models::CreateTenant200Response, Error<CreateTenantError>> {
+) -> Result<models::CreateTenant201Response, Error<CreateTenantError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_body_create_tenant_request = create_tenant_request;
@@ -157,12 +157,12 @@ pub async fn create_tenant(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::CreateTenant200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::CreateTenant201Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateTenant200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateTenant201Response`"
                 ))));
             }
         }
@@ -182,7 +182,7 @@ pub async fn delete_tenant(
     configuration: &configuration::Configuration,
     project_id: &str,
     tenant_id: &str,
-) -> Result<serde_json::Value, Error<DeleteTenantError>> {
+) -> Result<(), Error<DeleteTenantError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_path_tenant_id = tenant_id;
@@ -216,28 +216,9 @@ pub async fn delete_tenant(
     let resp = configuration.client.execute(req).await?;
 
     let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
 
     if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => {
-                return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `serde_json::Value`",
-                )));
-            }
-            ContentType::Unsupported(unknown_type) => {
-                return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `serde_json::Value`"
-                ))));
-            }
-        }
+        Ok(())
     } else {
         let content = resp.text().await?;
         let entity: Option<DeleteTenantError> = serde_json::from_str(&content).ok();

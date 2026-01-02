@@ -87,7 +87,7 @@ tenants:
           schema:
             $ref: '../../components/schemas/admin/tenant.yml#/CreateTenantRequest'
     responses:
-      '200':
+      '201':
         description: Tenant created
         content:
           application/json:
@@ -291,12 +291,8 @@ tenantById:
           pattern: '^[a-zA-Z0-9_]+$'
           maxLength: 128
     responses:
-      '200':
-        description: Tenant deleted
-        content:
-          application/json:
-            schema:
-              $ref: '../../components/schemas/admin/tenant.yml#/DeleteTenantResponse'
+      '204':
+        description: Tenant permanently deleted
       '400':
         description: Invalid projectId or tenantId format
         content:

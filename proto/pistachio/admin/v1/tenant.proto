@@ -30,11 +30,10 @@ message CreateTenantRequest {
   }];
 
   // Human-readable display name for the tenant.
-  // Required. Max 256 characters.
-  string display_name = 3 [(buf.validate.field).string = {
-    min_len: 1
-    max_len: 256
-  }];
+  // Optional. Max 256 characters.
+  // If not provided or empty, a friendly name will be generated based on the
+  // tenant ID, or a random adjective-noun pair if the tenant ID is auto-generated.
+  string display_name = 3 [(buf.validate.field).string = {max_len: 256}];
 
   // Whether passphrase-derived public key authentication (PDPKA) sign-up is allowed.
   // Defaults to true if not specified.
@@ -123,13 +122,15 @@ message UpdateTenantRequest {
   optional bool disable_auth = 5;
 
   // Enabled MFA providers for this tenant.
-  // If not provided, the value will not be changed.
-  // To clear all MFA providers, send an empty array.
+  // If not provided (None/null), the value will not be changed.
+  // If provided with an empty array, clears all MFA providers.
   // Valid values: "phone", "totp"
-  MfaConfigUpdate mfa_config = 6;
+  optional MfaConfigUpdate mfa_config = 6;
 }
 
-// MfaConfigUpdate represents an optional update to MFA configuration.
+// MfaConfigUpdate represents an update to MFA configuration.
+// When this message is present, the providers list replaces the existing config.
+// An empty providers list clears all MFA providers.
 message MfaConfigUpdate {
   // The new MFA providers. An empty array clears all providers.
   repeated string providers = 1;

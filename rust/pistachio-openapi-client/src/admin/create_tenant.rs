@@ -9,7 +9,7 @@ use tracing::{debug, error};
 use crate::generated_admin::apis::configuration::Configuration;
 use crate::generated_admin::apis::tenants_api::{CreateTenantError as GenError, create_tenant};
 use crate::generated_admin::models::{
-    CreateTenant200Response, CreateTenantRequest as GenRequest, ListTenants200ResponseTenantsInner,
+    CreateTenant201Response, CreateTenantRequest as GenRequest, ListTenants200ResponseTenantsInner,
 };
 use crate::problem_details::{fallback_error_details, parse_error_details};
 use crate::types::{FromJson, convert_error_details, parse_timestamp};
@@ -66,9 +66,14 @@ pub(crate) async fn handle_create_tenant(
         )
     };
 
+    // Convert Option<TenantDisplayName> to Option<Option<String>>
+    // None -> None (field omitted, server generates)
+    // Some(name) -> Some(Some(name.to_string())) (explicit value)
+    let display_name = req.display_name.map(|name| Some(name.to_string()));
+
     let gen_request = GenRequest {
         tenant_id: req.tenant_id.map(|id| id.to_string()),
-        display_name: req.display_name.to_string(),
+        display_name,
         allow_pdpka_signup: req.allow_pdpka_signup,
         disable_auth: req.disable_auth,
         mfa_config,
@@ -135,10 +140,10 @@ pub(crate) async fn handle_create_tenant(
 // JSON conversions
 // =============================================================================
 
-impl FromJson<CreateTenant200Response> for CreateTenantResponse {
+impl FromJson<CreateTenant201Response> for CreateTenantResponse {
     type Error = ValidationError;
 
-    fn from_json(json: CreateTenant200Response) -> Result<Self, Self::Error> {
+    fn from_json(json: CreateTenant201Response) -> Result<Self, Self::Error> {
         let tenant = json
             .tenant
             .map(|t| Tenant::from_json(*t))

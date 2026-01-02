@@ -23,9 +23,14 @@ pub struct UpdateTenantRequest {
     /// Whether authentication is disabled. If not provided, the value will not be changed.
     #[serde(rename = "disableAuth", skip_serializing_if = "Option::is_none")]
     pub disable_auth: Option<bool>,
-    /// Enabled MFA providers for this tenant. If provided, replaces the existing configuration. To clear all MFA providers, send an empty array. Valid values: \"phone\", \"totp\"
-    #[serde(rename = "mfaConfig", skip_serializing_if = "Option::is_none")]
-    pub mfa_config: Option<Vec<MfaConfig>>,
+    /// Enabled MFA providers for this tenant. If not provided (omitted) or null, the configuration will not be changed. If provided as an empty array [], clears all MFA providers. If provided with values, replaces the existing configuration. Valid values: \"phone\", \"totp\"
+    #[serde(
+        rename = "mfaConfig",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub mfa_config: Option<Option<Vec<MfaConfig>>>,
 }
 
 impl UpdateTenantRequest {
@@ -39,7 +44,7 @@ impl UpdateTenantRequest {
         }
     }
 }
-/// Enabled MFA providers for this tenant. If provided, replaces the existing configuration. To clear all MFA providers, send an empty array. Valid values: \"phone\", \"totp\"
+/// Enabled MFA providers for this tenant. If not provided (omitted) or null, the configuration will not be changed. If provided as an empty array [], clears all MFA providers. If provided with values, replaces the existing configuration. Valid values: \"phone\", \"totp\"
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum MfaConfig {
     #[serde(rename = "phone")]

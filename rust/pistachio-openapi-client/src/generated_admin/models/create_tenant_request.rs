@@ -17,9 +17,14 @@ pub struct CreateTenantRequest {
     /// Desired tenant ID. If not provided, one will be generated. Must be 1-128 characters, alphanumeric with underscores, case-sensitive.
     #[serde(rename = "tenantId", skip_serializing_if = "Option::is_none")]
     pub tenant_id: Option<String>,
-    /// Human-readable display name. Required. Max 256 characters.
-    #[serde(rename = "displayName")]
-    pub display_name: String,
+    /// Human-readable display name. Max 256 characters. If not provided or null, a friendly name will be generated based on the tenant ID, or a random adjective-noun pair if the tenant ID is auto-generated.
+    #[serde(
+        rename = "displayName",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub display_name: Option<Option<String>>,
     /// Whether PDPKA sign-up is allowed. Defaults to true if not specified.
     #[serde(rename = "allowPdpkaSignup", skip_serializing_if = "Option::is_none")]
     pub allow_pdpka_signup: Option<bool>,
@@ -33,10 +38,10 @@ pub struct CreateTenantRequest {
 
 impl CreateTenantRequest {
     /// Request body for creating a new tenant.
-    pub fn new(display_name: String) -> CreateTenantRequest {
+    pub fn new() -> CreateTenantRequest {
         CreateTenantRequest {
             tenant_id: None,
-            display_name,
+            display_name: None,
             allow_pdpka_signup: None,
             disable_auth: None,
             mfa_config: None,

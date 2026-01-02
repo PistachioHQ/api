@@ -43,7 +43,7 @@ pub(crate) async fn handle_delete_tenant(
 
     debug!(?project_id, ?tenant_id, "Sending delete_tenant request");
 
-    let _response = delete_tenant(config, &project_id, &tenant_id)
+    delete_tenant(config, &project_id, &tenant_id)
         .await
         .map_err(|e| {
             error!(?e, "Error in delete_tenant response");

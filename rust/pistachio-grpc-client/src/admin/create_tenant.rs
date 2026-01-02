@@ -60,7 +60,8 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::CreateTenantRequest> for Cre
         pistachio_api::pistachio::admin::v1::CreateTenantRequest {
             project_id: self.project_id.to_string(),
             tenant_id: self.tenant_id.map(|id| id.to_string()).unwrap_or_default(),
-            display_name: self.display_name.to_string(),
+            // Empty string signals server to generate display name
+            display_name: self.display_name.map(|n| n.to_string()).unwrap_or_default(),
             allow_pdpka_signup: self.allow_pdpka_signup,
             disable_auth: self.disable_auth,
             mfa_config: self.mfa_config,
