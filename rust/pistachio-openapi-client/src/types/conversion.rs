@@ -1,7 +1,9 @@
 use chrono::{DateTime, Utc};
 use pistachio_api_common::error::{ErrorDetails, InvalidParam, ValidationError};
 
-use crate::generated_admin::models::{ListApps400Response, ListApps400ResponseInvalidParamsInner};
+use crate::generated_admin::models::{
+    ListProjects400Response, ListProjects400ResponseInvalidParamsInner,
+};
 
 /// Base URL for error type documentation.
 const ERROR_TYPE_BASE_URL: &str = "https://docs.pistachiohq.com/errors/";
@@ -33,7 +35,7 @@ fn extract_error_type_slug(url: &str) -> String {
 ///
 /// This function handles the RFC 7807 Problem Details format and converts it
 /// to a protocol-agnostic representation.
-pub(crate) fn convert_error_details(e: ListApps400Response) -> ErrorDetails {
+pub(crate) fn convert_error_details(e: ListProjects400Response) -> ErrorDetails {
     ErrorDetails {
         error_type: extract_error_type_slug(&e.r#type),
         title: e.title,
@@ -46,7 +48,7 @@ pub(crate) fn convert_error_details(e: ListApps400Response) -> ErrorDetails {
 }
 
 /// Convert a generated InvalidParam to a domain InvalidParam.
-fn convert_invalid_param(param: ListApps400ResponseInvalidParamsInner) -> InvalidParam {
+fn convert_invalid_param(param: ListProjects400ResponseInvalidParamsInner) -> InvalidParam {
     InvalidParam {
         name: param.name,
         reason: param.reason,

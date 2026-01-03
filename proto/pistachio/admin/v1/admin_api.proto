@@ -3,6 +3,7 @@ syntax = "proto3";
 package pistachio.admin.v1;
 
 import "pistachio/admin/v1/app.proto";
+import "pistachio/admin/v1/auth_provider.proto";
 import "pistachio/admin/v1/project.proto";
 import "pistachio/admin/v1/tenant.proto";
 
@@ -172,6 +173,107 @@ service PistachioAdmin {
   // - NOT_FOUND: Project does not exist
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchTenants(SearchTenantsRequest) returns (SearchTenantsResponse);
+
+  // =============================================================================
+  // Project Auth Provider Operations
+  // =============================================================================
+
+  // ListProjectAuthProviders lists all auth providers configured for a project.
+  //
+  // Returns all configured auth providers with their settings, ordered by
+  // display_order.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListProjectAuthProviders(ListProjectAuthProvidersRequest) returns (ListProjectAuthProvidersResponse);
+
+  // GetProjectAuthProvider retrieves a specific auth provider for a project.
+  //
+  // Returns the provider configuration including enabled state and settings.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or provider_id format
+  // - NOT_FOUND: Project or provider does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetProjectAuthProvider(GetProjectAuthProviderRequest) returns (GetProjectAuthProviderResponse);
+
+  // UpdateProjectAuthProvider creates or updates an auth provider for a project.
+  //
+  // This is an upsert operation: if the provider exists, it is updated;
+  // otherwise, a new provider is created. Supports providers:
+  // - pdpka: Passphrase-derived public key authentication
+  // - anonymous: Anonymous/guest authentication
+  // - google, apple, facebook, github: OAuth 2.0 social providers
+  // - oidc:<name>: Generic OpenID Connect providers
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, provider_id, or config format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateProjectAuthProvider(UpdateProjectAuthProviderRequest) returns (UpdateProjectAuthProviderResponse);
+
+  // DeleteProjectAuthProvider permanently removes an auth provider from a project.
+  //
+  // Deleting a provider will prevent users from authenticating with that
+  // method. Existing users who only have this auth method will be locked out.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or provider_id format
+  // - NOT_FOUND: Project or provider does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteProjectAuthProvider(DeleteProjectAuthProviderRequest) returns (DeleteProjectAuthProviderResponse);
+
+  // =============================================================================
+  // Tenant Auth Provider Override Operations
+  // =============================================================================
+
+  // ListTenantAuthProviders lists tenant-level auth provider overrides.
+  //
+  // Returns only the overrides explicitly set for this tenant, not the
+  // full effective configuration. Use GetEffectiveTenantAuthProviders
+  // for the merged configuration.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or tenant_id format
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListTenantAuthProviders(ListTenantAuthProvidersRequest) returns (ListTenantAuthProvidersResponse);
+
+  // UpdateTenantAuthProvider creates or updates a tenant-level auth provider override.
+  //
+  // Tenant overrides allow customizing auth provider settings per tenant.
+  // Fields not set inherit from the project-level configuration.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or provider_id format
+  // - NOT_FOUND: Project, tenant, or project-level provider does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateTenantAuthProvider(UpdateTenantAuthProviderRequest) returns (UpdateTenantAuthProviderResponse);
+
+  // DeleteTenantAuthProvider removes a tenant-level auth provider override.
+  //
+  // After deletion, the tenant will inherit the project-level configuration
+  // for this provider.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or provider_id format
+  // - NOT_FOUND: Project, tenant, or override does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteTenantAuthProvider(DeleteTenantAuthProviderRequest) returns (DeleteTenantAuthProviderResponse);
+
+  // GetEffectiveTenantAuthProviders retrieves the merged auth provider configuration.
+  //
+  // Returns the effective configuration for a tenant after applying
+  // tenant-level overrides to project-level configuration. Each provider
+  // includes a source indicator showing where the configuration originates.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or tenant_id format
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetEffectiveTenantAuthProviders(GetEffectiveTenantAuthProvidersRequest) returns (GetEffectiveTenantAuthProvidersResponse);
 
   // =============================================================================
   // App Operations

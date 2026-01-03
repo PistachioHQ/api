@@ -17,12 +17,12 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateProjectError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status409(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status409(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -30,12 +30,12 @@ pub enum CreateProjectError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteProjectError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -43,12 +43,12 @@ pub enum DeleteProjectError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetAdminSdkConfigError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -56,12 +56,12 @@ pub enum GetAdminSdkConfigError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetProjectError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -69,11 +69,11 @@ pub enum GetProjectError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ListProjectsError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -81,11 +81,11 @@ pub enum ListProjectsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchProjectsError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -93,11 +93,11 @@ pub enum SearchProjectsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchProjectsPostError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -105,13 +105,13 @@ pub enum SearchProjectsPostError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UndeleteProjectError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status409(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status409(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -119,12 +119,12 @@ pub enum UndeleteProjectError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateProjectError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 

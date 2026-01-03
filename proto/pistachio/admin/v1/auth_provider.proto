@@ -1,0 +1,305 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/auth_provider.proto";
+
+// =============================================================================
+// Project Auth Providers
+// =============================================================================
+
+// ListProjectAuthProvidersRequest retrieves all auth providers for a project.
+message ListProjectAuthProvidersRequest {
+  // The project ID to list auth providers for.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// ListProjectAuthProvidersResponse contains the list of configured auth providers.
+message ListProjectAuthProvidersResponse {
+  // The list of auth providers configured for this project.
+  // Ordered by display_order ascending.
+  repeated pistachio.types.v1.AuthProvider providers = 1;
+}
+
+// =============================================================================
+// GetProjectAuthProvider
+// =============================================================================
+
+// GetProjectAuthProviderRequest retrieves a specific auth provider for a project.
+message GetProjectAuthProviderRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The provider ID to retrieve.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$"
+  }];
+}
+
+// GetProjectAuthProviderResponse contains the requested auth provider.
+message GetProjectAuthProviderResponse {
+  // The retrieved auth provider.
+  pistachio.types.v1.AuthProvider provider = 1;
+}
+
+// =============================================================================
+// UpdateProjectAuthProvider (Upsert)
+// =============================================================================
+
+// UpdateProjectAuthProviderRequest creates or updates an auth provider for a project.
+//
+// This is an upsert operation: if the provider exists, it is updated;
+// otherwise, a new provider is created.
+message UpdateProjectAuthProviderRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The provider ID to create or update.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$"
+  }];
+
+  // Whether this provider is enabled for authentication.
+  // Defaults to true for new providers.
+  optional bool enabled = 3;
+
+  // Display order for the provider in the sign-in UI.
+  // Lower values appear first. Defaults to 0 for new providers.
+  optional int32 display_order = 4;
+
+  // Provider-specific configuration.
+  // Required for new providers. If not provided on update, the existing
+  // config is preserved.
+  pistachio.types.v1.AuthProviderConfig config = 5;
+
+  // OAuth/OIDC client secret.
+  // Write-only. This value is stored securely in the secrets manager
+  // and is never returned in API responses.
+  // Only applicable for OAuth and OIDC providers.
+  optional string client_secret = 10;
+}
+
+// UpdateProjectAuthProviderResponse contains the created or updated auth provider.
+message UpdateProjectAuthProviderResponse {
+  // The created or updated auth provider.
+  pistachio.types.v1.AuthProvider provider = 1;
+}
+
+// =============================================================================
+// DeleteProjectAuthProvider
+// =============================================================================
+
+// DeleteProjectAuthProviderRequest permanently deletes an auth provider from a project.
+message DeleteProjectAuthProviderRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The provider ID to delete.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$"
+  }];
+}
+
+// DeleteProjectAuthProviderResponse is returned after a provider is deleted.
+message DeleteProjectAuthProviderResponse {
+  // Empty response. The provider has been permanently deleted.
+}
+
+// =============================================================================
+// Tenant Auth Provider Overrides
+// =============================================================================
+
+// ListTenantAuthProvidersRequest retrieves tenant-level auth provider overrides.
+message ListTenantAuthProvidersRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+}
+
+// ListTenantAuthProvidersResponse contains tenant-level auth provider overrides.
+message ListTenantAuthProvidersResponse {
+  // The list of tenant-level auth provider overrides.
+  // Only contains overrides that have been explicitly set for this tenant.
+  repeated pistachio.types.v1.TenantAuthProviderOverride overrides = 1;
+}
+
+// =============================================================================
+// UpdateTenantAuthProvider (Upsert)
+// =============================================================================
+
+// UpdateTenantAuthProviderRequest creates or updates a tenant-level auth provider override.
+//
+// Tenant overrides allow customizing auth provider settings per tenant.
+// Fields that are not set (null) inherit from the project-level configuration.
+message UpdateTenantAuthProviderRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The provider ID to override.
+  // Must be a provider that exists at the project level.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$"
+  }];
+
+  // Override for the enabled state.
+  // If not set, inherits from project configuration.
+  optional bool enabled = 4;
+
+  // Override for the display order.
+  // If not set, inherits from project configuration.
+  optional int32 display_order = 5;
+
+  // Override for the provider-specific configuration.
+  // If not set, inherits from project configuration.
+  // If set, completely replaces the project config (no field-level merging).
+  optional pistachio.types.v1.AuthProviderConfig config = 6;
+
+  // OAuth/OIDC client secret override.
+  // Write-only. Only applicable for OAuth and OIDC providers.
+  // If not set, uses the project-level secret.
+  optional string client_secret = 10;
+}
+
+// UpdateTenantAuthProviderResponse contains the created or updated override.
+message UpdateTenantAuthProviderResponse {
+  // The created or updated tenant auth provider override.
+  pistachio.types.v1.TenantAuthProviderOverride override = 1;
+}
+
+// =============================================================================
+// DeleteTenantAuthProvider
+// =============================================================================
+
+// DeleteTenantAuthProviderRequest removes a tenant-level auth provider override.
+//
+// After deletion, the tenant will inherit the project-level configuration
+// for this provider.
+message DeleteTenantAuthProviderRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The provider ID override to delete.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$"
+  }];
+}
+
+// DeleteTenantAuthProviderResponse is returned after an override is deleted.
+message DeleteTenantAuthProviderResponse {
+  // Empty response. The override has been deleted and the tenant
+  // will now inherit from the project-level configuration.
+}
+
+// =============================================================================
+// GetEffectiveTenantAuthProviders
+// =============================================================================
+
+// GetEffectiveTenantAuthProvidersRequest retrieves the merged auth provider
+// configuration for a tenant.
+//
+// This returns the effective configuration after applying tenant-level
+// overrides to project-level configuration.
+message GetEffectiveTenantAuthProvidersRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // If true, only return enabled providers.
+  // Defaults to false (returns all providers regardless of enabled state).
+  bool enabled_only = 3;
+}
+
+// GetEffectiveTenantAuthProvidersResponse contains the merged auth provider configuration.
+message GetEffectiveTenantAuthProvidersResponse {
+  // The list of effective auth providers after merging project and tenant configs.
+  // Each provider includes a source indicator showing where the configuration
+  // originates (project or tenant).
+  // Ordered by display_order ascending.
+  repeated pistachio.types.v1.EffectiveAuthProvider providers = 1;
+}

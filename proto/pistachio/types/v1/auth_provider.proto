@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+// =============================================================================
+// Auth Provider Configuration Types
+// =============================================================================
+
+// ConfigSource indicates where a provider's configuration originates.
+enum ConfigSource {
+  // Unspecified source.
+  CONFIG_SOURCE_UNSPECIFIED = 0;
+
+  // Configuration is from the project level.
+  CONFIG_SOURCE_PROJECT = 1;
+
+  // Configuration is overridden at the tenant level.
+  CONFIG_SOURCE_TENANT = 2;
+}
+
+// =============================================================================
+// Provider-Specific Configuration Messages
+// =============================================================================
+
+// PdpkaConfig configures Passphrase-Derived Public Key Authentication.
+//
+// PDPKA is a passwordless authentication method where users derive
+// cryptographic keypairs from a passphrase. The private key never leaves
+// the client device.
+message PdpkaConfig {
+  // Whether new user sign-up via PDPKA is allowed.
+  // When false, only existing users can sign in with PDPKA.
+  bool allow_signup = 1;
+}
+
+// AnonymousConfig configures anonymous/guest authentication.
+//
+// Anonymous authentication allows users to interact with the app without
+// creating an account. Anonymous users can later be upgraded to permanent
+// accounts by linking a sign-in method.
+message AnonymousConfig {
+  // Session duration in seconds for anonymous users.
+  // After this period, the anonymous session expires.
+  // Default: 3600 (1 hour). Maximum: 86400 (24 hours).
+  int32 session_duration_seconds = 1 [(buf.validate.field).int32 = {
+    gte: 60
+    lte: 86400
+  }];
+
+  // Whether to automatically upgrade anonymous users when they link
+  // a permanent sign-in method (e.g., PDPKA, OAuth).
+  // When true, the anonymous account is converted to a permanent account.
+  // When false, a new account is created and the anonymous data is lost.
+  bool auto_upgrade = 2;
+}
+
+// OAuthConfig configures OAuth 2.0 social sign-in providers.
+//
+// This configuration is used for providers like Google, Apple, Facebook,
+// and GitHub that implement the OAuth 2.0 / OpenID Connect protocol.
+message OAuthConfig {
+  // OAuth client ID obtained from the provider's developer console.
+  string client_id = 1 [(buf.validate.field).string.max_len = 512];
+
+  // OAuth scopes to request during authentication.
+  // Default scopes if not specified: ["openid", "profile", "email"]
+  repeated string scopes = 2;
+
+  // Allowed hosted domains for sign-in (Google Workspace only).
+  // When set, only users from these domains can sign in.
+  // Empty list allows all domains.
+  repeated string allowed_hosted_domains = 3;
+
+  // Note: client_secret is write-only and stored as a reference
+  // in the secrets manager. It is never returned in API responses.
+}
+
+// OidcConfig configures generic OpenID Connect providers.
+//
+// This configuration is used for enterprise identity providers like
+// Okta, Auth0, Azure AD, and other OIDC-compliant systems.
+message OidcConfig {
+  // Human-readable display name for this provider.
+  // Shown in the sign-in UI (e.g., "Sign in with Okta").
+  string display_name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+
+  // OIDC issuer URL (e.g., "https://example.okta.com").
+  // Must be a valid HTTPS URL. The well-known configuration
+  // will be fetched from {issuer_url}/.well-known/openid-configuration
+  string issuer_url = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 512
+    pattern: "^https://.*"
+  }];
+
+  // OAuth client ID obtained from the identity provider.
+  string client_id = 3 [(buf.validate.field).string.max_len = 512];
+
+  // OAuth scopes to request during authentication.
+  // Default scopes if not specified: ["openid", "profile", "email"]
+  repeated string scopes = 4;
+
+  // Additional authorization parameters to include in the auth request.
+  // Useful for provider-specific parameters like prompt, login_hint, etc.
+  map<string, string> additional_params = 5;
+
+  // Note: client_secret is write-only and stored as a reference
+  // in the secrets manager. It is never returned in API responses.
+}
+
+// =============================================================================
+// AuthProviderConfig - Stored in BYTEA column
+// =============================================================================
+
+// AuthProviderConfig contains the provider-specific configuration.
+//
+// This message is serialized to protobuf binary format and stored in the
+// database `config` BYTEA column. It uses oneof to ensure type safety
+// while allowing different configuration shapes per provider type.
+message AuthProviderConfig {
+  // Provider-specific configuration.
+  oneof config {
+    // PDPKA (Passphrase-Derived Public Key Authentication) configuration.
+    PdpkaConfig pdpka = 1;
+
+    // Anonymous/guest authentication configuration.
+    AnonymousConfig anonymous = 2;
+
+    // OAuth 2.0 provider configuration (Google, Apple, Facebook, GitHub).
+    OAuthConfig oauth = 3;
+
+    // Generic OpenID Connect provider configuration.
+    OidcConfig oidc = 4;
+  }
+}
+
+// =============================================================================
+// AuthProvider - Full Provider Representation
+// =============================================================================
+
+// AuthProvider represents a configured authentication provider.
+//
+// Each provider is stored as a separate row in the database, identified
+// by project_id + provider_id. The provider_id format supports:
+// - Built-in providers: "pdpka", "anonymous", "google", "apple", "facebook", "github"
+// - OIDC providers: "oidc:{name}" (e.g., "oidc:okta", "oidc:auth0")
+message AuthProvider {
+  // Provider identifier.
+  // Format: "pdpka", "anonymous", "google", "apple", "oidc:okta", etc.
+  string provider_id = 1;
+
+  // Whether this provider is enabled for authentication.
+  // Disabled providers are not shown in the sign-in UI.
+  bool enabled = 2;
+
+  // Display order for the provider in the sign-in UI.
+  // Lower values appear first. Default: 0.
+  int32 display_order = 3;
+
+  // Provider-specific configuration.
+  AuthProviderConfig config = 4;
+
+  // Timestamp when this provider was configured.
+  google.protobuf.Timestamp created_at = 10;
+
+  // Timestamp when this provider was last updated.
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// =============================================================================
+// Tenant Override Types
+// =============================================================================
+
+// TenantAuthProviderOverride represents a tenant-level override for a provider.
+//
+// All fields are optional. When a field is not set (null), the value is
+// inherited from the project-level configuration. This allows tenants to
+// selectively override specific settings while inheriting the rest.
+message TenantAuthProviderOverride {
+  // Provider identifier being overridden.
+  string provider_id = 1;
+
+  // Override for the enabled state.
+  // If not set, inherits from project configuration.
+  optional bool enabled = 2;
+
+  // Override for the display order.
+  // If not set, inherits from project configuration.
+  optional int32 display_order = 3;
+
+  // Override for the provider-specific configuration.
+  // If not set, inherits from project configuration.
+  // If set, completely replaces the project config (no merging).
+  optional AuthProviderConfig config = 4;
+
+  // Timestamp when this override was created.
+  google.protobuf.Timestamp created_at = 10;
+
+  // Timestamp when this override was last updated.
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// EffectiveAuthProvider represents the merged configuration for a provider.
+//
+// This is the result of applying tenant-level overrides to project-level
+// configuration. It includes the source indicator to show where each
+// provider's configuration originates.
+message EffectiveAuthProvider {
+  // The effective provider configuration after merging.
+  AuthProvider provider = 1;
+
+  // Where this provider's configuration comes from.
+  ConfigSource source = 2;
+}

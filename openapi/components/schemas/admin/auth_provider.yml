@@ -1,0 +1,358 @@
+# Auth Provider Schemas for Admin API
+
+# =============================================================================
+# Provider-Specific Configuration Types
+# =============================================================================
+
+PdpkaConfig:
+  type: object
+  description: |
+    Configuration for passphrase-derived public key authentication (PDPKA).
+    PDPKA allows users to authenticate using cryptographic keypairs derived
+    from passphrases, providing passwordless authentication.
+  properties:
+    allowSignup:
+      type: boolean
+      description: Whether new users can sign up using PDPKA.
+      example: true
+
+AnonymousConfig:
+  type: object
+  description: |
+    Configuration for anonymous authentication.
+    Anonymous auth creates temporary user sessions without requiring credentials.
+  properties:
+    sessionDurationSeconds:
+      type: integer
+      format: int32
+      description: Duration in seconds for anonymous sessions.
+      minimum: 60
+      maximum: 86400
+      example: 3600
+    autoUpgrade:
+      type: boolean
+      description: |
+        Whether to automatically upgrade anonymous users to permanent accounts
+        when they link credentials.
+      example: true
+
+OAuthConfig:
+  type: object
+  description: |
+    Configuration for OAuth providers (Google, Apple, Facebook, GitHub, etc.).
+  properties:
+    clientId:
+      type: string
+      description: OAuth client ID from the provider.
+      example: "123456789-abc.apps.googleusercontent.com"
+    scopes:
+      type: array
+      description: OAuth scopes to request during authentication.
+      items:
+        type: string
+      example:
+        - email
+        - profile
+    allowedHostedDomains:
+      type: array
+      description: |
+        For Google Workspace: restrict sign-in to specific domains.
+        Empty array allows all domains.
+      items:
+        type: string
+      example:
+        - example.com
+
+OidcConfig:
+  type: object
+  description: |
+    Configuration for generic OpenID Connect providers.
+  properties:
+    displayName:
+      type: string
+      description: Human-readable name for the provider shown in the sign-in UI.
+      example: "Corporate SSO"
+    issuerUrl:
+      type: string
+      format: uri
+      description: The OIDC issuer URL (must support discovery).
+      example: "https://login.example.com"
+    clientId:
+      type: string
+      description: OIDC client ID.
+      example: "my-app-client-id"
+    scopes:
+      type: array
+      description: OIDC scopes to request.
+      items:
+        type: string
+      example:
+        - openid
+        - email
+        - profile
+    additionalParams:
+      type: object
+      description: Additional parameters to include in authorization requests.
+      additionalProperties:
+        type: string
+      example:
+        prompt: consent
+
+# =============================================================================
+# Auth Provider (Project Level)
+# =============================================================================
+
+AuthProvider:
+  type: object
+  description: |
+    An authentication provider configured at the project level.
+    Providers define how users can authenticate to the project.
+  properties:
+    providerId:
+      type: string
+      description: |
+        Provider identifier. Built-in providers: "pdpka", "anonymous", "google", "apple".
+        Custom OIDC providers use the format "oidc:<name>", e.g., "oidc:okta".
+      pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+      maxLength: 64
+      example: google
+    enabled:
+      type: boolean
+      description: Whether this provider is enabled for authentication.
+      example: true
+    displayOrder:
+      type: integer
+      format: int32
+      description: Display order in sign-in UI. Lower values appear first.
+      example: 1
+    pdpka:
+      $ref: '#/PdpkaConfig'
+    anonymous:
+      $ref: '#/AnonymousConfig'
+    oauth:
+      $ref: '#/OAuthConfig'
+    oidc:
+      $ref: '#/OidcConfig'
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the provider was configured.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the provider was last updated.
+      example: "2024-01-15T10:30:00Z"
+
+# =============================================================================
+# Tenant Auth Provider Override
+# =============================================================================
+
+TenantAuthProviderOverride:
+  type: object
+  description: |
+    Tenant-level override for an auth provider configuration.
+    Fields that are null or omitted inherit from the project-level configuration.
+  properties:
+    providerId:
+      type: string
+      description: Provider identifier being overridden.
+      pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+      maxLength: 64
+      example: google
+    enabled:
+      type:
+        - boolean
+        - 'null'
+      description: Override for enabled state. Null = inherit from project.
+      example: false
+    displayOrder:
+      type:
+        - integer
+        - 'null'
+      format: int32
+      description: Override for display order. Null = inherit from project.
+      example: 2
+    pdpka:
+      $ref: '#/PdpkaConfig'
+    anonymous:
+      $ref: '#/AnonymousConfig'
+    oauth:
+      $ref: '#/OAuthConfig'
+    oidc:
+      $ref: '#/OidcConfig'
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the override was created.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the override was last updated.
+      example: "2024-01-15T10:30:00Z"
+
+# =============================================================================
+# Effective Auth Provider (Merged Configuration)
+# =============================================================================
+
+ConfigSource:
+  type: string
+  description: Indicates where the effective configuration originates.
+  enum:
+    - PROJECT
+    - TENANT
+  example: PROJECT
+
+EffectiveAuthProvider:
+  type: object
+  description: |
+    The effective auth provider configuration after merging project
+    and tenant configurations.
+  properties:
+    provider:
+      $ref: '#/AuthProvider'
+    source:
+      $ref: '#/ConfigSource'
+
+# =============================================================================
+# Request/Response Messages - Project Auth Providers
+# =============================================================================
+
+ListProjectAuthProvidersResponse:
+  type: object
+  description: Response containing the list of project auth providers.
+  properties:
+    providers:
+      type: array
+      description: List of configured auth providers, ordered by displayOrder.
+      items:
+        $ref: '#/AuthProvider'
+
+GetProjectAuthProviderResponse:
+  type: object
+  description: Response containing a single project auth provider.
+  properties:
+    provider:
+      $ref: '#/AuthProvider'
+
+UpdateProjectAuthProviderRequest:
+  type: object
+  description: |
+    Request to create or update an auth provider for a project.
+    This is an upsert operation: creates if not exists, updates if exists.
+  properties:
+    enabled:
+      type: boolean
+      description: Whether this provider is enabled. Defaults to true for new providers.
+      example: true
+    displayOrder:
+      type: integer
+      format: int32
+      description: Display order in sign-in UI. Defaults to 0 for new providers.
+      example: 1
+    pdpka:
+      $ref: '#/PdpkaConfig'
+    anonymous:
+      $ref: '#/AnonymousConfig'
+    oauth:
+      $ref: '#/OAuthConfig'
+    oidc:
+      $ref: '#/OidcConfig'
+    clientSecret:
+      type: string
+      description: |
+        Client secret for OAuth/OIDC providers (write-only).
+        For security, secrets are stored as references and never returned in responses.
+      writeOnly: true
+      example: "GOCSPX-secret-value"
+
+UpdateProjectAuthProviderResponse:
+  type: object
+  description: Response containing the created or updated auth provider.
+  properties:
+    provider:
+      $ref: '#/AuthProvider'
+
+DeleteProjectAuthProviderResponse:
+  type: object
+  description: Response confirming the auth provider was deleted.
+  properties: {}
+
+# =============================================================================
+# Request/Response Messages - Tenant Auth Providers
+# =============================================================================
+
+ListTenantAuthProvidersResponse:
+  type: object
+  description: Response containing tenant-level auth provider overrides.
+  properties:
+    overrides:
+      type: array
+      description: List of tenant-level overrides.
+      items:
+        $ref: '#/TenantAuthProviderOverride'
+
+UpdateTenantAuthProviderRequest:
+  type: object
+  description: |
+    Request to create or update a tenant-level auth provider override.
+    Fields that are null or omitted will inherit from the project configuration.
+  properties:
+    enabled:
+      type:
+        - boolean
+        - 'null'
+      description: Override for enabled state. Null = inherit from project.
+      example: false
+    displayOrder:
+      type:
+        - integer
+        - 'null'
+      format: int32
+      description: Override for display order. Null = inherit from project.
+      example: 2
+    pdpka:
+      $ref: '#/PdpkaConfig'
+    anonymous:
+      $ref: '#/AnonymousConfig'
+    oauth:
+      $ref: '#/OAuthConfig'
+    oidc:
+      $ref: '#/OidcConfig'
+    clientSecret:
+      type: string
+      description: |
+        Client secret override for OAuth/OIDC providers (write-only).
+        For security, secrets are stored as references and never returned in responses.
+      writeOnly: true
+
+UpdateTenantAuthProviderResponse:
+  type: object
+  description: Response containing the created or updated override.
+  properties:
+    override:
+      $ref: '#/TenantAuthProviderOverride'
+
+DeleteTenantAuthProviderResponse:
+  type: object
+  description: Response confirming the override was deleted.
+  properties: {}
+
+# =============================================================================
+# Request/Response Messages - Effective Auth Providers
+# =============================================================================
+
+GetEffectiveTenantAuthProvidersResponse:
+  type: object
+  description: |
+    Response containing the effective auth provider configuration for a tenant
+    after merging project and tenant configurations.
+  properties:
+    providers:
+      type: array
+      description: |
+        List of effective auth providers, ordered by displayOrder.
+        Each provider includes the source (PROJECT or TENANT).
+      items:
+        $ref: '#/EffectiveAuthProvider'

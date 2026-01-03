@@ -13,24 +13,10 @@ use crate::generated_admin::{apis::ResponseContent, models};
 use reqwest;
 use serde::{Deserialize, Serialize, de::Error as _};
 
-/// struct for typed errors of method [`create_app`]
+/// struct for typed errors of method [`delete_project_auth_provider`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum CreateAppError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status409(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
-    UnknownValue(serde_json::Value),
-}
-
-/// struct for typed errors of method [`delete_app`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum DeleteAppError {
+pub enum DeleteProjectAuthProviderError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -40,10 +26,10 @@ pub enum DeleteAppError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`get_app`]
+/// struct for typed errors of method [`delete_tenant_auth_provider`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum GetAppError {
+pub enum DeleteTenantAuthProviderError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -53,10 +39,10 @@ pub enum GetAppError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`get_app_config`]
+/// struct for typed errors of method [`get_effective_tenant_auth_providers`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum GetAppConfigError {
+pub enum GetEffectiveTenantAuthProvidersError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -66,10 +52,10 @@ pub enum GetAppConfigError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`list_apps`]
+/// struct for typed errors of method [`get_project_auth_provider`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum ListAppsError {
+pub enum GetProjectAuthProviderError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -79,10 +65,10 @@ pub enum ListAppsError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`search_apps`]
+/// struct for typed errors of method [`list_project_auth_providers`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SearchAppsError {
+pub enum ListProjectAuthProvidersError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -92,10 +78,10 @@ pub enum SearchAppsError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`search_apps_post`]
+/// struct for typed errors of method [`list_tenant_auth_providers`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum SearchAppsPostError {
+pub enum ListTenantAuthProvidersError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -105,24 +91,10 @@ pub enum SearchAppsPostError {
     UnknownValue(serde_json::Value),
 }
 
-/// struct for typed errors of method [`undelete_app`]
+/// struct for typed errors of method [`update_project_auth_provider`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum UndeleteAppError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status409(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
-    UnknownValue(serde_json::Value),
-}
-
-/// struct for typed errors of method [`update_app`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum UpdateAppError {
+pub enum UpdateProjectAuthProviderError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -132,93 +104,34 @@ pub enum UpdateAppError {
     UnknownValue(serde_json::Value),
 }
 
-/// Registers a new app within a project. API keys are auto-generated for each app. Platform-specific configuration must match the specified platform.
-pub async fn create_app(
+/// struct for typed errors of method [`update_tenant_auth_provider`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateTenantAuthProviderError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// Permanently deletes an authentication provider from a project. This operation is irreversible.
+pub async fn delete_project_auth_provider(
     configuration: &configuration::Configuration,
     project_id: &str,
-    create_app_request: models::CreateAppRequest,
-) -> Result<models::CreateApp200Response, Error<CreateAppError>> {
+    provider_id: &str,
+) -> Result<(), Error<DeleteProjectAuthProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_body_create_app_request = create_app_request;
+    let p_path_provider_id = provider_id;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps",
-        configuration.base_path,
-        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
-    );
-    let mut req_builder = configuration
-        .client
-        .request(reqwest::Method::POST, &uri_str);
-
-    if let Some(ref apikey) = configuration.api_key {
-        let key = apikey.key.clone();
-        let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
-            None => key,
-        };
-        req_builder = req_builder.query(&[("key", value)]);
-    }
-    if let Some(ref user_agent) = configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(ref token) = configuration.bearer_access_token {
-        req_builder = req_builder.bearer_auth(token.to_owned());
-    };
-    req_builder = req_builder.json(&p_body_create_app_request);
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => {
-                return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::CreateApp200Response`",
-                )));
-            }
-            ContentType::Unsupported(unknown_type) => {
-                return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::CreateApp200Response`"
-                ))));
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<CreateAppError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
-            status,
-            content,
-            entity,
-        }))
-    }
-}
-
-/// Soft-deletes an app. The app enters DELETED state and will be permanently removed after 30 days. During this period, the app can be restored using the undelete operation.
-pub async fn delete_app(
-    configuration: &configuration::Configuration,
-    project_id: &str,
-    app_id: &str,
-) -> Result<models::DeleteApp200Response, Error<DeleteAppError>> {
-    // add a prefix to parameters to efficiently prevent name collisions
-    let p_path_project_id = project_id;
-    let p_path_app_id = app_id;
-
-    let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/authProviders/{providerId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+        providerId = crate::generated_admin::apis::urlencode(p_path_provider_id)
     );
     let mut req_builder = configuration
         .client
@@ -243,6 +156,121 @@ pub async fn delete_app(
     let resp = configuration.client.execute(req).await?;
 
     let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<DeleteProjectAuthProviderError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Removes a tenant-level authentication provider override. After deletion, the tenant will inherit the project-level configuration.
+pub async fn delete_tenant_auth_provider(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    tenant_id: &str,
+    provider_id: &str,
+) -> Result<(), Error<DeleteTenantAuthProviderError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_tenant_id = tenant_id;
+    let p_path_provider_id = provider_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders/{providerId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id),
+        providerId = crate::generated_admin::apis::urlencode(p_path_provider_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::DELETE, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<DeleteTenantAuthProviderError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Retrieves the effective authentication provider configuration for a tenant. Returns the merged configuration after applying tenant-level overrides to project-level configuration. Each provider includes its source (PROJECT or TENANT).
+pub async fn get_effective_tenant_auth_providers(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    tenant_id: &str,
+    enabled_only: Option<bool>,
+) -> Result<
+    models::GetEffectiveTenantAuthProviders200Response,
+    Error<GetEffectiveTenantAuthProvidersError>,
+> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_tenant_id = tenant_id;
+    let p_query_enabled_only = enabled_only;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders:effective",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_enabled_only {
+        req_builder = req_builder.query(&[("enabledOnly", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
     let content_type = resp
         .headers()
         .get("content-type")
@@ -256,18 +284,19 @@ pub async fn delete_app(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::DeleteApp200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::GetEffectiveTenantAuthProviders200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::DeleteApp200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetEffectiveTenantAuthProviders200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<DeleteAppError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetEffectiveTenantAuthProvidersError> =
+            serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -276,21 +305,21 @@ pub async fn delete_app(
     }
 }
 
-/// Retrieves an app by its ID. Returns the app details including its platform configuration.
-pub async fn get_app(
+/// Retrieves a specific authentication provider configuration for a project.
+pub async fn get_project_auth_provider(
     configuration: &configuration::Configuration,
     project_id: &str,
-    app_id: &str,
-) -> Result<models::GetApp200Response, Error<GetAppError>> {
+    provider_id: &str,
+) -> Result<models::GetProjectAuthProvider200Response, Error<GetProjectAuthProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_app_id = app_id;
+    let p_path_provider_id = provider_id;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/authProviders/{providerId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+        providerId = crate::generated_admin::apis::urlencode(p_path_provider_id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
@@ -326,18 +355,18 @@ pub async fn get_app(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::GetApp200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProjectAuthProvider200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetApp200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProjectAuthProvider200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<GetAppError> = serde_json::from_str(&content).ok();
+        let entity: Option<GetProjectAuthProviderError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -346,111 +375,21 @@ pub async fn get_app(
     }
 }
 
-/// Retrieves the SDK configuration file for an app. Returns platform-specific configuration files: - iOS: GoogleService-Info.plist (XML plist format) - Android: google-services.json (JSON format) - macOS/Windows/Linux: pistachio-config.json (JSON format) - Web: JavaScript config object (JSON format)
-pub async fn get_app_config(
+/// Lists all authentication providers configured for a project. Providers are returned ordered by displayOrder.
+pub async fn list_project_auth_providers(
     configuration: &configuration::Configuration,
     project_id: &str,
-    app_id: &str,
-) -> Result<models::GetAppConfig200Response, Error<GetAppConfigError>> {
+) -> Result<models::ListProjectAuthProviders200Response, Error<ListProjectAuthProvidersError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_app_id = app_id;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps/{appId}/config",
-        configuration.base_path,
-        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
-    );
-    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
-
-    if let Some(ref apikey) = configuration.api_key {
-        let key = apikey.key.clone();
-        let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
-            None => key,
-        };
-        req_builder = req_builder.query(&[("key", value)]);
-    }
-    if let Some(ref user_agent) = configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(ref token) = configuration.bearer_access_token {
-        req_builder = req_builder.bearer_auth(token.to_owned());
-    };
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => {
-                return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::GetAppConfig200Response`",
-                )));
-            }
-            ContentType::Unsupported(unknown_type) => {
-                return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetAppConfig200Response`"
-                ))));
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<GetAppConfigError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
-            status,
-            content,
-            entity,
-        }))
-    }
-}
-
-/// Lists all apps within a project. Results are paginated with cursor-based pagination.
-pub async fn list_apps(
-    configuration: &configuration::Configuration,
-    project_id: &str,
-    page_size: Option<i32>,
-    cursor: Option<&str>,
-    sort: Option<&str>,
-    show_deleted: Option<bool>,
-) -> Result<models::ListApps200Response, Error<ListAppsError>> {
-    // add a prefix to parameters to efficiently prevent name collisions
-    let p_path_project_id = project_id;
-    let p_query_page_size = page_size;
-    let p_query_cursor = cursor;
-    let p_query_sort = sort;
-    let p_query_show_deleted = show_deleted;
-
-    let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps",
+        "{}/admin/v1/projects/{projectId}/authProviders",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = p_query_page_size {
-        req_builder = req_builder.query(&[("pageSize", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_sort {
-        req_builder = req_builder.query(&[("sort", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_show_deleted {
-        req_builder = req_builder.query(&[("showDeleted", &param_value.to_string())]);
-    }
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
@@ -483,18 +422,18 @@ pub async fn list_apps(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::ListApps200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::ListProjectAuthProviders200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListApps200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListProjectAuthProviders200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<ListAppsError> = serde_json::from_str(&content).ok();
+        let entity: Option<ListProjectAuthProvidersError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -503,41 +442,24 @@ pub async fn list_apps(
     }
 }
 
-/// Searches for apps within a project using full-text search.  Searchable fields: - app_id: The unique app identifier - display_name: Human-readable display name - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB) - state: App state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_app\" - Search all fields - \"display_name:Production*\" - Apps with display name starting with \"Production\" - \"platform:IOS\" - iOS apps only - \"platform:IOS AND state:ACTIVE\" - Active iOS apps  For complex queries that exceed URL length limits, use POST instead.
-pub async fn search_apps(
+/// Lists all tenant-level authentication provider overrides. Returns only the overrides explicitly set for this tenant.
+pub async fn list_tenant_auth_providers(
     configuration: &configuration::Configuration,
     project_id: &str,
-    query: Option<&str>,
-    page_size: Option<i32>,
-    cursor: Option<&str>,
-    sort: Option<&str>,
-) -> Result<models::SearchApps200Response, Error<SearchAppsError>> {
+    tenant_id: &str,
+) -> Result<models::ListTenantAuthProviders200Response, Error<ListTenantAuthProvidersError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_query_query = query;
-    let p_query_page_size = page_size;
-    let p_query_cursor = cursor;
-    let p_query_sort = sort;
+    let p_path_tenant_id = tenant_id;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps:search",
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders",
         configuration.base_path,
-        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
     );
     let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
 
-    if let Some(ref param_value) = p_query_query {
-        req_builder = req_builder.query(&[("query", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_page_size {
-        req_builder = req_builder.query(&[("pageSize", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_cursor {
-        req_builder = req_builder.query(&[("cursor", &param_value.to_string())]);
-    }
-    if let Some(ref param_value) = p_query_sort {
-        req_builder = req_builder.query(&[("sort", &param_value.to_string())]);
-    }
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
         let value = match apikey.prefix {
@@ -570,18 +492,18 @@ pub async fn search_apps(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::SearchApps200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::ListTenantAuthProviders200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchApps200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListTenantAuthProviders200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<SearchAppsError> = serde_json::from_str(&content).ok();
+        let entity: Option<ListTenantAuthProvidersError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -590,97 +512,25 @@ pub async fn search_apps(
     }
 }
 
-/// Searches for apps within a project using full-text search. Use this method for complex queries that exceed URL length limits.  Searchable fields: - app_id: The unique app identifier - display_name: Human-readable display name - platform: Target platform (IOS, ANDROID, MACOS, WINDOWS, LINUX, WEB) - state: App state (ACTIVE, DELETED) - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"my_app\" - Search all fields - \"display_name:Production*\" - Apps with display name starting with \"Production\" - \"platform:IOS\" - iOS apps only
-pub async fn search_apps_post(
+/// Creates or updates an authentication provider for a project. This is an upsert operation: creates the provider if it doesn't exist, updates it if it does.
+pub async fn update_project_auth_provider(
     configuration: &configuration::Configuration,
     project_id: &str,
-    search_apps_post_request: models::SearchAppsPostRequest,
-) -> Result<models::SearchApps200Response, Error<SearchAppsPostError>> {
+    provider_id: &str,
+    update_project_auth_provider_request: models::UpdateProjectAuthProviderRequest,
+) -> Result<models::UpdateProjectAuthProvider200Response, Error<UpdateProjectAuthProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_body_search_apps_post_request = search_apps_post_request;
+    let p_path_provider_id = provider_id;
+    let p_body_update_project_auth_provider_request = update_project_auth_provider_request;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps:search",
-        configuration.base_path,
-        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
-    );
-    let mut req_builder = configuration
-        .client
-        .request(reqwest::Method::POST, &uri_str);
-
-    if let Some(ref apikey) = configuration.api_key {
-        let key = apikey.key.clone();
-        let value = match apikey.prefix {
-            Some(ref prefix) => format!("{} {}", prefix, key),
-            None => key,
-        };
-        req_builder = req_builder.query(&[("key", value)]);
-    }
-    if let Some(ref user_agent) = configuration.user_agent {
-        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-    }
-    if let Some(ref token) = configuration.bearer_access_token {
-        req_builder = req_builder.bearer_auth(token.to_owned());
-    };
-    req_builder = req_builder.json(&p_body_search_apps_post_request);
-
-    let req = req_builder.build()?;
-    let resp = configuration.client.execute(req).await?;
-
-    let status = resp.status();
-    let content_type = resp
-        .headers()
-        .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("application/octet-stream");
-    let content_type = super::ContentType::from(content_type);
-
-    if !status.is_client_error() && !status.is_server_error() {
-        let content = resp.text().await?;
-        match content_type {
-            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
-            ContentType::Text => {
-                return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::SearchApps200Response`",
-                )));
-            }
-            ContentType::Unsupported(unknown_type) => {
-                return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchApps200Response`"
-                ))));
-            }
-        }
-    } else {
-        let content = resp.text().await?;
-        let entity: Option<SearchAppsPostError> = serde_json::from_str(&content).ok();
-        Err(Error::ResponseError(ResponseContent {
-            status,
-            content,
-            entity,
-        }))
-    }
-}
-
-/// Restores a soft-deleted app. Only works for apps in DELETED state within the 30-day grace period. The app will be restored to ACTIVE state.
-pub async fn undelete_app(
-    configuration: &configuration::Configuration,
-    project_id: &str,
-    app_id: &str,
-) -> Result<models::UndeleteApp200Response, Error<UndeleteAppError>> {
-    // add a prefix to parameters to efficiently prevent name collisions
-    let p_path_project_id = project_id;
-    let p_path_app_id = app_id;
-
-    let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps/{appId}:undelete",
+        "{}/admin/v1/projects/{projectId}/authProviders/{providerId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+        providerId = crate::generated_admin::apis::urlencode(p_path_provider_id)
     );
-    let mut req_builder = configuration
-        .client
-        .request(reqwest::Method::POST, &uri_str);
+    let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
@@ -696,6 +546,7 @@ pub async fn undelete_app(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
+    req_builder = req_builder.json(&p_body_update_project_auth_provider_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -714,18 +565,18 @@ pub async fn undelete_app(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::UndeleteApp200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::UpdateProjectAuthProvider200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::UndeleteApp200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateProjectAuthProvider200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<UndeleteAppError> = serde_json::from_str(&content).ok();
+        let entity: Option<UpdateProjectAuthProviderError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -734,27 +585,28 @@ pub async fn undelete_app(
     }
 }
 
-/// Updates an existing app. Updates the app's display name or platform-specific configuration.
-pub async fn update_app(
+/// Creates or updates a tenant-level authentication provider override. Fields that are null or omitted will inherit from the project configuration.
+pub async fn update_tenant_auth_provider(
     configuration: &configuration::Configuration,
     project_id: &str,
-    app_id: &str,
-    update_app_request: models::UpdateAppRequest,
-) -> Result<models::UpdateApp200Response, Error<UpdateAppError>> {
+    tenant_id: &str,
+    provider_id: &str,
+    update_tenant_auth_provider_request: models::UpdateTenantAuthProviderRequest,
+) -> Result<models::UpdateTenantAuthProvider200Response, Error<UpdateTenantAuthProviderError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
-    let p_path_app_id = app_id;
-    let p_body_update_app_request = update_app_request;
+    let p_path_tenant_id = tenant_id;
+    let p_path_provider_id = provider_id;
+    let p_body_update_tenant_auth_provider_request = update_tenant_auth_provider_request;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/apps/{appId}",
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders/{providerId}",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
-        appId = crate::generated_admin::apis::urlencode(p_path_app_id)
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id),
+        providerId = crate::generated_admin::apis::urlencode(p_path_provider_id)
     );
-    let mut req_builder = configuration
-        .client
-        .request(reqwest::Method::PATCH, &uri_str);
+    let mut req_builder = configuration.client.request(reqwest::Method::PUT, &uri_str);
 
     if let Some(ref apikey) = configuration.api_key {
         let key = apikey.key.clone();
@@ -770,7 +622,7 @@ pub async fn update_app(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
-    req_builder = req_builder.json(&p_body_update_app_request);
+    req_builder = req_builder.json(&p_body_update_tenant_auth_provider_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;
@@ -789,18 +641,18 @@ pub async fn update_app(
             ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
             ContentType::Text => {
                 return Err(Error::from(serde_json::Error::custom(
-                    "Received `text/plain` content type response that cannot be converted to `models::UpdateApp200Response`",
+                    "Received `text/plain` content type response that cannot be converted to `models::UpdateTenantAuthProvider200Response`",
                 )));
             }
             ContentType::Unsupported(unknown_type) => {
                 return Err(Error::from(serde_json::Error::custom(format!(
-                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateApp200Response`"
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateTenantAuthProvider200Response`"
                 ))));
             }
         }
     } else {
         let content = resp.text().await?;
-        let entity: Option<UpdateAppError> = serde_json::from_str(&content).ok();
+        let entity: Option<UpdateTenantAuthProviderError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

@@ -8,6 +8,19 @@ use super::app::{
     SearchAppsError, SearchAppsRequest, SearchAppsResponse, UndeleteAppError, UndeleteAppRequest,
     UndeleteAppResponse, UpdateAppError, UpdateAppRequest, UpdateAppResponse,
 };
+use super::auth_provider::{
+    DeleteProjectAuthProviderError, DeleteProjectAuthProviderRequest,
+    DeleteProjectAuthProviderResponse, DeleteTenantAuthProviderError,
+    DeleteTenantAuthProviderRequest, DeleteTenantAuthProviderResponse,
+    GetEffectiveTenantAuthProvidersError, GetEffectiveTenantAuthProvidersRequest,
+    GetEffectiveTenantAuthProvidersResponse, GetProjectAuthProviderError,
+    GetProjectAuthProviderRequest, GetProjectAuthProviderResponse, ListProjectAuthProvidersError,
+    ListProjectAuthProvidersRequest, ListProjectAuthProvidersResponse,
+    ListTenantAuthProvidersError, ListTenantAuthProvidersRequest, ListTenantAuthProvidersResponse,
+    UpdateProjectAuthProviderError, UpdateProjectAuthProviderRequest,
+    UpdateProjectAuthProviderResponse, UpdateTenantAuthProviderError,
+    UpdateTenantAuthProviderRequest, UpdateTenantAuthProviderResponse,
+};
 use super::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
@@ -240,4 +253,75 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: GetAppConfigRequest,
     ) -> Result<GetAppConfigResponse, GetAppConfigError>;
+
+    // =========================================================================
+    // Auth Provider Operations
+    // =========================================================================
+
+    /// Lists all auth providers for a project.
+    ///
+    /// Returns all configured authentication providers ordered by display order.
+    async fn list_project_auth_providers(
+        &mut self,
+        req: ListProjectAuthProvidersRequest,
+    ) -> Result<ListProjectAuthProvidersResponse, ListProjectAuthProvidersError>;
+
+    /// Retrieves a specific auth provider for a project.
+    ///
+    /// Returns the provider configuration including type-specific settings.
+    async fn get_project_auth_provider(
+        &mut self,
+        req: GetProjectAuthProviderRequest,
+    ) -> Result<GetProjectAuthProviderResponse, GetProjectAuthProviderError>;
+
+    /// Creates or updates an auth provider for a project.
+    ///
+    /// This is an upsert operation: if the provider exists, it is updated;
+    /// otherwise, a new provider is created.
+    async fn update_project_auth_provider(
+        &mut self,
+        req: UpdateProjectAuthProviderRequest,
+    ) -> Result<UpdateProjectAuthProviderResponse, UpdateProjectAuthProviderError>;
+
+    /// Permanently deletes an auth provider from a project.
+    ///
+    /// This operation is irreversible.
+    async fn delete_project_auth_provider(
+        &mut self,
+        req: DeleteProjectAuthProviderRequest,
+    ) -> Result<DeleteProjectAuthProviderResponse, DeleteProjectAuthProviderError>;
+
+    /// Lists tenant-level auth provider overrides.
+    ///
+    /// Returns only overrides that have been explicitly set for this tenant.
+    async fn list_tenant_auth_providers(
+        &mut self,
+        req: ListTenantAuthProvidersRequest,
+    ) -> Result<ListTenantAuthProvidersResponse, ListTenantAuthProvidersError>;
+
+    /// Creates or updates a tenant-level auth provider override.
+    ///
+    /// Tenant overrides allow customizing auth provider settings per tenant.
+    /// Fields that are not set inherit from the project-level configuration.
+    async fn update_tenant_auth_provider(
+        &mut self,
+        req: UpdateTenantAuthProviderRequest,
+    ) -> Result<UpdateTenantAuthProviderResponse, UpdateTenantAuthProviderError>;
+
+    /// Removes a tenant-level auth provider override.
+    ///
+    /// After deletion, the tenant will inherit the project-level configuration.
+    async fn delete_tenant_auth_provider(
+        &mut self,
+        req: DeleteTenantAuthProviderRequest,
+    ) -> Result<DeleteTenantAuthProviderResponse, DeleteTenantAuthProviderError>;
+
+    /// Retrieves effective auth provider configuration for a tenant.
+    ///
+    /// Returns the merged configuration after applying tenant-level overrides
+    /// to project-level configuration.
+    async fn get_effective_tenant_auth_providers(
+        &mut self,
+        req: GetEffectiveTenantAuthProvidersRequest,
+    ) -> Result<GetEffectiveTenantAuthProvidersResponse, GetEffectiveTenantAuthProvidersError>;
 }

@@ -18,7 +18,7 @@ pub struct SearchProjects200Response {
     #[serde(rename = "projects", skip_serializing_if = "Option::is_none")]
     pub projects: Option<Vec<models::ListProjects200ResponseProjectsInner>>,
     #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
-    pub pagination: Option<Box<models::ListApps200ResponsePagination>>,
+    pub pagination: Option<Box<models::ListProjects200ResponsePagination>>,
 }
 
 impl SearchProjects200Response {

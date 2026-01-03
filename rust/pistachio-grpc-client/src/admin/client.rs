@@ -5,6 +5,19 @@ use pistachio_api_common::admin::app::{
     SearchAppsError, SearchAppsRequest, SearchAppsResponse, UndeleteAppError, UndeleteAppRequest,
     UndeleteAppResponse, UpdateAppError, UpdateAppRequest, UpdateAppResponse,
 };
+use pistachio_api_common::admin::auth_provider::{
+    DeleteProjectAuthProviderError, DeleteProjectAuthProviderRequest,
+    DeleteProjectAuthProviderResponse, DeleteTenantAuthProviderError,
+    DeleteTenantAuthProviderRequest, DeleteTenantAuthProviderResponse,
+    GetEffectiveTenantAuthProvidersError, GetEffectiveTenantAuthProvidersRequest,
+    GetEffectiveTenantAuthProvidersResponse, GetProjectAuthProviderError,
+    GetProjectAuthProviderRequest, GetProjectAuthProviderResponse, ListProjectAuthProvidersError,
+    ListProjectAuthProvidersRequest, ListProjectAuthProvidersResponse,
+    ListTenantAuthProvidersError, ListTenantAuthProvidersRequest, ListTenantAuthProvidersResponse,
+    UpdateProjectAuthProviderError, UpdateProjectAuthProviderRequest,
+    UpdateProjectAuthProviderResponse, UpdateTenantAuthProviderError,
+    UpdateTenantAuthProviderRequest, UpdateTenantAuthProviderResponse,
+};
 use pistachio_api_common::admin::client::PistachioAdminClient;
 use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
@@ -36,14 +49,20 @@ use super::create_project::handle_create_project;
 use super::create_tenant::handle_create_tenant;
 use super::delete_app::handle_delete_app;
 use super::delete_project::handle_delete_project;
+use super::delete_project_auth_provider::handle_delete_project_auth_provider;
 use super::delete_tenant::handle_delete_tenant;
+use super::delete_tenant_auth_provider::handle_delete_tenant_auth_provider;
 use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_app::handle_get_app;
 use super::get_app_config::handle_get_app_config;
+use super::get_effective_tenant_auth_providers::handle_get_effective_tenant_auth_providers;
 use super::get_project::handle_get_project;
+use super::get_project_auth_provider::handle_get_project_auth_provider;
 use super::get_tenant::handle_get_tenant;
 use super::list_apps::handle_list_apps;
+use super::list_project_auth_providers::handle_list_project_auth_providers;
 use super::list_projects::handle_list_projects;
+use super::list_tenant_auth_providers::handle_list_tenant_auth_providers;
 use super::list_tenants::handle_list_tenants;
 use super::search_apps::handle_search_apps;
 use super::search_projects::handle_search_projects;
@@ -52,7 +71,9 @@ use super::undelete_app::handle_undelete_app;
 use super::undelete_project::handle_undelete_project;
 use super::update_app::handle_update_app;
 use super::update_project::handle_update_project;
+use super::update_project_auth_provider::handle_update_project_auth_provider;
 use super::update_tenant::handle_update_tenant;
+use super::update_tenant_auth_provider::handle_update_tenant_auth_provider;
 
 /// Interceptor that adds admin credentials to requests.
 #[derive(Debug, Clone)]
@@ -611,6 +632,164 @@ impl PistachioAdminClient for AdminClient {
                 Err(GetAppConfigError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // Auth Provider Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_project_auth_providers(
+        &mut self,
+        req: ListProjectAuthProvidersRequest,
+    ) -> Result<ListProjectAuthProvidersResponse, ListProjectAuthProvidersError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_project_auth_providers");
+                handle_list_project_auth_providers(client, req).await
+            }
+            None => {
+                warn!("Attempted list_project_auth_providers with unconnected client");
+                Err(ListProjectAuthProvidersError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_project_auth_provider(
+        &mut self,
+        req: GetProjectAuthProviderRequest,
+    ) -> Result<GetProjectAuthProviderResponse, GetProjectAuthProviderError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_project_auth_provider");
+                handle_get_project_auth_provider(client, req).await
+            }
+            None => {
+                warn!("Attempted get_project_auth_provider with unconnected client");
+                Err(GetProjectAuthProviderError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_project_auth_provider(
+        &mut self,
+        req: UpdateProjectAuthProviderRequest,
+    ) -> Result<UpdateProjectAuthProviderResponse, UpdateProjectAuthProviderError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_project_auth_provider");
+                handle_update_project_auth_provider(client, req).await
+            }
+            None => {
+                warn!("Attempted update_project_auth_provider with unconnected client");
+                Err(UpdateProjectAuthProviderError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_project_auth_provider(
+        &mut self,
+        req: DeleteProjectAuthProviderRequest,
+    ) -> Result<DeleteProjectAuthProviderResponse, DeleteProjectAuthProviderError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_project_auth_provider");
+                handle_delete_project_auth_provider(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_project_auth_provider with unconnected client");
+                Err(DeleteProjectAuthProviderError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_tenant_auth_providers(
+        &mut self,
+        req: ListTenantAuthProvidersRequest,
+    ) -> Result<ListTenantAuthProvidersResponse, ListTenantAuthProvidersError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_tenant_auth_providers");
+                handle_list_tenant_auth_providers(client, req).await
+            }
+            None => {
+                warn!("Attempted list_tenant_auth_providers with unconnected client");
+                Err(ListTenantAuthProvidersError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_tenant_auth_provider(
+        &mut self,
+        req: UpdateTenantAuthProviderRequest,
+    ) -> Result<UpdateTenantAuthProviderResponse, UpdateTenantAuthProviderError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_tenant_auth_provider");
+                handle_update_tenant_auth_provider(client, req).await
+            }
+            None => {
+                warn!("Attempted update_tenant_auth_provider with unconnected client");
+                Err(UpdateTenantAuthProviderError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_tenant_auth_provider(
+        &mut self,
+        req: DeleteTenantAuthProviderRequest,
+    ) -> Result<DeleteTenantAuthProviderResponse, DeleteTenantAuthProviderError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_tenant_auth_provider");
+                handle_delete_tenant_auth_provider(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_tenant_auth_provider with unconnected client");
+                Err(DeleteTenantAuthProviderError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_effective_tenant_auth_providers(
+        &mut self,
+        req: GetEffectiveTenantAuthProvidersRequest,
+    ) -> Result<GetEffectiveTenantAuthProvidersResponse, GetEffectiveTenantAuthProvidersError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_effective_tenant_auth_providers");
+                handle_get_effective_tenant_auth_providers(client, req).await
+            }
+            None => {
+                warn!("Attempted get_effective_tenant_auth_providers with unconnected client");
+                Err(
+                    GetEffectiveTenantAuthProvidersError::PistachioApiClientError(
+                        PistachioApiClientError::NotConnected,
+                    ),
+                )
             }
         }
     }

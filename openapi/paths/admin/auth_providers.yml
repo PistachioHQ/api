@@ -1,0 +1,549 @@
+# Auth Provider Management Endpoints
+
+# =============================================================================
+# Project Auth Providers
+# =============================================================================
+
+projectAuthProviders:
+  get:
+    operationId: listProjectAuthProviders
+    summary: List project auth providers
+    description: |
+      Lists all authentication providers configured for a project.
+      Providers are returned ordered by displayOrder.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    responses:
+      '200':
+        description: List of auth providers
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/ListProjectAuthProvidersResponse'
+      '400':
+        description: Invalid projectId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectAuthProviderById:
+  get:
+    operationId: getProjectAuthProvider
+    summary: Get a project auth provider
+    description: |
+      Retrieves a specific authentication provider configuration for a project.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: providerId
+        in: path
+        description: |
+          The provider ID. Built-in: "pdpka", "anonymous", "google", "apple".
+          Custom OIDC: "oidc:<name>".
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+          maxLength: 64
+    responses:
+      '200':
+        description: Auth provider configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/GetProjectAuthProviderResponse'
+      '400':
+        description: Invalid projectId or providerId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or auth provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  put:
+    operationId: updateProjectAuthProvider
+    summary: Create or update a project auth provider
+    description: |
+      Creates or updates an authentication provider for a project.
+      This is an upsert operation: creates the provider if it doesn't exist,
+      updates it if it does.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: providerId
+        in: path
+        description: |
+          The provider ID. Built-in: "pdpka", "anonymous", "google", "apple".
+          Custom OIDC: "oidc:<name>".
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+          maxLength: 64
+    requestBody:
+      description: Auth provider configuration
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/auth_provider.yml#/UpdateProjectAuthProviderRequest'
+    responses:
+      '200':
+        description: Auth provider created or updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/UpdateProjectAuthProviderResponse'
+      '400':
+        description: Invalid projectId, providerId, or configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteProjectAuthProvider
+    summary: Delete a project auth provider
+    description: |
+      Permanently deletes an authentication provider from a project.
+      This operation is irreversible.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: providerId
+        in: path
+        description: The provider ID to delete
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+          maxLength: 64
+    responses:
+      '204':
+        description: Auth provider permanently deleted
+      '400':
+        description: Invalid projectId or providerId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or auth provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Tenant Auth Provider Overrides
+# =============================================================================
+
+tenantAuthProviders:
+  get:
+    operationId: listTenantAuthProviders
+    summary: List tenant auth provider overrides
+    description: |
+      Lists all tenant-level authentication provider overrides.
+      Returns only the overrides explicitly set for this tenant.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    responses:
+      '200':
+        description: List of tenant auth provider overrides
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/ListTenantAuthProvidersResponse'
+      '400':
+        description: Invalid projectId or tenantId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantAuthProviderById:
+  put:
+    operationId: updateTenantAuthProvider
+    summary: Create or update a tenant auth provider override
+    description: |
+      Creates or updates a tenant-level authentication provider override.
+      Fields that are null or omitted will inherit from the project configuration.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: providerId
+        in: path
+        description: The provider ID to override
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+          maxLength: 64
+    requestBody:
+      description: Auth provider override configuration
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/auth_provider.yml#/UpdateTenantAuthProviderRequest'
+    responses:
+      '200':
+        description: Override created or updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/UpdateTenantAuthProviderResponse'
+      '400':
+        description: Invalid projectId, tenantId, providerId, or configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or project-level provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteTenantAuthProvider
+    summary: Delete a tenant auth provider override
+    description: |
+      Removes a tenant-level authentication provider override.
+      After deletion, the tenant will inherit the project-level configuration.
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: providerId
+        in: path
+        description: The provider ID override to delete
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9]*(?::[a-z][a-z0-9_-]*)?$'
+          maxLength: 64
+    responses:
+      '204':
+        description: Override deleted
+      '400':
+        description: Invalid projectId, tenantId, or providerId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or override not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Effective Auth Providers (Merged Configuration)
+# =============================================================================
+
+effectiveTenantAuthProviders:
+  get:
+    operationId: getEffectiveTenantAuthProviders
+    summary: Get effective auth providers for a tenant
+    description: |
+      Retrieves the effective authentication provider configuration for a tenant.
+      Returns the merged configuration after applying tenant-level overrides
+      to project-level configuration. Each provider includes its source
+      (PROJECT or TENANT).
+    tags:
+      - Auth Providers
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: enabledOnly
+        in: query
+        description: If true, only return enabled providers
+        required: false
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: Effective auth provider configuration
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/auth_provider.yml#/GetEffectiveTenantAuthProvidersResponse'
+      '400':
+        description: Invalid projectId or tenantId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

@@ -21,6 +21,8 @@ tags:
     description: Tenant management operations within projects
   - name: Apps
     description: App management operations within projects
+  - name: Auth Providers
+    description: Authentication provider configuration for projects and tenants
 
 paths:
   /admin/v1/projects:
@@ -49,6 +51,18 @@ paths:
     $ref: './paths/admin/apps.yml#/appUndelete'
   /admin/v1/projects/{projectId}/apps/{appId}/config:
     $ref: './paths/admin/apps.yml#/appConfig'
+  # Auth Providers - Project Level
+  /admin/v1/projects/{projectId}/authProviders:
+    $ref: './paths/admin/auth_providers.yml#/projectAuthProviders'
+  /admin/v1/projects/{projectId}/authProviders/{providerId}:
+    $ref: './paths/admin/auth_providers.yml#/projectAuthProviderById'
+  # Auth Providers - Tenant Level
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders:
+    $ref: './paths/admin/auth_providers.yml#/tenantAuthProviders'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders/{providerId}:
+    $ref: './paths/admin/auth_providers.yml#/tenantAuthProviderById'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders:effective:
+    $ref: './paths/admin/auth_providers.yml#/effectiveTenantAuthProviders'
 
 components:
   securitySchemes:

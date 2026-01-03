@@ -17,13 +17,13 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateTenantError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status409(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status409(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -31,12 +31,12 @@ pub enum CreateTenantError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteTenantError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -44,12 +44,12 @@ pub enum DeleteTenantError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetTenantError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -57,12 +57,12 @@ pub enum GetTenantError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ListTenantsError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -70,12 +70,12 @@ pub enum ListTenantsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchTenantsError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -83,12 +83,12 @@ pub enum SearchTenantsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchTenantsPostError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -96,12 +96,12 @@ pub enum SearchTenantsPostError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateTenantError {
-    Status400(models::ListApps400Response),
-    Status401(models::ListApps400Response),
-    Status403(models::ListApps400Response),
-    Status404(models::ListApps400Response),
-    Status500(models::ListApps400Response),
-    Status503(models::ListApps400Response),
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
     UnknownValue(serde_json::Value),
 }
 
