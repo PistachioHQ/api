@@ -32,7 +32,6 @@ serde_repr = "0.1.5"
 serde_with = "3"
 tracing = { workspace = true }
 url = "2"
-uuid = { version = "1.11", features = ["serde"] }
 
 [build-dependencies]
 tempfile = "3"
