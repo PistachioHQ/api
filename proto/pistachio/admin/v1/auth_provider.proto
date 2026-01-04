@@ -4,6 +4,7 @@ package pistachio.admin.v1;
 
 import "buf/validate/validate.proto";
 import "pistachio/types/v1/auth_provider.proto";
+import "pistachio/types/v1/pagination.proto";
 
 // =============================================================================
 // Project Auth Providers
@@ -18,13 +19,21 @@ message ListProjectAuthProvidersRequest {
     max_len: 30
     pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
   }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: provider_id, display_order, enabled, created_at, updated_at
+  // Default sort: display_order ASC
+  pistachio.types.v1.PaginationParams pagination = 2;
 }
 
 // ListProjectAuthProvidersResponse contains the list of configured auth providers.
 message ListProjectAuthProvidersResponse {
   // The list of auth providers configured for this project.
-  // Ordered by display_order ascending.
   repeated pistachio.types.v1.AuthProvider providers = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
 }
 
 // =============================================================================
@@ -156,6 +165,12 @@ message ListTenantAuthProvidersRequest {
     max_len: 128
     pattern: "^[a-zA-Z0-9_]+$"
   }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: provider_id, display_order, enabled, created_at, updated_at
+  // Default sort: display_order ASC
+  pistachio.types.v1.PaginationParams pagination = 3;
 }
 
 // ListTenantAuthProvidersResponse contains tenant-level auth provider overrides.
@@ -163,6 +178,9 @@ message ListTenantAuthProvidersResponse {
   // The list of tenant-level auth provider overrides.
   // Only contains overrides that have been explicitly set for this tenant.
   repeated pistachio.types.v1.TenantAuthProviderOverride overrides = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
 }
 
 // =============================================================================
@@ -293,6 +311,12 @@ message GetEffectiveTenantAuthProvidersRequest {
   // If true, only return enabled providers.
   // Defaults to false (returns all providers regardless of enabled state).
   bool enabled_only = 3;
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: provider_id, display_order, enabled, created_at, updated_at
+  // Default sort: display_order ASC
+  pistachio.types.v1.PaginationParams pagination = 4;
 }
 
 // GetEffectiveTenantAuthProvidersResponse contains the merged auth provider configuration.
@@ -300,6 +324,8 @@ message GetEffectiveTenantAuthProvidersResponse {
   // The list of effective auth providers after merging project and tenant configs.
   // Each provider includes a source indicator showing where the configuration
   // originates (project or tenant).
-  // Ordered by display_order ascending.
   repeated pistachio.types.v1.EffectiveAuthProvider providers = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
 }

@@ -63,6 +63,9 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::ListProjectAuthProvidersRequ
     fn into_proto(self) -> pistachio_api::pistachio::admin::v1::ListProjectAuthProvidersRequest {
         pistachio_api::pistachio::admin::v1::ListProjectAuthProvidersRequest {
             project_id: self.project_id.to_string(),
+            pagination: self
+                .pagination
+                .map(crate::types::pagination_params_to_proto),
         }
     }
 }
@@ -81,7 +84,14 @@ impl FromProto<pistachio_api::pistachio::admin::v1::ListProjectAuthProvidersResp
             .map(AuthProvider::from_proto)
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self { providers })
+        let pagination = proto
+            .pagination
+            .map(crate::types::pagination_meta_from_proto);
+
+        Ok(Self {
+            providers,
+            pagination,
+        })
     }
 }
 

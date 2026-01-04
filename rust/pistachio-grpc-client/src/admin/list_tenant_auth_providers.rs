@@ -64,6 +64,9 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::ListTenantAuthProvidersReque
         pistachio_api::pistachio::admin::v1::ListTenantAuthProvidersRequest {
             project_id: self.project_id.to_string(),
             tenant_id: self.tenant_id.to_string(),
+            pagination: self
+                .pagination
+                .map(crate::types::pagination_params_to_proto),
         }
     }
 }
@@ -82,7 +85,14 @@ impl FromProto<pistachio_api::pistachio::admin::v1::ListTenantAuthProvidersRespo
             .map(TenantAuthProviderOverride::from_proto)
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self { overrides })
+        let pagination = proto
+            .pagination
+            .map(crate::types::pagination_meta_from_proto);
+
+        Ok(Self {
+            overrides,
+            pagination,
+        })
     }
 }
 

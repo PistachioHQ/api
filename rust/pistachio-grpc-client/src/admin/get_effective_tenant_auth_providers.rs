@@ -70,6 +70,9 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::GetEffectiveTenantAuthProvid
             project_id: self.project_id.to_string(),
             tenant_id: self.tenant_id.to_string(),
             enabled_only: self.enabled_only,
+            pagination: self
+                .pagination
+                .map(crate::types::pagination_params_to_proto),
         }
     }
 }
@@ -88,7 +91,14 @@ impl FromProto<pistachio_api::pistachio::admin::v1::GetEffectiveTenantAuthProvid
             .map(EffectiveAuthProvider::from_proto)
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self { providers })
+        let pagination = proto
+            .pagination
+            .map(crate::types::pagination_meta_from_proto);
+
+        Ok(Self {
+            providers,
+            pagination,
+        })
     }
 }
 

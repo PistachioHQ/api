@@ -79,6 +79,29 @@ impl FromProto<pistachio_api::pistachio::types::v1::PaginationMeta> for Paginati
     }
 }
 
+/// Convert `PaginationParams` to proto format.
+pub(crate) fn pagination_params_to_proto(
+    params: PaginationParams,
+) -> pistachio_api::pistachio::types::v1::PaginationParams {
+    params.into_proto()
+}
+
+/// Convert proto `PaginationMeta` to domain type.
+pub(crate) fn pagination_meta_from_proto(
+    proto: pistachio_api::pistachio::types::v1::PaginationMeta,
+) -> PaginationMeta {
+    // unwrap is safe here as we control the conversion and it can't fail
+    // for the simple fields we're converting
+    PaginationMeta {
+        next_cursor: if proto.next_cursor.is_empty() {
+            None
+        } else {
+            Some(proto.next_cursor)
+        },
+        total_count: proto.total_count,
+    }
+}
+
 // =============================================================================
 // Search conversions
 // =============================================================================

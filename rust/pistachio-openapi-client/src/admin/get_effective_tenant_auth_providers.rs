@@ -127,5 +127,9 @@ pub(crate) async fn handle_get_effective_tenant_auth_providers(
         .collect::<Result<Vec<_>, _>>()
         .map_err(GetEffectiveTenantAuthProvidersError::ResponseValidationError)?;
 
-    Ok(GetEffectiveTenantAuthProvidersResponse { providers })
+    // TODO: Extract pagination from response once OpenAPI spec is regenerated
+    Ok(GetEffectiveTenantAuthProvidersResponse {
+        providers,
+        pagination: None,
+    })
 }

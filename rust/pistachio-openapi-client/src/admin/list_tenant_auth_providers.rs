@@ -115,5 +115,9 @@ pub(crate) async fn handle_list_tenant_auth_providers(
         .collect::<Result<Vec<_>, _>>()
         .map_err(ListTenantAuthProvidersError::ResponseValidationError)?;
 
-    Ok(ListTenantAuthProvidersResponse { overrides })
+    // TODO: Extract pagination from response once OpenAPI spec is regenerated
+    Ok(ListTenantAuthProvidersResponse {
+        overrides,
+        pagination: None,
+    })
 }

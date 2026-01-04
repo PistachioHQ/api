@@ -9,6 +9,7 @@ use libgn::project::ProjectId;
 use libgn::tenant::TenantId;
 
 use crate::error::{ErrorDetails, PistachioApiClientError, ValidationError};
+use crate::pagination::{PaginationMeta, PaginationParams};
 
 // =============================================================================
 // Common Types
@@ -155,12 +156,23 @@ pub enum ListProjectAuthProvidersError {
 pub struct ListProjectAuthProvidersRequest {
     /// The project ID to list auth providers for.
     pub project_id: ProjectId,
+    /// Pagination parameters.
+    pub pagination: Option<PaginationParams>,
 }
 
 impl ListProjectAuthProvidersRequest {
     /// Creates a new request for the given project ID.
     pub fn new(project_id: ProjectId) -> Self {
-        Self { project_id }
+        Self {
+            project_id,
+            pagination: None,
+        }
+    }
+
+    /// Sets the pagination parameters.
+    pub fn with_pagination(mut self, pagination: PaginationParams) -> Self {
+        self.pagination = Some(pagination);
+        self
     }
 }
 
@@ -169,6 +181,8 @@ impl ListProjectAuthProvidersRequest {
 pub struct ListProjectAuthProvidersResponse {
     /// List of configured auth providers, ordered by display_order.
     pub providers: Vec<AuthProvider>,
+    /// Pagination metadata.
+    pub pagination: Option<PaginationMeta>,
 }
 
 // =============================================================================
@@ -393,6 +407,8 @@ pub struct ListTenantAuthProvidersRequest {
     pub project_id: ProjectId,
     /// The tenant ID.
     pub tenant_id: TenantId,
+    /// Pagination parameters.
+    pub pagination: Option<PaginationParams>,
 }
 
 impl ListTenantAuthProvidersRequest {
@@ -401,7 +417,14 @@ impl ListTenantAuthProvidersRequest {
         Self {
             project_id,
             tenant_id,
+            pagination: None,
         }
+    }
+
+    /// Sets the pagination parameters.
+    pub fn with_pagination(mut self, pagination: PaginationParams) -> Self {
+        self.pagination = Some(pagination);
+        self
     }
 }
 
@@ -410,6 +433,8 @@ impl ListTenantAuthProvidersRequest {
 pub struct ListTenantAuthProvidersResponse {
     /// List of tenant-level overrides.
     pub overrides: Vec<TenantAuthProviderOverride>,
+    /// Pagination metadata.
+    pub pagination: Option<PaginationMeta>,
 }
 
 // =============================================================================
@@ -590,6 +615,8 @@ pub struct GetEffectiveTenantAuthProvidersRequest {
     pub tenant_id: TenantId,
     /// If true, only return enabled providers.
     pub enabled_only: bool,
+    /// Pagination parameters.
+    pub pagination: Option<PaginationParams>,
 }
 
 impl GetEffectiveTenantAuthProvidersRequest {
@@ -599,12 +626,19 @@ impl GetEffectiveTenantAuthProvidersRequest {
             project_id,
             tenant_id,
             enabled_only: false,
+            pagination: None,
         }
     }
 
     /// Sets whether to only return enabled providers.
     pub fn with_enabled_only(mut self, enabled_only: bool) -> Self {
         self.enabled_only = enabled_only;
+        self
+    }
+
+    /// Sets the pagination parameters.
+    pub fn with_pagination(mut self, pagination: PaginationParams) -> Self {
+        self.pagination = Some(pagination);
         self
     }
 }
@@ -614,4 +648,6 @@ impl GetEffectiveTenantAuthProvidersRequest {
 pub struct GetEffectiveTenantAuthProvidersResponse {
     /// List of effective auth providers, ordered by display_order.
     pub providers: Vec<EffectiveAuthProvider>,
+    /// Pagination metadata.
+    pub pagination: Option<PaginationMeta>,
 }

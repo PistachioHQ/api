@@ -111,5 +111,9 @@ pub(crate) async fn handle_list_project_auth_providers(
         .collect::<Result<Vec<_>, _>>()
         .map_err(ListProjectAuthProvidersError::ResponseValidationError)?;
 
-    Ok(ListProjectAuthProvidersResponse { providers })
+    // TODO: Extract pagination from response once OpenAPI spec is regenerated
+    Ok(ListProjectAuthProvidersResponse {
+        providers,
+        pagination: None,
+    })
 }
