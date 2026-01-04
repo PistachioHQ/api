@@ -155,80 +155,17 @@ workspace-default-features = "allow"
 # on a crate-by-crate basis if desired.
 external-default-features = "allow"
 # List of crates that are allowed. Use with care!
-allow = [
-    #"ansi_term@0.11.0",
-    #{ crate = "ansi_term@0.11.0", reason = "you can specify a reason it is allowed" },
-]
-# List of crates to deny
-#
-# Low-level cryptographic primitives are banned from direct use.
-# All crypto operations must go through libgn-crypto, which provides high-level
-# misuse-resistant APIs. This enforces the "pit of success" design pattern.
-#
-# NOTE: The `wrappers` field lists crates that are allowed to DIRECTLY depend
-# on the banned crate. This includes libgn-crypto-internal (which wraps primitives)
-# and other crypto crates that have internal dependencies (e.g., chacha20poly1305 -> chacha20).
-deny = [
-    # Block ciphers and modes
-    { crate = "aes", wrappers = ["libgn-crypto-internal", "aes-gcm", "aes-kw"], reason = "Use libgn-crypto for AES operations" },
-    { crate = "cbc", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for CBC mode" },
-    { crate = "ctr", wrappers = ["libgn-crypto-internal", "aes-gcm"], reason = "Use libgn-crypto for CTR mode" },
-    # cipher is a foundational trait crate used by many crypto crates internally
-    { crate = "cipher", wrappers = ["libgn-crypto-internal", "aes", "aes-gcm", "cbc", "ctr"], reason = "Use libgn-crypto for cipher traits" },
-    # aead is a trait crate for AEAD algorithms
-    { crate = "aead", wrappers = ["aes-gcm"], reason = "Use libgn-crypto for AEAD traits" },
+allow = []
 
-    # Hash functions - digest is a foundational trait used by many hash implementations
-    { crate = "sha2", wrappers = ["libgn-crypto-internal", "p256"], reason = "Use libgn-crypto for SHA-2 hashing" },
-    { crate = "digest", wrappers = ["sha2", "hmac", "signature", "ecdsa", "elliptic-curve"], reason = "Digest traits used by hash implementations" },
-
-    # MACs
-    { crate = "hmac", wrappers = ["libgn-crypto-internal", "rfc6979"], reason = "Use libgn-crypto for HMAC" },
-
-    # Low-level crypto utilities - crypto-common is a foundational crate
-    { crate = "crypto-common", wrappers = ["cipher", "digest", "aead", "universal-hash"], reason = "Use libgn-crypto for crypto-common traits" },
-    { crate = "ring", wrappers = ["rustls", "rustls-webpki"], reason = "Use libgn-crypto for ring primitives" },
-
-    # Random number generation - enforce all randomness through internal crate
-    { crate = "rand", wrappers = ["libgn-crypto-internal"], reason = "Use libgn-crypto for secure random bytes" },
-
-    # Low-level crypto internal crate - only libgn-crypto should use this
-    { crate = "libgn-crypto-internal", wrappers = ["libgn-crypto"], reason = "Use libgn-crypto high-level API, not internal crate" },
-]
-
-# List of features to allow/deny
-# Each entry the name of a crate and a version range. If version is
-# not specified, all versions will be matched.
-#[[bans.features]]
-#crate = "reqwest"
-# Features to not allow
-#deny = ["json"]
-# Features to allow
-#allow = [
-#    "rustls",
-#    "__rustls",
-#    "__tls",
-#    "hyper-rustls",
-#    "rustls",
-#    "rustls-pemfile",
-#    "rustls-tls-webpki-roots",
-#    "tokio-rustls",
-#    "webpki-roots",
-#]
-# If true, the allowed features must exactly match the enabled feature set. If
-# this is set there is no point setting `deny`
-#exact = true
-
-# Certain crates/versions that will be skipped when doing duplicate detection.
+# PERMANENT: p256 (and related RustCrypto elliptic curve crates) require rand_core 0.6
+# for the CryptoRngCore trait used in key generation. rand 0.9 uses rand_core 0.9,
+# which is incompatible. libgn-crypto-internal explicitly depends on rand_core 0.6
+# (as rand_core_06) for these APIs only.
+# See: https://github.com/RustCrypto/elliptic-curves/issues/1058
+# DO NOT REMOVE these skips until p256 supports rand_core 0.9.
 skip = [
-    # PERMANENT: ed25519-dalek 2.x and x25519-dalek 2.x require rand_core 0.6 for
-    # key generation (SigningKey::generate() and StaticSecret::random_from_rng()).
-    # rand 0.9 uses rand_core 0.9, which is incompatible. We explicitly depend on
-    # rand_core 0.6 (as rand_core_0_6) for these APIs only.
-    # See: https://github.com/dalek-cryptography/curve25519-dalek/issues/706
-    # DO NOT REMOVE these skips until ed25519-dalek and x25519-dalek support rand_core 0.9.
-    { crate = "rand_core", reason = "PERMANENT: ed25519-dalek/x25519-dalek require rand_core 0.6 for key generation" },
-    { crate = "getrandom", reason = "PERMANENT: follows rand_core version split for dalek crate compatibility" },
+    { crate = "getrandom@0.2", reason = "PERMANENT: follows rand_core version split for p256 compatibility" },
+    { crate = "rand_core@0.6", reason = "PERMANENT: p256 requires rand_core 0.6 for CryptoRngCore trait" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
@@ -239,6 +176,228 @@ skip-tree = [
     # due to version mismatch: ring uses 0.52.x, tokio/socket2 uses 0.60.x
     { crate = "windows-sys", reason = "transitive dependency version mismatch" },
 ]
+
+# ============================================================================
+# Internal crypto implementation - must not be used directly
+# ============================================================================
+[[bans.deny]]
+crate = "libgn-crypto-internal"
+reason = "Use libgn-crypto for all cryptographic operations. libgn-crypto-internal is an implementation detail."
+wrappers = ["libgn-crypto"]
+
+# ============================================================================
+# Cryptography and randomness crates must only be used through libgn-crypto.
+# This ensures all crypto operations are centralized and auditable.
+# libgn-crypto-internal is allowed as a wrapper since it's the implementation layer.
+# ============================================================================
+
+# Symmetric encryption
+[[bans.deny]]
+crate = "aes"
+reason = "Use libgn-crypto for encryption operations."
+wrappers = ["libgn-crypto-internal", "aes-gcm", "aes-kw"]
+
+[[bans.deny]]
+crate = "aes-gcm"
+reason = "Use libgn-crypto for authenticated encryption."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "aes-kw"
+reason = "Use libgn-crypto for key wrapping."
+wrappers = ["libgn-crypto-internal"]
+
+# Block cipher modes
+[[bans.deny]]
+crate = "cbc"
+reason = "Use libgn-crypto for encryption operations."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "ctr"
+reason = "Use libgn-crypto for encryption operations."
+wrappers = ["libgn-crypto-internal", "aes-gcm"]
+
+[[bans.deny]]
+crate = "cipher"
+reason = "Use libgn-crypto for encryption operations."
+wrappers = ["libgn-crypto-internal", "aes", "aes-gcm", "cbc", "ctr"]
+
+# Hashing and MACs
+[[bans.deny]]
+crate = "sha2"
+reason = "Use libgn-crypto for hashing operations."
+wrappers = ["libgn-crypto-internal", "p256"]
+
+[[bans.deny]]
+crate = "hmac"
+reason = "Use libgn-crypto for HMAC operations."
+wrappers = ["libgn-crypto-internal", "rfc6979"]
+
+[[bans.deny]]
+crate = "digest"
+reason = "Use libgn-crypto for hashing operations."
+wrappers = ["sha2", "hmac", "ecdsa", "elliptic-curve", "signature"]
+
+# Elliptic curve cryptography
+[[bans.deny]]
+crate = "p256"
+reason = "Use libgn-crypto for ECDSA signing and verification."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "ecdsa"
+reason = "Use libgn-crypto for ECDSA signing and verification."
+wrappers = ["libgn-crypto-internal", "p256"]
+
+[[bans.deny]]
+crate = "elliptic-curve"
+reason = "Use libgn-crypto for elliptic curve operations."
+wrappers = ["p256", "ecdsa", "primeorder"]
+
+# Randomness
+[[bans.deny]]
+crate = "rand"
+reason = "Use libgn-crypto for secure random generation."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "rand_core"
+reason = "Use libgn-crypto for secure random generation."
+wrappers = ["libgn-crypto-internal", "rand", "rand_chacha", "signature", "group", "ff", "elliptic-curve", "crypto-common", "crypto-bigint"]
+
+[[bans.deny]]
+crate = "getrandom"
+reason = "Use libgn-crypto for secure random generation."
+wrappers = ["rand_core", "ring", "tempfile"]
+
+# Memory security
+[[bans.deny]]
+crate = "zeroize"
+reason = "Use libgn-crypto types which handle secure memory automatically."
+wrappers = ["libgn-crypto-internal", "crypto-bigint", "der", "elliptic-curve", "generic-array", "rustls", "rustls-pki-types", "sec1"]
+
+# Encoding (used in crypto contexts)
+[[bans.deny]]
+crate = "base64ct"
+reason = "Use libgn-crypto for constant-time encoding in crypto contexts."
+wrappers = ["libgn-crypto-internal", "pem-rfc7468"]
+
+# TLS libraries - only allowed via high-level HTTP/gRPC clients
+[[bans.deny]]
+crate = "ring"
+reason = "Do not use ring directly. Use standard HTTP clients (reqwest, tonic) for TLS."
+wrappers = ["rustls", "rustls-webpki"]
+
+[[bans.deny]]
+crate = "rustls"
+reason = "Do not configure TLS directly. Use standard HTTP clients (reqwest, tonic)."
+wrappers = ["hyper-rustls", "reqwest", "tokio-rustls"]
+
+[[bans.deny]]
+crate = "rustls-pki-types"
+reason = "Do not use TLS types directly. Use standard HTTP clients (reqwest, tonic)."
+wrappers = ["hyper-rustls", "reqwest", "rustls", "rustls-webpki", "webpki-roots"]
+
+# ============================================================================
+# Transitive crypto dependencies
+# These are internal implementation crates that should not be used directly.
+# ============================================================================
+
+# Signature infrastructure
+[[bans.deny]]
+crate = "signature"
+wrappers = ["ecdsa"]
+
+[[bans.deny]]
+crate = "rfc6979"
+wrappers = ["ecdsa"]
+
+# Elliptic curve infrastructure
+[[bans.deny]]
+crate = "primeorder"
+wrappers = ["p256"]
+
+[[bans.deny]]
+crate = "sec1"
+wrappers = ["elliptic-curve"]
+
+[[bans.deny]]
+crate = "ff"
+wrappers = ["elliptic-curve", "group"]
+
+[[bans.deny]]
+crate = "group"
+wrappers = ["elliptic-curve"]
+
+[[bans.deny]]
+crate = "crypto-bigint"
+wrappers = ["elliptic-curve"]
+
+# Key encoding (PKCS#8, SPKI, DER, PEM)
+[[bans.deny]]
+crate = "pkcs8"
+wrappers = ["elliptic-curve", "sec1"]
+
+[[bans.deny]]
+crate = "spki"
+wrappers = ["ecdsa", "pkcs8"]
+
+[[bans.deny]]
+crate = "der"
+wrappers = ["ecdsa", "pkcs8", "sec1", "spki"]
+
+[[bans.deny]]
+crate = "pem-rfc7468"
+wrappers = ["der", "elliptic-curve"]
+
+# Crypto common infrastructure
+[[bans.deny]]
+crate = "crypto-common"
+wrappers = ["aead", "cipher", "digest", "universal-hash"]
+
+[[bans.deny]]
+crate = "generic-array"
+wrappers = ["aead", "block-buffer", "block-padding", "crypto-bigint", "crypto-common", "elliptic-curve", "inout", "sec1"]
+
+[[bans.deny]]
+crate = "block-buffer"
+wrappers = ["digest"]
+
+[[bans.deny]]
+crate = "inout"
+wrappers = ["cipher"]
+
+[[bans.deny]]
+crate = "block-padding"
+wrappers = ["inout"]
+
+# AEAD infrastructure
+[[bans.deny]]
+crate = "aead"
+wrappers = ["aes-gcm"]
+
+[[bans.deny]]
+crate = "ghash"
+wrappers = ["aes-gcm"]
+
+[[bans.deny]]
+crate = "polyval"
+wrappers = ["ghash"]
+
+[[bans.deny]]
+crate = "universal-hash"
+wrappers = ["polyval"]
+
+# RNG infrastructure
+[[bans.deny]]
+crate = "rand_chacha"
+wrappers = ["rand"]
+
+# UUID - banned entirely (misuse for entropy/unique identifiers in crypto contexts)
+[[bans.deny]]
+crate = "uuid"
+reason = "UUIDs should not be used for cryptographic entropy or identity. Use libgn-crypto for secure random generation."
 
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:
