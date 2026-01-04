@@ -399,6 +399,11 @@ wrappers = ["rand"]
 crate = "uuid"
 reason = "UUIDs should not be used for cryptographic entropy or identity. Use libgn-crypto for secure random generation."
 
+# Nanoid - banned entirely (use libgn-crypto's built-in nanoid implementation)
+[[bans.deny]]
+crate = "nanoid"
+reason = "Use libgn-crypto::random::nanoid for ID generation."
+
 # This section is considered when running `cargo deny check sources`.
 # More documentation about the 'sources' section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/sources/cfg.html
