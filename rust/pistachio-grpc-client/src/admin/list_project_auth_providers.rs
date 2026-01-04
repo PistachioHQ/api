@@ -1,6 +1,6 @@
 use pistachio_api_common::admin::auth_provider::{
     AuthProvider, AuthProviderConfig, ListProjectAuthProvidersError,
-    ListProjectAuthProvidersRequest, ListProjectAuthProvidersResponse,
+    ListProjectAuthProvidersRequest, ListProjectAuthProvidersResponse, ProviderId,
 };
 use tonic::Code;
 use tonic::service::Interceptor;
@@ -105,8 +105,10 @@ impl FromProto<pistachio_api::pistachio::types::v1::AuthProvider> for AuthProvid
             .map(|ts| crate::types::timestamp_to_datetime(Some(ts)))
             .transpose()?;
 
+        let provider_id = ProviderId::parse(&proto.provider_id)?;
+
         Ok(Self {
-            provider_id: proto.provider_id,
+            provider_id,
             enabled: proto.enabled,
             display_order: proto.display_order,
             config,

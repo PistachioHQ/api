@@ -2,7 +2,7 @@
 
 use pistachio_api_common::admin::auth_provider::{
     AnonymousConfig, AuthProvider, AuthProviderConfig, ConfigSource, EffectiveAuthProvider,
-    OAuthConfig, OidcConfig, PdpkaConfig, TenantAuthProviderOverride,
+    OAuthConfig, OidcConfig, PdpkaConfig, ProviderId, TenantAuthProviderOverride,
 };
 use pistachio_api_common::error::ValidationError;
 
@@ -26,9 +26,11 @@ pub(crate) fn provider_from_json(
     // Parse config before moving any fields
     let config = parse_provider_config(&json);
 
-    let provider_id = json
+    let provider_id_str = json
         .provider_id
         .ok_or(ValidationError::MissingField("providerId"))?;
+
+    let provider_id = ProviderId::parse(&provider_id_str)?;
 
     Ok(AuthProvider {
         provider_id,
@@ -91,9 +93,11 @@ pub(crate) fn override_from_json(
     // Parse config before moving any fields
     let config = parse_override_config(&json);
 
-    let provider_id = json
+    let provider_id_str = json
         .provider_id
         .ok_or(ValidationError::MissingField("providerId"))?;
+
+    let provider_id = ProviderId::parse(&provider_id_str)?;
 
     Ok(TenantAuthProviderOverride {
         provider_id,

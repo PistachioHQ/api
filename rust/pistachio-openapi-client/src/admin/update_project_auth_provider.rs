@@ -43,7 +43,7 @@ pub(crate) async fn handle_update_project_auth_provider(
     debug!("Creating OpenAPI request");
 
     let project_id = req.project_id.to_string();
-    let provider_id = req.provider_id.clone();
+    let provider_id = req.provider_id.to_string();
 
     let request_body = build_update_project_request(
         req.enabled,

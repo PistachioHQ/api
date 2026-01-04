@@ -148,4 +148,6 @@ pub enum ValidationError {
     InvalidTenantId(#[from] libgn::pistachio_id::TenantIdError),
     #[error("Invalid app ID: {0}")]
     InvalidAppId(#[from] libgn::pistachio_id::AppIdError),
+    #[error("Invalid provider ID: {0}")]
+    InvalidProviderId(#[from] libgn::auth_provider::ProviderIdError),
 }

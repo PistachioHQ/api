@@ -61,7 +61,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::DeleteProjectAuthProviderReq
     fn into_proto(self) -> pistachio_api::pistachio::admin::v1::DeleteProjectAuthProviderRequest {
         pistachio_api::pistachio::admin::v1::DeleteProjectAuthProviderRequest {
             project_id: self.project_id.to_string(),
-            provider_id: self.provider_id,
+            provider_id: self.provider_id.to_string(),
         }
     }
 }

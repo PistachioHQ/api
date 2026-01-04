@@ -1,5 +1,5 @@
 use libgn::pistachio_id::TenantId as PistachioTenantId;
-use libgn::tenant::{Tenant, TenantDisplayName, TenantId, TenantName};
+use libgn::tenant::{MfaMethod, Tenant, TenantDisplayName, TenantId, TenantName};
 use pistachio_api_common::admin::tenant::{
     CreateTenantError, CreateTenantRequest, CreateTenantResponse,
 };
@@ -183,17 +183,17 @@ impl FromJson<ListTenants200ResponseTenantsInner> for Tenant {
         let created_at = parse_timestamp(json.created_at)?;
         let updated_at = parse_timestamp(json.updated_at)?;
 
-        // Convert MfaConfig enum to strings
-        let mfa_config = json
+        // Convert MfaConfig enum to MfaMethod domain type
+        let mfa_config: Vec<MfaMethod> = json
             .mfa_config
             .unwrap_or_default()
             .into_iter()
             .map(|mfa| match mfa {
                 crate::generated_admin::models::list_tenants_200_response_tenants_inner::MfaConfig::Phone => {
-                    "phone".to_string()
+                    MfaMethod::Phone
                 }
                 crate::generated_admin::models::list_tenants_200_response_tenants_inner::MfaConfig::Totp => {
-                    "totp".to_string()
+                    MfaMethod::Totp
                 }
             })
             .collect();

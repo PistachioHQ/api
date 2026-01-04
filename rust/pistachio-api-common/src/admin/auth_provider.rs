@@ -14,8 +14,8 @@ use crate::error::{ErrorDetails, PistachioApiClientError, ValidationError};
 // Common Types
 // =============================================================================
 
-/// Identifier for an auth provider.
-pub type ProviderId = String;
+// Re-export ProviderId from libgn for convenience.
+pub use libgn::auth_provider::{ProviderId, ProviderIdError};
 
 /// Configuration source for effective auth providers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -208,10 +208,10 @@ pub struct GetProjectAuthProviderRequest {
 
 impl GetProjectAuthProviderRequest {
     /// Creates a new request for the given project and provider IDs.
-    pub fn new(project_id: ProjectId, provider_id: impl Into<ProviderId>) -> Self {
+    pub fn new(project_id: ProjectId, provider_id: ProviderId) -> Self {
         Self {
             project_id,
-            provider_id: provider_id.into(),
+            provider_id,
         }
     }
 }
@@ -268,10 +268,10 @@ pub struct UpdateProjectAuthProviderRequest {
 
 impl UpdateProjectAuthProviderRequest {
     /// Creates a new request for the given project and provider IDs.
-    pub fn new(project_id: ProjectId, provider_id: impl Into<ProviderId>) -> Self {
+    pub fn new(project_id: ProjectId, provider_id: ProviderId) -> Self {
         Self {
             project_id,
-            provider_id: provider_id.into(),
+            provider_id,
             enabled: None,
             display_order: None,
             config: None,
@@ -346,10 +346,10 @@ pub struct DeleteProjectAuthProviderRequest {
 
 impl DeleteProjectAuthProviderRequest {
     /// Creates a new request for the given project and provider IDs.
-    pub fn new(project_id: ProjectId, provider_id: impl Into<ProviderId>) -> Self {
+    pub fn new(project_id: ProjectId, provider_id: ProviderId) -> Self {
         Self {
             project_id,
-            provider_id: provider_id.into(),
+            provider_id,
         }
     }
 }
@@ -459,15 +459,11 @@ pub struct UpdateTenantAuthProviderRequest {
 
 impl UpdateTenantAuthProviderRequest {
     /// Creates a new request for the given project, tenant, and provider IDs.
-    pub fn new(
-        project_id: ProjectId,
-        tenant_id: TenantId,
-        provider_id: impl Into<ProviderId>,
-    ) -> Self {
+    pub fn new(project_id: ProjectId, tenant_id: TenantId, provider_id: ProviderId) -> Self {
         Self {
             project_id,
             tenant_id,
-            provider_id: provider_id.into(),
+            provider_id,
             enabled: None,
             display_order: None,
             config: None,
@@ -544,15 +540,11 @@ pub struct DeleteTenantAuthProviderRequest {
 
 impl DeleteTenantAuthProviderRequest {
     /// Creates a new request for the given project, tenant, and provider IDs.
-    pub fn new(
-        project_id: ProjectId,
-        tenant_id: TenantId,
-        provider_id: impl Into<ProviderId>,
-    ) -> Self {
+    pub fn new(project_id: ProjectId, tenant_id: TenantId, provider_id: ProviderId) -> Self {
         Self {
             project_id,
             tenant_id,
-            provider_id: provider_id.into(),
+            provider_id,
         }
     }
 }

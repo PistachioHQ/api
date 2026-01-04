@@ -43,7 +43,7 @@ pub(crate) async fn handle_delete_tenant_auth_provider(
 
     let project_id = req.project_id.to_string();
     let tenant_id = req.tenant_id.to_string();
-    let provider_id = req.provider_id.clone();
+    let provider_id = req.provider_id.to_string();
 
     debug!(
         ?project_id,

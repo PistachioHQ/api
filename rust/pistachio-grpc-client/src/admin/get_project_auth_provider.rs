@@ -63,7 +63,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::GetProjectAuthProviderReques
     fn into_proto(self) -> pistachio_api::pistachio::admin::v1::GetProjectAuthProviderRequest {
         pistachio_api::pistachio::admin::v1::GetProjectAuthProviderRequest {
             project_id: self.project_id.to_string(),
-            provider_id: self.provider_id,
+            provider_id: self.provider_id.to_string(),
         }
     }
 }

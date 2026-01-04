@@ -64,7 +64,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::UpdateProjectAuthProviderReq
     fn into_proto(self) -> pistachio_api::pistachio::admin::v1::UpdateProjectAuthProviderRequest {
         pistachio_api::pistachio::admin::v1::UpdateProjectAuthProviderRequest {
             project_id: self.project_id.to_string(),
-            provider_id: self.provider_id,
+            provider_id: self.provider_id.to_string(),
             enabled: self.enabled,
             display_order: self.display_order,
             config: self.config.as_ref().map(auth_provider_config_to_proto),

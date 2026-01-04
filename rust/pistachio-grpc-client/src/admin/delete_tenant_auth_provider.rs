@@ -62,7 +62,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::DeleteTenantAuthProviderRequ
         pistachio_api::pistachio::admin::v1::DeleteTenantAuthProviderRequest {
             project_id: self.project_id.to_string(),
             tenant_id: self.tenant_id.to_string(),
-            provider_id: self.provider_id,
+            provider_id: self.provider_id.to_string(),
         }
     }
 }

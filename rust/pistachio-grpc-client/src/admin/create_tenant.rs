@@ -1,5 +1,5 @@
 use libgn::pistachio_id::TenantId as PistachioTenantId;
-use libgn::tenant::{Tenant, TenantDisplayName, TenantId, TenantName};
+use libgn::tenant::{MfaMethod, Tenant, TenantDisplayName, TenantId, TenantName};
 use pistachio_api_common::admin::tenant::{
     CreateTenantError, CreateTenantRequest, CreateTenantResponse,
 };
@@ -103,6 +103,13 @@ impl FromProto<pistachio_api::pistachio::types::v1::Tenant> for Tenant {
         let created_at = timestamp_to_datetime(proto.created_at)?;
         let updated_at = timestamp_to_datetime(proto.updated_at)?;
 
+        // Parse MFA config strings to MfaMethod enum
+        let mfa_config: Vec<MfaMethod> = proto
+            .mfa_config
+            .iter()
+            .filter_map(|s| MfaMethod::parse(s).ok())
+            .collect();
+
         Ok(Self {
             project_id,
             tenant_id,
@@ -111,7 +118,7 @@ impl FromProto<pistachio_api::pistachio::types::v1::Tenant> for Tenant {
             display_name,
             allow_pdpka_signup: proto.allow_pdpka_signup,
             disable_auth: proto.disable_auth,
-            mfa_config: proto.mfa_config,
+            mfa_config,
             created_at,
             updated_at,
         })
