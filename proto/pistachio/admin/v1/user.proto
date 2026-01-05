@@ -1,0 +1,583 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/struct.proto";
+import "pistachio/types/v1/pagination.proto";
+import "pistachio/types/v1/search.proto";
+import "pistachio/types/v1/user.proto";
+
+// =============================================================================
+// Project-Level User Operations
+// =============================================================================
+
+// CreateProjectUserRequest creates a new user within a project.
+message CreateProjectUserRequest {
+  // The project ID that will own this user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // User's email address.
+  // Must be unique within the project scope if provided.
+  string email = 2 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      email: true
+      max_len: 256
+    }
+  }];
+
+  // Whether the email has been verified.
+  bool email_verified = 3;
+
+  // User's phone number in E.164 format.
+  // Must be unique within the project scope if provided.
+  string phone_number = 4 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {pattern: "^\\+[1-9]\\d{1,14}$"}
+  }];
+
+  // Human-readable display name for the user.
+  string display_name = 5 [(buf.validate.field).string = {max_len: 256}];
+
+  // URL to the user's profile photo.
+  string photo_url = 6 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {uri: true}
+  }];
+
+  // Whether to create the user in disabled state.
+  bool disabled = 7;
+
+  // Custom claims for the ID token.
+  google.protobuf.Struct custom_claims = 8;
+}
+
+// CreateProjectUserResponse contains the newly created user.
+message CreateProjectUserResponse {
+  // The created user.
+  pistachio.types.v1.User user = 1;
+}
+
+// GetProjectUserRequest retrieves a user by their pistachio_id.
+message GetProjectUserRequest {
+  // The project ID that owns the user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// GetProjectUserResponse contains the requested user.
+message GetProjectUserResponse {
+  // The retrieved user.
+  pistachio.types.v1.User user = 1;
+}
+
+// UpdateProjectUserRequest updates an existing user.
+message UpdateProjectUserRequest {
+  // The project ID that owns the user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // New email address.
+  // If provided, must be unique within the project scope.
+  optional string email = 3 [(buf.validate.field).string = {
+    email: true
+    max_len: 256
+  }];
+
+  // New email verification status.
+  optional bool email_verified = 4;
+
+  // New phone number in E.164 format.
+  // If provided, must be unique within the project scope.
+  optional string phone_number = 5 [(buf.validate.field).string = {pattern: "^\\+[1-9]\\d{1,14}$"}];
+
+  // New display name.
+  optional string display_name = 6 [(buf.validate.field).string = {max_len: 256}];
+
+  // New photo URL.
+  optional string photo_url = 7 [(buf.validate.field).string = {uri: true}];
+
+  // New disabled status.
+  optional bool disabled = 8;
+
+  // New custom claims. Replaces existing claims if provided.
+  optional CustomClaimsUpdate custom_claims = 9;
+}
+
+// CustomClaimsUpdate represents an update to custom claims.
+// When this message is present, the claims replace the existing claims.
+// An empty claims object clears all custom claims.
+message CustomClaimsUpdate {
+  // The new custom claims. Empty object clears all claims.
+  google.protobuf.Struct claims = 1;
+}
+
+// UpdateProjectUserResponse contains the updated user.
+message UpdateProjectUserResponse {
+  // The updated user.
+  pistachio.types.v1.User user = 1;
+}
+
+// DeleteProjectUserRequest permanently deletes a user.
+message DeleteProjectUserRequest {
+  // The project ID that owns the user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// DeleteProjectUserResponse is returned after a user is deleted.
+message DeleteProjectUserResponse {
+  // Empty response. The user has been permanently deleted.
+}
+
+// ListProjectUsersRequest lists users within a project with optional pagination.
+message ListProjectUsersRequest {
+  // The project ID to list users from.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: email, display_name, created_at, updated_at, last_sign_in_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 2;
+}
+
+// ListProjectUsersResponse contains a page of users.
+message ListProjectUsersResponse {
+  // The list of users.
+  repeated pistachio.types.v1.User users = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// ImportProjectUsersRequest imports users into a project in batch.
+message ImportProjectUsersRequest {
+  // The project ID to import users into.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Array of user records to import.
+  // Maximum 1000 users per request.
+  repeated pistachio.types.v1.ImportUserRecord users = 2 [(buf.validate.field).repeated = {max_items: 1000}];
+
+  // Hash algorithm for password hashes.
+  // Required if any user has a password_hash.
+  pistachio.types.v1.HashAlgorithm hash_algorithm = 3;
+
+  // Configuration for the hash algorithm.
+  pistachio.types.v1.HashConfig hash_config = 4;
+}
+
+// ImportProjectUsersResponse contains import results.
+message ImportProjectUsersResponse {
+  // Number of users successfully imported.
+  int32 success_count = 1;
+
+  // Number of users that failed to import.
+  int32 failure_count = 2;
+
+  // Details of import failures.
+  repeated pistachio.types.v1.ImportUserError errors = 3;
+}
+
+// SearchProjectUsersRequest searches for users within a project using full-text search.
+message SearchProjectUsersRequest {
+  // The project ID to search users in.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Search parameters including query, sorting, and pagination.
+  //
+  // Searchable fields for users:
+  // - pistachio_id: The unique user identifier
+  // - email: User's email address
+  // - phone_number: User's phone number
+  // - display_name: Human-readable display name
+  // - email_verified: Whether email is verified
+  // - disabled: Whether account is disabled
+  // - created_at: Timestamp when created
+  // - last_sign_in_at: Timestamp of last sign-in
+  // - updated_at: Timestamp when last updated
+  //
+  // Sortable fields: email, display_name, created_at, updated_at, last_sign_in_at
+  //
+  // Example queries:
+  // - "user@example.com" - Search all fields
+  // - "email:*@example.com" - Users with emails from example.com
+  // - "disabled:false AND email_verified:true" - Active verified users
+  // - "created_at:[2024-01-01 TO *]" - Users created in 2024
+  pistachio.types.v1.SearchParams params = 2;
+}
+
+// SearchProjectUsersResponse contains search results for users.
+message SearchProjectUsersResponse {
+  // The list of users matching the search query.
+  repeated pistachio.types.v1.User users = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// =============================================================================
+// Tenant-Level User Operations
+// =============================================================================
+
+// CreateTenantUserRequest creates a new user within a tenant.
+message CreateTenantUserRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that will own this user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // User's email address.
+  // Must be unique within the tenant scope if provided.
+  string email = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      email: true
+      max_len: 256
+    }
+  }];
+
+  // Whether the email has been verified.
+  bool email_verified = 4;
+
+  // User's phone number in E.164 format.
+  // Must be unique within the tenant scope if provided.
+  string phone_number = 5 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {pattern: "^\\+[1-9]\\d{1,14}$"}
+  }];
+
+  // Human-readable display name for the user.
+  string display_name = 6 [(buf.validate.field).string = {max_len: 256}];
+
+  // URL to the user's profile photo.
+  string photo_url = 7 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {uri: true}
+  }];
+
+  // Whether to create the user in disabled state.
+  bool disabled = 8;
+
+  // Custom claims for the ID token.
+  google.protobuf.Struct custom_claims = 9;
+}
+
+// CreateTenantUserResponse contains the newly created user.
+message CreateTenantUserResponse {
+  // The created user.
+  pistachio.types.v1.User user = 1;
+}
+
+// GetTenantUserRequest retrieves a user by their pistachio_id.
+message GetTenantUserRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that owns the user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 3 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// GetTenantUserResponse contains the requested user.
+message GetTenantUserResponse {
+  // The retrieved user.
+  pistachio.types.v1.User user = 1;
+}
+
+// UpdateTenantUserRequest updates an existing user.
+message UpdateTenantUserRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that owns the user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 3 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // New email address.
+  // If provided, must be unique within the tenant scope.
+  optional string email = 4 [(buf.validate.field).string = {
+    email: true
+    max_len: 256
+  }];
+
+  // New email verification status.
+  optional bool email_verified = 5;
+
+  // New phone number in E.164 format.
+  // If provided, must be unique within the tenant scope.
+  optional string phone_number = 6 [(buf.validate.field).string = {pattern: "^\\+[1-9]\\d{1,14}$"}];
+
+  // New display name.
+  optional string display_name = 7 [(buf.validate.field).string = {max_len: 256}];
+
+  // New photo URL.
+  optional string photo_url = 8 [(buf.validate.field).string = {uri: true}];
+
+  // New disabled status.
+  optional bool disabled = 9;
+
+  // New custom claims. Replaces existing claims if provided.
+  optional CustomClaimsUpdate custom_claims = 10;
+}
+
+// UpdateTenantUserResponse contains the updated user.
+message UpdateTenantUserResponse {
+  // The updated user.
+  pistachio.types.v1.User user = 1;
+}
+
+// DeleteTenantUserRequest permanently deletes a user.
+message DeleteTenantUserRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that owns the user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 3 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// DeleteTenantUserResponse is returned after a user is deleted.
+message DeleteTenantUserResponse {
+  // Empty response. The user has been permanently deleted.
+}
+
+// ListTenantUsersRequest lists users within a tenant with optional pagination.
+message ListTenantUsersRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to list users from.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: email, display_name, created_at, updated_at, last_sign_in_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 3;
+}
+
+// ListTenantUsersResponse contains a page of users.
+message ListTenantUsersResponse {
+  // The list of users.
+  repeated pistachio.types.v1.User users = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// ImportTenantUsersRequest imports users into a tenant in batch.
+message ImportTenantUsersRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to import users into.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // Array of user records to import.
+  // Maximum 1000 users per request.
+  repeated pistachio.types.v1.ImportUserRecord users = 3 [(buf.validate.field).repeated = {max_items: 1000}];
+
+  // Hash algorithm for password hashes.
+  // Required if any user has a password_hash.
+  pistachio.types.v1.HashAlgorithm hash_algorithm = 4;
+
+  // Configuration for the hash algorithm.
+  pistachio.types.v1.HashConfig hash_config = 5;
+}
+
+// ImportTenantUsersResponse contains import results.
+message ImportTenantUsersResponse {
+  // Number of users successfully imported.
+  int32 success_count = 1;
+
+  // Number of users that failed to import.
+  int32 failure_count = 2;
+
+  // Details of import failures.
+  repeated pistachio.types.v1.ImportUserError errors = 3;
+}
+
+// SearchTenantUsersRequest searches for users within a tenant using full-text search.
+message SearchTenantUsersRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to search users in.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // Search parameters including query, sorting, and pagination.
+  //
+  // Searchable fields for users:
+  // - pistachio_id: The unique user identifier
+  // - email: User's email address
+  // - phone_number: User's phone number
+  // - display_name: Human-readable display name
+  // - email_verified: Whether email is verified
+  // - disabled: Whether account is disabled
+  // - created_at: Timestamp when created
+  // - last_sign_in_at: Timestamp of last sign-in
+  // - updated_at: Timestamp when last updated
+  //
+  // Sortable fields: email, display_name, created_at, updated_at, last_sign_in_at
+  //
+  // Example queries:
+  // - "user@example.com" - Search all fields
+  // - "email:*@example.com" - Users with emails from example.com
+  // - "disabled:false AND email_verified:true" - Active verified users
+  // - "created_at:[2024-01-01 TO *]" - Users created in 2024
+  pistachio.types.v1.SearchParams params = 3;
+}
+
+// SearchTenantUsersResponse contains search results for users.
+message SearchTenantUsersResponse {
+  // The list of users matching the search query.
+  repeated pistachio.types.v1.User users = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}

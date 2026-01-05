@@ -37,40 +37,70 @@ use pistachio_api_common::admin::tenant::{
     SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
     UpdateTenantResponse,
 };
+use pistachio_api_common::admin::user::{
+    CreateProjectUserError, CreateProjectUserRequest, CreateProjectUserResponse,
+    CreateTenantUserError, CreateTenantUserRequest, CreateTenantUserResponse,
+    DeleteProjectUserError, DeleteProjectUserRequest, DeleteProjectUserResponse,
+    DeleteTenantUserError, DeleteTenantUserRequest, DeleteTenantUserResponse, GetProjectUserError,
+    GetProjectUserRequest, GetProjectUserResponse, GetTenantUserError, GetTenantUserRequest,
+    GetTenantUserResponse, ImportProjectUsersError, ImportProjectUsersRequest,
+    ImportProjectUsersResponse, ImportTenantUsersError, ImportTenantUsersRequest,
+    ImportTenantUsersResponse, ListProjectUsersError, ListProjectUsersRequest,
+    ListProjectUsersResponse, ListTenantUsersError, ListTenantUsersRequest,
+    ListTenantUsersResponse, SearchProjectUsersError, SearchProjectUsersRequest,
+    SearchProjectUsersResponse, SearchTenantUsersError, SearchTenantUsersRequest,
+    SearchTenantUsersResponse, UpdateProjectUserError, UpdateProjectUserRequest,
+    UpdateProjectUserResponse, UpdateTenantUserError, UpdateTenantUserRequest,
+    UpdateTenantUserResponse,
+};
 use pistachio_api_common::credentials::AdminCredentials;
 use pistachio_api_common::error::PistachioApiClientError;
 use tracing::{debug, info, instrument, warn};
 
 use super::create_app::handle_create_app;
 use super::create_project::handle_create_project;
+use super::create_project_user::handle_create_project_user;
 use super::create_tenant::handle_create_tenant;
+use super::create_tenant_user::handle_create_tenant_user;
 use super::delete_app::handle_delete_app;
 use super::delete_project::handle_delete_project;
 use super::delete_project_auth_provider::handle_delete_project_auth_provider;
+use super::delete_project_user::handle_delete_project_user;
 use super::delete_tenant::handle_delete_tenant;
 use super::delete_tenant_auth_provider::handle_delete_tenant_auth_provider;
+use super::delete_tenant_user::handle_delete_tenant_user;
 use super::get_admin_sdk_config::handle_get_admin_sdk_config;
 use super::get_app::handle_get_app;
 use super::get_app_config::handle_get_app_config;
 use super::get_effective_tenant_auth_providers::handle_get_effective_tenant_auth_providers;
 use super::get_project::handle_get_project;
 use super::get_project_auth_provider::handle_get_project_auth_provider;
+use super::get_project_user::handle_get_project_user;
 use super::get_tenant::handle_get_tenant;
+use super::get_tenant_user::handle_get_tenant_user;
+use super::import_project_users::handle_import_project_users;
+use super::import_tenant_users::handle_import_tenant_users;
 use super::list_apps::handle_list_apps;
 use super::list_project_auth_providers::handle_list_project_auth_providers;
+use super::list_project_users::handle_list_project_users;
 use super::list_projects::handle_list_projects;
 use super::list_tenant_auth_providers::handle_list_tenant_auth_providers;
+use super::list_tenant_users::handle_list_tenant_users;
 use super::list_tenants::handle_list_tenants;
 use super::search_apps::handle_search_apps;
+use super::search_project_users::handle_search_project_users;
 use super::search_projects::handle_search_projects;
+use super::search_tenant_users::handle_search_tenant_users;
 use super::search_tenants::handle_search_tenants;
 use super::undelete_app::handle_undelete_app;
 use super::undelete_project::handle_undelete_project;
 use super::update_app::handle_update_app;
 use super::update_project::handle_update_project;
 use super::update_project_auth_provider::handle_update_project_auth_provider;
+use super::update_project_user::handle_update_project_user;
 use super::update_tenant::handle_update_tenant;
 use super::update_tenant_auth_provider::handle_update_tenant_auth_provider;
+use super::update_tenant_user::handle_update_tenant_user;
 
 /// OpenAPI/REST client for the Pistachio Admin API.
 ///
@@ -708,6 +738,280 @@ macro_rules! impl_admin_client {
                     None => {
                         warn!("Attempted get_effective_tenant_auth_providers with unconnected client");
                         Err(GetEffectiveTenantAuthProvidersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            // =========================================================================
+            // Project User methods
+            // =========================================================================
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn create_project_user(
+                &mut self,
+                req: CreateProjectUserRequest,
+            ) -> Result<CreateProjectUserResponse, CreateProjectUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting create_project_user via OpenAPI");
+                        handle_create_project_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted create_project_user with unconnected client");
+                        Err(CreateProjectUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn get_project_user(
+                &mut self,
+                req: GetProjectUserRequest,
+            ) -> Result<GetProjectUserResponse, GetProjectUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_project_user via OpenAPI");
+                        handle_get_project_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_project_user with unconnected client");
+                        Err(GetProjectUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn update_project_user(
+                &mut self,
+                req: UpdateProjectUserRequest,
+            ) -> Result<UpdateProjectUserResponse, UpdateProjectUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting update_project_user via OpenAPI");
+                        handle_update_project_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted update_project_user with unconnected client");
+                        Err(UpdateProjectUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn delete_project_user(
+                &mut self,
+                req: DeleteProjectUserRequest,
+            ) -> Result<DeleteProjectUserResponse, DeleteProjectUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting delete_project_user via OpenAPI");
+                        handle_delete_project_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted delete_project_user with unconnected client");
+                        Err(DeleteProjectUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn list_project_users(
+                &mut self,
+                req: ListProjectUsersRequest,
+            ) -> Result<ListProjectUsersResponse, ListProjectUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting list_project_users via OpenAPI");
+                        handle_list_project_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted list_project_users with unconnected client");
+                        Err(ListProjectUsersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn import_project_users(
+                &mut self,
+                req: ImportProjectUsersRequest,
+            ) -> Result<ImportProjectUsersResponse, ImportProjectUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting import_project_users via OpenAPI");
+                        handle_import_project_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted import_project_users with unconnected client");
+                        Err(ImportProjectUsersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn search_project_users(
+                &mut self,
+                req: SearchProjectUsersRequest,
+            ) -> Result<SearchProjectUsersResponse, SearchProjectUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting search_project_users via OpenAPI");
+                        handle_search_project_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted search_project_users with unconnected client");
+                        Err(SearchProjectUsersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            // =========================================================================
+            // Tenant User methods
+            // =========================================================================
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn create_tenant_user(
+                &mut self,
+                req: CreateTenantUserRequest,
+            ) -> Result<CreateTenantUserResponse, CreateTenantUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting create_tenant_user via OpenAPI");
+                        handle_create_tenant_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted create_tenant_user with unconnected client");
+                        Err(CreateTenantUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn get_tenant_user(
+                &mut self,
+                req: GetTenantUserRequest,
+            ) -> Result<GetTenantUserResponse, GetTenantUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting get_tenant_user via OpenAPI");
+                        handle_get_tenant_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted get_tenant_user with unconnected client");
+                        Err(GetTenantUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn update_tenant_user(
+                &mut self,
+                req: UpdateTenantUserRequest,
+            ) -> Result<UpdateTenantUserResponse, UpdateTenantUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting update_tenant_user via OpenAPI");
+                        handle_update_tenant_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted update_tenant_user with unconnected client");
+                        Err(UpdateTenantUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn delete_tenant_user(
+                &mut self,
+                req: DeleteTenantUserRequest,
+            ) -> Result<DeleteTenantUserResponse, DeleteTenantUserError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting delete_tenant_user via OpenAPI");
+                        handle_delete_tenant_user(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted delete_tenant_user with unconnected client");
+                        Err(DeleteTenantUserError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn list_tenant_users(
+                &mut self,
+                req: ListTenantUsersRequest,
+            ) -> Result<ListTenantUsersResponse, ListTenantUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting list_tenant_users via OpenAPI");
+                        handle_list_tenant_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted list_tenant_users with unconnected client");
+                        Err(ListTenantUsersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn import_tenant_users(
+                &mut self,
+                req: ImportTenantUsersRequest,
+            ) -> Result<ImportTenantUsersResponse, ImportTenantUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting import_tenant_users via OpenAPI");
+                        handle_import_tenant_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted import_tenant_users with unconnected client");
+                        Err(ImportTenantUsersError::PistachioApiClientError(
+                            PistachioApiClientError::NotConnected,
+                        ))
+                    }
+                }
+            }
+
+            #[instrument(skip(self, req), level = "debug")]
+            async fn search_tenant_users(
+                &mut self,
+                req: SearchTenantUsersRequest,
+            ) -> Result<SearchTenantUsersResponse, SearchTenantUsersError> {
+                match &self.config {
+                    Some(config) => {
+                        debug!("Attempting search_tenant_users via OpenAPI");
+                        handle_search_tenant_users(config, req).await
+                    }
+                    None => {
+                        warn!("Attempted search_tenant_users with unconnected client");
+                        Err(SearchTenantUsersError::PistachioApiClientError(
                             PistachioApiClientError::NotConnected,
                         ))
                     }

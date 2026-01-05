@@ -1,0 +1,1155 @@
+# User Management Endpoints
+
+# =============================================================================
+# Project-Level User Endpoints
+# =============================================================================
+
+projectUsers:
+  get:
+    operationId: listProjectUsers
+    summary: List project users
+    description: |
+      Lists all users within a project.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the users
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: List of users
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/ListUsersResponse'
+      '400':
+        description: Invalid pagination parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: createProjectUser
+    summary: Create a project user
+    description: |
+      Creates a new user within a project.
+      The pistachio_id is system-generated and returned in the response.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that will own the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: User creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/CreateUserRequest'
+    responses:
+      '201':
+        description: User created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/CreateUserResponse'
+      '400':
+        description: Invalid field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Email or phone number already in use
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectUserById:
+  get:
+    operationId: getProjectUser
+    summary: Get a project user
+    description: |
+      Retrieves a project-level user by pistachio_id.
+      Returns the user's profile data including email, phone, display name,
+      and custom claims.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '200':
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid projectId or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  patch:
+    operationId: updateProjectUser
+    summary: Update a project user
+    description: |
+      Updates an existing project-level user.
+      Only provided fields are updated; omitted fields retain their current values.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    requestBody:
+      description: User update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/UpdateUserRequest'
+    responses:
+      '200':
+        description: User updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/UpdateUserResponse'
+      '400':
+        description: Invalid projectId, pistachioId, or field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Email or phone number already in use by another user
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteProjectUser
+    summary: Delete a project user
+    description: |
+      Permanently deletes a project-level user.
+      This operation is irreversible. All user data and authentication
+      credentials will be permanently deleted.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '204':
+        description: User permanently deleted
+      '400':
+        description: Invalid projectId or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectUsersImport:
+  post:
+    operationId: importProjectUsers
+    summary: Import project users
+    description: |
+      Batch imports users into a project.
+      Allows bulk import of users from external systems with optional
+      password hash migration. Supports scrypt, bcrypt, argon2, and PBKDF2.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to import users into
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Import parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/ImportUsersRequest'
+    responses:
+      '200':
+        description: Import results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/ImportUsersResponse'
+      '400':
+        description: Invalid user records or hash config
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectUsersSearch:
+  get:
+    operationId: searchProjectUsers
+    summary: Search project users
+    description: |
+      Searches for users within a project using full-text search.
+
+      Searchable fields:
+      - email: User's email address
+      - display_name: Human-readable display name
+      - phone_number: Phone number in E.164 format
+      - disabled: Whether account is disabled
+      - email_verified: Whether email has been verified
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "john" - Search all fields
+      - "email:*@example.com" - Users with emails from example.com
+      - "disabled:true" - Disabled users only
+      - "email_verified:false AND created_at:[2024-01-01 TO *]" - Unverified users created in 2024
+
+      For complex queries that exceed URL length limits, use POST instead.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - $ref: '../../components/parameters/search.yml#/Query'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/SearchUsersResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: searchProjectUsersPost
+    summary: Search project users
+    description: |
+      Searches for users within a project using full-text search.
+      Use this method for complex queries that exceed URL length limits.
+
+      Searchable fields:
+      - email: User's email address
+      - display_name: Human-readable display name
+      - phone_number: Phone number in E.164 format
+      - disabled: Whether account is disabled
+      - email_verified: Whether email has been verified
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "john" - Search all fields
+      - "email:*@example.com" - Users with emails from example.com
+      - "disabled:true" - Disabled users only
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Search parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/SearchUsersRequest'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/SearchUsersResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Tenant-Level User Endpoints
+# =============================================================================
+
+tenantUsers:
+  get:
+    operationId: listTenantUsers
+    summary: List tenant users
+    description: |
+      Lists all users within a tenant.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the users
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: List of users
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/ListUsersResponse'
+      '400':
+        description: Invalid pagination parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: createTenantUser
+    summary: Create a tenant user
+    description: |
+      Creates a new user within a tenant.
+      The pistachio_id is system-generated and returned in the response.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that will own the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    requestBody:
+      description: User creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/CreateUserRequest'
+    responses:
+      '201':
+        description: User created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/CreateUserResponse'
+      '400':
+        description: Invalid field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Email or phone number already in use
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantUserById:
+  get:
+    operationId: getTenantUser
+    summary: Get a tenant user
+    description: |
+      Retrieves a tenant-level user by pistachio_id.
+      Returns the user's profile data including email, phone, display name,
+      and custom claims.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '200':
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid projectId, tenantId, or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  patch:
+    operationId: updateTenantUser
+    summary: Update a tenant user
+    description: |
+      Updates an existing tenant-level user.
+      Only provided fields are updated; omitted fields retain their current values.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    requestBody:
+      description: User update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/UpdateUserRequest'
+    responses:
+      '200':
+        description: User updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/UpdateUserResponse'
+      '400':
+        description: Invalid projectId, tenantId, pistachioId, or field format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Email or phone number already in use by another user
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteTenantUser
+    summary: Delete a tenant user
+    description: |
+      Permanently deletes a tenant-level user.
+      This operation is irreversible. All user data and authentication
+      credentials will be permanently deleted.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '204':
+        description: User permanently deleted
+      '400':
+        description: Invalid projectId, tenantId, or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantUsersImport:
+  post:
+    operationId: importTenantUsers
+    summary: Import tenant users
+    description: |
+      Batch imports users into a tenant.
+      Allows bulk import of users from external systems with optional
+      password hash migration. Supports scrypt, bcrypt, argon2, and PBKDF2.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to import users into
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    requestBody:
+      description: Import parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/ImportUsersRequest'
+    responses:
+      '200':
+        description: Import results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/ImportUsersResponse'
+      '400':
+        description: Invalid user records or hash config
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantUsersSearch:
+  get:
+    operationId: searchTenantUsers
+    summary: Search tenant users
+    description: |
+      Searches for users within a tenant using full-text search.
+
+      Searchable fields:
+      - email: User's email address
+      - display_name: Human-readable display name
+      - phone_number: Phone number in E.164 format
+      - disabled: Whether account is disabled
+      - email_verified: Whether email has been verified
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "john" - Search all fields
+      - "email:*@example.com" - Users with emails from example.com
+      - "disabled:true" - Disabled users only
+      - "email_verified:false AND created_at:[2024-01-01 TO *]" - Unverified users created in 2024
+
+      For complex queries that exceed URL length limits, use POST instead.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - $ref: '../../components/parameters/search.yml#/Query'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/SearchUsersResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: searchTenantUsersPost
+    summary: Search tenant users
+    description: |
+      Searches for users within a tenant using full-text search.
+      Use this method for complex queries that exceed URL length limits.
+
+      Searchable fields:
+      - email: User's email address
+      - display_name: Human-readable display name
+      - phone_number: Phone number in E.164 format
+      - disabled: Whether account is disabled
+      - email_verified: Whether email has been verified
+      - created_at: Timestamp when created
+      - updated_at: Timestamp when last updated
+
+      Example queries:
+      - "john" - Search all fields
+      - "email:*@example.com" - Users with emails from example.com
+      - "disabled:true" - Disabled users only
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+    requestBody:
+      description: Search parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/SearchUsersRequest'
+    responses:
+      '200':
+        description: Search results
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/SearchUsersResponse'
+      '400':
+        description: Invalid search query or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

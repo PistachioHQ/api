@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+// User represents a user account within a project or tenant.
+//
+// Users are the identity records for authentication. Each user has a
+// system-generated pistachio_id as their unique identifier. Users can
+// belong to a project directly (project-level users) or to a specific
+// tenant within a project (tenant-level users).
+message User {
+  // Resource name in the format:
+  // - Project users: "projects/{project_id}/users/{pistachio_id}"
+  // - Tenant users: "projects/{project_id}/tenants/{tenant_id}/users/{pistachio_id}"
+  string name = 1;
+
+  // System-generated user identifier.
+  // 16 bytes encoded as 32 hex characters ending in '00'.
+  string pistachio_id = 2;
+
+  // Tenant ID this user belongs to.
+  // Empty string for project-level users (single-tenant mode).
+  string tenant_id = 3;
+
+  // User's primary email address.
+  // Unique within the project/tenant scope if set.
+  string email = 4;
+
+  // Whether the user's email address has been verified.
+  bool email_verified = 5;
+
+  // User's phone number in E.164 format (e.g., "+14155551234").
+  // Unique within the project/tenant scope if set.
+  string phone_number = 6;
+
+  // Human-readable display name for the user.
+  // Max 256 characters.
+  string display_name = 7;
+
+  // URL to the user's profile photo.
+  string photo_url = 8;
+
+  // Whether the user account is disabled.
+  // Disabled users cannot sign in.
+  bool disabled = 9;
+
+  // Custom claims to include in the user's ID token.
+  // Used for application-specific authorization.
+  // Maximum size: 1000 bytes when JSON-encoded.
+  google.protobuf.Struct custom_claims = 10;
+
+  // Timestamp when the user account was created.
+  google.protobuf.Timestamp created_at = 11;
+
+  // Timestamp when the user last signed in.
+  google.protobuf.Timestamp last_sign_in_at = 12;
+
+  // Timestamp when the user's tokens were last refreshed.
+  google.protobuf.Timestamp last_refresh_at = 13;
+
+  // Timestamp when the user account was last updated.
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// ImportUserRecord represents a user record for batch import.
+//
+// Used with the ImportUsers RPC to bulk import users from external systems.
+message ImportUserRecord {
+  // User's primary email address.
+  string email = 1;
+
+  // Whether the email has been verified.
+  bool email_verified = 2;
+
+  // User's phone number in E.164 format.
+  string phone_number = 3;
+
+  // Human-readable display name.
+  string display_name = 4;
+
+  // URL to the user's profile photo.
+  string photo_url = 5;
+
+  // Whether the account is disabled.
+  bool disabled = 6;
+
+  // Custom claims for the ID token.
+  google.protobuf.Struct custom_claims = 7;
+
+  // Base64-encoded password hash for PDPKA import.
+  // Format depends on hash_algorithm in ImportUsersRequest.
+  string password_hash = 8;
+
+  // Base64-encoded salt used with the password hash.
+  string password_salt = 9;
+}
+
+// HashAlgorithm specifies the algorithm used for password hashes during import.
+enum HashAlgorithm {
+  // Unspecified hash algorithm.
+  HASH_ALGORITHM_UNSPECIFIED = 0;
+
+  // scrypt key derivation function.
+  HASH_ALGORITHM_SCRYPT = 1;
+
+  // bcrypt password hashing.
+  HASH_ALGORITHM_BCRYPT = 2;
+
+  // Argon2 password hashing (Argon2id variant).
+  HASH_ALGORITHM_ARGON2 = 3;
+
+  // PBKDF2 with SHA-256.
+  HASH_ALGORITHM_PBKDF2_SHA256 = 4;
+}
+
+// HashConfig contains algorithm-specific configuration for password hashing.
+message HashConfig {
+  // Number of rounds for BCRYPT/SCRYPT.
+  int32 rounds = 1;
+
+  // Memory cost parameter for SCRYPT/ARGON2.
+  int32 memory_cost = 2;
+
+  // Parallelization parameter for SCRYPT/ARGON2.
+  int32 parallelization = 3;
+
+  // Base64-encoded salt separator for SCRYPT.
+  string salt_separator = 4;
+
+  // Base64-encoded signer key for SCRYPT.
+  string signer_key = 5;
+}
+
+// ImportUserError contains details about a failed user import.
+message ImportUserError {
+  // Zero-based index of the user in the request array.
+  int32 index = 1;
+
+  // Error message describing the failure.
+  string message = 2;
+
+  // Field that caused the error, if applicable.
+  string field = 3;
+}

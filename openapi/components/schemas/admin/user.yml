@@ -1,0 +1,530 @@
+# User Schemas for Admin API
+
+User:
+  type: object
+  description: |
+    A user account within a project or tenant.
+    Users are the identity records for authentication. Each user has a
+    system-generated pistachio_id as their unique identifier.
+  required:
+    - name
+    - pistachioId
+    - emailVerified
+    - disabled
+    - createdAt
+    - updatedAt
+  properties:
+    name:
+      type: string
+      description: |
+        Resource name in the format:
+        - Project users: "projects/{project_id}/users/{pistachio_id}"
+        - Tenant users: "projects/{project_id}/tenants/{tenant_id}/users/{pistachio_id}"
+      example: projects/my-project/users/a1b2c3d4e5f6789012345678901234500
+    pistachioId:
+      type: string
+      description: |
+        System-generated user identifier.
+        16 bytes encoded as 32 hex characters ending in '00'.
+      pattern: '^[a-fA-F0-9]{30}00$'
+      example: a1b2c3d4e5f6789012345678901234500
+    tenantId:
+      type:
+        - string
+        - 'null'
+      description: |
+        Tenant ID this user belongs to.
+        Null for project-level users (single-tenant mode).
+      example: MyTenant
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: |
+        User's primary email address.
+        Unique within the project/tenant scope if set.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the user's email address has been verified.
+      default: false
+      example: true
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: |
+        User's phone number in E.164 format (e.g., "+14155551234").
+        Unique within the project/tenant scope if set.
+      example: "+14155551234"
+    displayName:
+      type:
+        - string
+        - 'null'
+      maxLength: 256
+      description: Human-readable display name for the user. Max 256 characters.
+      example: John Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: URL to the user's profile photo.
+      example: "https://example.com/photo.jpg"
+    disabled:
+      type: boolean
+      description: |
+        Whether the user account is disabled.
+        Disabled users cannot sign in.
+      default: false
+      example: false
+    customClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: |
+        Custom claims to include in the user's ID token.
+        Used for application-specific authorization.
+        Maximum size: 1000 bytes when JSON-encoded.
+      example:
+        role: admin
+        tier: premium
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the user account was created.
+      example: "2024-01-15T10:30:00Z"
+    lastSignInAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: Timestamp when the user last signed in.
+      example: "2024-01-20T14:45:00Z"
+    lastRefreshAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: Timestamp when the user's tokens were last refreshed.
+      example: "2024-01-20T15:00:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the user account was last updated.
+      example: "2024-01-15T10:30:00Z"
+
+# =============================================================================
+# Import Types
+# =============================================================================
+
+ImportUserRecord:
+  type: object
+  description: |
+    A user record for batch import.
+    Used with the ImportUsers endpoint to bulk import users from external systems.
+  properties:
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: User's primary email address.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the email has been verified.
+      default: false
+      example: true
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: User's phone number in E.164 format.
+      example: "+14155551234"
+    displayName:
+      type:
+        - string
+        - 'null'
+      maxLength: 256
+      description: Human-readable display name.
+      example: John Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: URL to the user's profile photo.
+      example: "https://example.com/photo.jpg"
+    disabled:
+      type: boolean
+      description: Whether the account is disabled.
+      default: false
+      example: false
+    customClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: Custom claims for the ID token.
+      example:
+        role: user
+    passwordHash:
+      type:
+        - string
+        - 'null'
+      description: |
+        Base64-encoded password hash for PDPKA import.
+        Format depends on hashAlgorithm in the import request.
+      example: "JDJiJDEyJEFCQ0RFRkdISUpLTE1OT1BRUlNUVVY="
+    passwordSalt:
+      type:
+        - string
+        - 'null'
+      description: Base64-encoded salt used with the password hash.
+      example: "c2FsdHNhbHRzYWx0"
+
+HashAlgorithm:
+  type: string
+  description: The algorithm used for password hashes during import.
+  enum:
+    - SCRYPT
+    - BCRYPT
+    - ARGON2
+    - PBKDF2_SHA256
+  example: BCRYPT
+
+HashConfig:
+  type: object
+  description: Algorithm-specific configuration for password hashing.
+  properties:
+    rounds:
+      type:
+        - integer
+        - 'null'
+      format: int32
+      description: Number of rounds for BCRYPT/SCRYPT.
+      example: 12
+    memoryCost:
+      type:
+        - integer
+        - 'null'
+      format: int32
+      description: Memory cost parameter for SCRYPT/ARGON2.
+      example: 16384
+    parallelization:
+      type:
+        - integer
+        - 'null'
+      format: int32
+      description: Parallelization parameter for SCRYPT/ARGON2.
+      example: 1
+    saltSeparator:
+      type:
+        - string
+        - 'null'
+      description: Base64-encoded salt separator for SCRYPT.
+      example: "Qnc="
+    signerKey:
+      type:
+        - string
+        - 'null'
+      description: Base64-encoded signer key for SCRYPT.
+      example: "c2lnbmVya2V5"
+
+ImportUserError:
+  type: object
+  description: Details about a failed user import.
+  required:
+    - index
+    - message
+  properties:
+    index:
+      type: integer
+      format: int32
+      description: Zero-based index of the user in the request array.
+      example: 3
+    message:
+      type: string
+      description: Error message describing the failure.
+      example: "Email already exists"
+    field:
+      type:
+        - string
+        - 'null'
+      description: Field that caused the error, if applicable.
+      example: "email"
+
+# =============================================================================
+# Request/Response Messages - Create User
+# =============================================================================
+
+CreateUserRequest:
+  type: object
+  description: Request body for creating a new user.
+  properties:
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: User's primary email address.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the email has been verified. Defaults to false.
+      example: false
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: User's phone number in E.164 format.
+      example: "+14155551234"
+    displayName:
+      type:
+        - string
+        - 'null'
+      maxLength: 256
+      description: Human-readable display name. Max 256 characters.
+      example: John Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: URL to the user's profile photo.
+      example: "https://example.com/photo.jpg"
+    disabled:
+      type: boolean
+      description: Whether the account is disabled. Defaults to false.
+      example: false
+    customClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: Custom claims for the ID token.
+      example:
+        role: user
+  example:
+    email: user@example.com
+    displayName: John Doe
+
+CreateUserResponse:
+  type: object
+  description: Response containing the newly created user.
+  properties:
+    user:
+      $ref: '#/User'
+
+# =============================================================================
+# Request/Response Messages - Get User
+# =============================================================================
+
+GetUserResponse:
+  type: object
+  description: Response containing the requested user.
+  properties:
+    user:
+      $ref: '#/User'
+
+# =============================================================================
+# Request/Response Messages - Update User
+# =============================================================================
+
+UpdateUserRequest:
+  type: object
+  description: |
+    Request body for updating an existing user.
+    Only provided fields are updated; omitted fields retain their current values.
+    To clear a nullable field, explicitly set it to null.
+  properties:
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: |
+        New email address for the user.
+        If not provided, the email will not be changed.
+        Set to null to clear the email.
+      example: newemail@example.com
+    emailVerified:
+      type: boolean
+      description: |
+        Whether the email has been verified.
+        If not provided, the value will not be changed.
+      example: true
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: |
+        New phone number in E.164 format.
+        If not provided, the phone number will not be changed.
+        Set to null to clear the phone number.
+      example: "+14155559999"
+    displayName:
+      type:
+        - string
+        - 'null'
+      maxLength: 256
+      description: |
+        New display name for the user.
+        If not provided, the display name will not be changed.
+        Set to null to clear the display name.
+      example: Jane Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: |
+        New photo URL for the user.
+        If not provided, the photo URL will not be changed.
+        Set to null to clear the photo URL.
+      example: "https://example.com/newphoto.jpg"
+    disabled:
+      type: boolean
+      description: |
+        Whether the account is disabled.
+        If not provided, the value will not be changed.
+      example: false
+    customClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: |
+        Custom claims for the ID token.
+        If not provided, the claims will not be changed.
+        Set to null or {} to clear all custom claims.
+      example:
+        role: admin
+        tier: premium
+  example:
+    displayName: Jane Doe
+    emailVerified: true
+
+UpdateUserResponse:
+  type: object
+  description: Response containing the updated user.
+  properties:
+    user:
+      $ref: '#/User'
+
+# =============================================================================
+# Request/Response Messages - Delete User
+# =============================================================================
+
+DeleteUserResponse:
+  type: object
+  description: Response confirming the user was permanently deleted.
+  properties: {}
+
+# =============================================================================
+# Request/Response Messages - List Users
+# =============================================================================
+
+ListUsersResponse:
+  type: object
+  description: Response containing a page of users.
+  properties:
+    users:
+      type: array
+      description: The list of users.
+      items:
+        $ref: '#/User'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'
+
+# =============================================================================
+# Request/Response Messages - Import Users
+# =============================================================================
+
+ImportUsersRequest:
+  type: object
+  description: |
+    Request body for batch importing users.
+    Allows bulk import of users from external systems with optional
+    password hash migration.
+  required:
+    - users
+  properties:
+    users:
+      type: array
+      description: |
+        List of users to import. Maximum 1000 users per request.
+      items:
+        $ref: '#/ImportUserRecord'
+      maxItems: 1000
+    hashAlgorithm:
+      $ref: '#/HashAlgorithm'
+    hashConfig:
+      $ref: '#/HashConfig'
+  example:
+    users:
+      - email: user1@example.com
+        displayName: User One
+      - email: user2@example.com
+        displayName: User Two
+    hashAlgorithm: BCRYPT
+
+ImportUsersResponse:
+  type: object
+  description: Response containing import results.
+  properties:
+    successCount:
+      type: integer
+      format: int32
+      description: Number of users successfully imported.
+      example: 98
+    failureCount:
+      type: integer
+      format: int32
+      description: Number of users that failed to import.
+      example: 2
+    errors:
+      type: array
+      description: Details about failed imports.
+      items:
+        $ref: '#/ImportUserError'
+
+# =============================================================================
+# Request/Response Messages - Search Users
+# =============================================================================
+
+SearchUsersRequest:
+  type: object
+  description: |
+    Request body for searching users within a project or tenant.
+  properties:
+    params:
+      $ref: '../common.yml#/SearchParams'
+  example:
+    params:
+      query: "email:*@example.com AND disabled:false"
+      pagination:
+        pageSize: 20
+        cursor: "*"
+        sort:
+          - field: created_at
+            direction: DESC
+
+SearchUsersResponse:
+  type: object
+  description: Response containing search results for users.
+  properties:
+    users:
+      type: array
+      description: The list of users matching the search query.
+      items:
+        $ref: '#/User'
+    pagination:
+      $ref: '../common.yml#/PaginationMeta'

@@ -6,6 +6,7 @@ import "pistachio/admin/v1/app.proto";
 import "pistachio/admin/v1/auth_provider.proto";
 import "pistachio/admin/v1/project.proto";
 import "pistachio/admin/v1/tenant.proto";
+import "pistachio/admin/v1/user.proto";
 
 // =============================================================================
 // Pistachio Admin Service
@@ -364,4 +365,176 @@ service PistachioAdmin {
   // - NOT_FOUND: App does not exist
   // - PERMISSION_DENIED: Insufficient permissions
   rpc GetAppConfig(GetAppConfigRequest) returns (GetAppConfigResponse);
+
+  // =============================================================================
+  // Project User Operations
+  // =============================================================================
+
+  // CreateProjectUser creates a new user within a project.
+  //
+  // Creates a project-level user (single-tenant mode). The pistachio_id is
+  // system-generated and returned in the response.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or user field format
+  // - ALREADY_EXISTS: Email or phone number already in use within the project
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateProjectUser(CreateProjectUserRequest) returns (CreateProjectUserResponse);
+
+  // GetProjectUser retrieves a project-level user by pistachio_id.
+  //
+  // Returns the user's profile data including email, phone, display name,
+  // and custom claims.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or pistachio_id format
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetProjectUser(GetProjectUserRequest) returns (GetProjectUserResponse);
+
+  // UpdateProjectUser updates an existing project-level user.
+  //
+  // Updates the user's profile fields. Only provided fields are updated;
+  // omitted fields retain their current values.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, pistachio_id, or field format
+  // - ALREADY_EXISTS: Email or phone number already in use by another user
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateProjectUser(UpdateProjectUserRequest) returns (UpdateProjectUserResponse);
+
+  // DeleteProjectUser permanently deletes a project-level user.
+  //
+  // This operation is irreversible. All user data and authentication
+  // credentials will be permanently deleted.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or pistachio_id format
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteProjectUser(DeleteProjectUserRequest) returns (DeleteProjectUserResponse);
+
+  // ListProjectUsers lists all users within a project.
+  //
+  // Results are paginated and sorted by creation time by default.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, page_size, or page_token
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListProjectUsers(ListProjectUsersRequest) returns (ListProjectUsersResponse);
+
+  // ImportProjectUsers batch imports users into a project.
+  //
+  // Allows bulk import of users from external systems with optional
+  // password hash migration. Supports scrypt, bcrypt, argon2, and PBKDF2.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, user records, or hash config
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ImportProjectUsers(ImportProjectUsersRequest) returns (ImportProjectUsersResponse);
+
+  // SearchProjectUsers searches for users within a project.
+  //
+  // Provides advanced search capabilities including:
+  // - Full-text search across user fields
+  // - Field-specific queries (e.g., email:*@example.com, disabled:true)
+  // - Boolean operators (AND, OR, NOT)
+  // - Range queries for dates
+  // - Flexible sorting and cursor-based pagination
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or search query
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc SearchProjectUsers(SearchProjectUsersRequest) returns (SearchProjectUsersResponse);
+
+  // =============================================================================
+  // Tenant User Operations
+  // =============================================================================
+
+  // CreateTenantUser creates a new user within a tenant.
+  //
+  // Creates a tenant-level user (multi-tenant mode). The pistachio_id is
+  // system-generated and returned in the response.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or user field format
+  // - ALREADY_EXISTS: Email or phone number already in use within the tenant
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateTenantUser(CreateTenantUserRequest) returns (CreateTenantUserResponse);
+
+  // GetTenantUser retrieves a tenant-level user by pistachio_id.
+  //
+  // Returns the user's profile data including email, phone, display name,
+  // and custom claims.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or pistachio_id format
+  // - NOT_FOUND: Project, tenant, or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetTenantUser(GetTenantUserRequest) returns (GetTenantUserResponse);
+
+  // UpdateTenantUser updates an existing tenant-level user.
+  //
+  // Updates the user's profile fields. Only provided fields are updated;
+  // omitted fields retain their current values.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, pistachio_id, or field format
+  // - ALREADY_EXISTS: Email or phone number already in use by another user
+  // - NOT_FOUND: Project, tenant, or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateTenantUser(UpdateTenantUserRequest) returns (UpdateTenantUserResponse);
+
+  // DeleteTenantUser permanently deletes a tenant-level user.
+  //
+  // This operation is irreversible. All user data and authentication
+  // credentials will be permanently deleted.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or pistachio_id format
+  // - NOT_FOUND: Project, tenant, or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteTenantUser(DeleteTenantUserRequest) returns (DeleteTenantUserResponse);
+
+  // ListTenantUsers lists all users within a tenant.
+  //
+  // Results are paginated and sorted by creation time by default.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, page_size, or page_token
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListTenantUsers(ListTenantUsersRequest) returns (ListTenantUsersResponse);
+
+  // ImportTenantUsers batch imports users into a tenant.
+  //
+  // Allows bulk import of users from external systems with optional
+  // password hash migration. Supports scrypt, bcrypt, argon2, and PBKDF2.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, user records, or hash config
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ImportTenantUsers(ImportTenantUsersRequest) returns (ImportTenantUsersResponse);
+
+  // SearchTenantUsers searches for users within a tenant.
+  //
+  // Provides advanced search capabilities including:
+  // - Full-text search across user fields
+  // - Field-specific queries (e.g., email:*@example.com, disabled:true)
+  // - Boolean operators (AND, OR, NOT)
+  // - Range queries for dates
+  // - Flexible sorting and cursor-based pagination
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or search query
+  // - NOT_FOUND: Project or tenant does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc SearchTenantUsers(SearchTenantUsersRequest) returns (SearchTenantUsersResponse);
 }

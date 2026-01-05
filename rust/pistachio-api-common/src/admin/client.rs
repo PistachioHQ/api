@@ -36,6 +36,22 @@ use super::tenant::{
     SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
     UpdateTenantResponse,
 };
+use super::user::{
+    CreateProjectUserError, CreateProjectUserRequest, CreateProjectUserResponse,
+    CreateTenantUserError, CreateTenantUserRequest, CreateTenantUserResponse,
+    DeleteProjectUserError, DeleteProjectUserRequest, DeleteProjectUserResponse,
+    DeleteTenantUserError, DeleteTenantUserRequest, DeleteTenantUserResponse, GetProjectUserError,
+    GetProjectUserRequest, GetProjectUserResponse, GetTenantUserError, GetTenantUserRequest,
+    GetTenantUserResponse, ImportProjectUsersError, ImportProjectUsersRequest,
+    ImportProjectUsersResponse, ImportTenantUsersError, ImportTenantUsersRequest,
+    ImportTenantUsersResponse, ListProjectUsersError, ListProjectUsersRequest,
+    ListProjectUsersResponse, ListTenantUsersError, ListTenantUsersRequest,
+    ListTenantUsersResponse, SearchProjectUsersError, SearchProjectUsersRequest,
+    SearchProjectUsersResponse, SearchTenantUsersError, SearchTenantUsersRequest,
+    SearchTenantUsersResponse, UpdateProjectUserError, UpdateProjectUserRequest,
+    UpdateProjectUserResponse, UpdateTenantUserError, UpdateTenantUserRequest,
+    UpdateTenantUserResponse,
+};
 
 /// Trait for Pistachio Admin API clients.
 ///
@@ -324,4 +340,110 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: GetEffectiveTenantAuthProvidersRequest,
     ) -> Result<GetEffectiveTenantAuthProvidersResponse, GetEffectiveTenantAuthProvidersError>;
+
+    // =========================================================================
+    // Project User Operations
+    // =========================================================================
+
+    /// Creates a new user within a project.
+    ///
+    /// Users in project-level scope are not associated with any tenant (single-tenant mode).
+    async fn create_project_user(
+        &mut self,
+        req: CreateProjectUserRequest,
+    ) -> Result<CreateProjectUserResponse, CreateProjectUserError>;
+
+    /// Retrieves a user by their pistachio_id within a project.
+    async fn get_project_user(
+        &mut self,
+        req: GetProjectUserRequest,
+    ) -> Result<GetProjectUserResponse, GetProjectUserError>;
+
+    /// Updates an existing user within a project.
+    async fn update_project_user(
+        &mut self,
+        req: UpdateProjectUserRequest,
+    ) -> Result<UpdateProjectUserResponse, UpdateProjectUserError>;
+
+    /// Permanently deletes a user from a project.
+    ///
+    /// This operation is irreversible. All user data will be deleted.
+    async fn delete_project_user(
+        &mut self,
+        req: DeleteProjectUserRequest,
+    ) -> Result<DeleteProjectUserResponse, DeleteProjectUserError>;
+
+    /// Lists all users within a project with pagination.
+    async fn list_project_users(
+        &mut self,
+        req: ListProjectUsersRequest,
+    ) -> Result<ListProjectUsersResponse, ListProjectUsersError>;
+
+    /// Imports users into a project in batch.
+    ///
+    /// Supports importing users with password hashes from external systems.
+    /// Maximum 1000 users per request.
+    async fn import_project_users(
+        &mut self,
+        req: ImportProjectUsersRequest,
+    ) -> Result<ImportProjectUsersResponse, ImportProjectUsersError>;
+
+    /// Searches for users within a project using full-text search.
+    async fn search_project_users(
+        &mut self,
+        req: SearchProjectUsersRequest,
+    ) -> Result<SearchProjectUsersResponse, SearchProjectUsersError>;
+
+    // =========================================================================
+    // Tenant User Operations
+    // =========================================================================
+
+    /// Creates a new user within a tenant.
+    ///
+    /// Users in tenant-level scope are isolated to that specific tenant.
+    async fn create_tenant_user(
+        &mut self,
+        req: CreateTenantUserRequest,
+    ) -> Result<CreateTenantUserResponse, CreateTenantUserError>;
+
+    /// Retrieves a user by their pistachio_id within a tenant.
+    async fn get_tenant_user(
+        &mut self,
+        req: GetTenantUserRequest,
+    ) -> Result<GetTenantUserResponse, GetTenantUserError>;
+
+    /// Updates an existing user within a tenant.
+    async fn update_tenant_user(
+        &mut self,
+        req: UpdateTenantUserRequest,
+    ) -> Result<UpdateTenantUserResponse, UpdateTenantUserError>;
+
+    /// Permanently deletes a user from a tenant.
+    ///
+    /// This operation is irreversible. All user data will be deleted.
+    async fn delete_tenant_user(
+        &mut self,
+        req: DeleteTenantUserRequest,
+    ) -> Result<DeleteTenantUserResponse, DeleteTenantUserError>;
+
+    /// Lists all users within a tenant with pagination.
+    async fn list_tenant_users(
+        &mut self,
+        req: ListTenantUsersRequest,
+    ) -> Result<ListTenantUsersResponse, ListTenantUsersError>;
+
+    /// Imports users into a tenant in batch.
+    ///
+    /// Supports importing users with password hashes from external systems.
+    /// Maximum 1000 users per request.
+    async fn import_tenant_users(
+        &mut self,
+        req: ImportTenantUsersRequest,
+    ) -> Result<ImportTenantUsersResponse, ImportTenantUsersError>;
+
+    /// Searches for users within a tenant using full-text search.
+    async fn search_tenant_users(
+        &mut self,
+        req: SearchTenantUsersRequest,
+    ) -> Result<SearchTenantUsersResponse, SearchTenantUsersError>;
 }

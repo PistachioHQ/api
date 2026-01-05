@@ -19,6 +19,8 @@ tags:
     description: Project management operations
   - name: Tenants
     description: Tenant management operations within projects
+  - name: Users
+    description: User management operations within projects and tenants
   - name: Apps
     description: App management operations within projects
   - name: Auth Providers
@@ -41,6 +43,24 @@ paths:
     $ref: './paths/admin/tenants.yml#/tenantById'
   /admin/v1/projects/{projectId}/tenants:search:
     $ref: './paths/admin/tenants.yml#/tenantsSearch'
+  # Users - Project Level
+  /admin/v1/projects/{projectId}/users:
+    $ref: './paths/admin/users.yml#/projectUsers'
+  /admin/v1/projects/{projectId}/users/{pistachioId}:
+    $ref: './paths/admin/users.yml#/projectUserById'
+  /admin/v1/projects/{projectId}/users:import:
+    $ref: './paths/admin/users.yml#/projectUsersImport'
+  /admin/v1/projects/{projectId}/users:search:
+    $ref: './paths/admin/users.yml#/projectUsersSearch'
+  # Users - Tenant Level
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users:
+    $ref: './paths/admin/users.yml#/tenantUsers'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}:
+    $ref: './paths/admin/users.yml#/tenantUserById'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users:import:
+    $ref: './paths/admin/users.yml#/tenantUsersImport'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users:search:
+    $ref: './paths/admin/users.yml#/tenantUsersSearch'
   /admin/v1/projects/{projectId}/apps:
     $ref: './paths/admin/apps.yml#/apps'
   /admin/v1/projects/{projectId}/apps:search:
