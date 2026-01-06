@@ -1,7 +1,5 @@
 //! User management types for the Admin API.
 
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 use libgn::email::Email;
 use libgn::pistachio_id::UserId;
@@ -13,12 +11,8 @@ use crate::error::{ErrorDetails, PistachioApiClientError, ValidationError};
 use crate::pagination::{PaginationMeta, PaginationParams};
 use crate::search::SearchParams;
 
-/// Represents custom claims for a user's ID token.
-///
-/// Custom claims are stored as key-value pairs where values are JSON-encoded strings.
-/// This type is transport-agnostic; transport layers (gRPC, OpenAPI) handle
-/// conversion to/from their native representations.
-pub type CustomClaims = HashMap<String, String>;
+// Re-export CustomClaims from libgn for convenience
+pub use libgn::user::CustomClaims;
 
 // =============================================================================
 // User Domain Type
