@@ -24,6 +24,7 @@ pub mod error_type {
     // Infrastructure errors
     pub const SERVICE_UNAVAILABLE: &str = "service_unavailable";
     pub const INTERNAL_ERROR: &str = "internal_error";
+    pub const NOT_IMPLEMENTED: &str = "not_implemented";
 
     // Auth errors
     pub const UNAUTHENTICATED: &str = "unauthenticated";
