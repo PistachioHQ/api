@@ -489,8 +489,6 @@ impl RotateApiKeyRequest {
 pub struct RotateApiKeyResponse {
     /// The API key with new key_string.
     pub api_key: ApiKey,
-    /// The previous key string (remains valid during grace period).
-    pub previous_key_string: String,
     /// When the grace period expires.
     pub grace_period_expires_at: Option<DateTime<Utc>>,
 }

@@ -189,16 +189,13 @@ message RotateApiKeyRequest {
 // RotateApiKeyResponse contains the rotated API key.
 //
 // IMPORTANT: The new key_string is only returned once and cannot be retrieved again.
+// The previous key remains valid during the grace period but its value is not returned
+// for security reasons (only the hash is stored).
 message RotateApiKeyResponse {
   // The API key with new key_string.
   pistachio.types.v1.ApiKey api_key = 1;
 
-  // The previous key string.
-  // This key remains valid for the configured grace period
-  // to allow for key rotation without downtime.
-  string previous_key_string = 2;
-
   // When the grace period expires and the previous key becomes invalid.
   // Not set if grace_period_seconds was 0 (immediate invalidation).
-  optional google.protobuf.Timestamp grace_period_expires_at = 3;
+  optional google.protobuf.Timestamp grace_period_expires_at = 2;
 }

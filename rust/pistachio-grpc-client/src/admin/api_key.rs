@@ -438,7 +438,6 @@ pub(crate) async fn handle_rotate_api_key<I: Interceptor>(
 
     Ok(RotateApiKeyResponse {
         api_key,
-        previous_key_string: response.previous_key_string,
         grace_period_expires_at,
     })
 }

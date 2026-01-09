@@ -31939,12 +31939,6 @@ paths:
                                                 format: date-time
                                                 description: Timestamp when the key was last updated.
                                                 example: "2024-01-20T14:45:00Z"
-                                    previousKeyString:
-                                        type: string
-                                        description: |
-                                            The previous key string. This key will remain valid for the configured
-                                            grace period to allow for key rotation without downtime.
-                                        example: AIzaSyB3old123def456ghi789jkl012mno345
                                     gracePeriodExpiresAt:
                                         type: string
                                         format: date-time

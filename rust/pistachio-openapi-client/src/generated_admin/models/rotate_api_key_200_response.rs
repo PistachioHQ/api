@@ -16,9 +16,6 @@ use serde::{Deserialize, Serialize};
 pub struct RotateApiKey200Response {
     #[serde(rename = "apiKey", skip_serializing_if = "Option::is_none")]
     pub api_key: Option<Box<models::CreateApiKey201ResponseApiKey>>,
-    /// The previous key string. This key will remain valid for the configured grace period to allow for key rotation without downtime.
-    #[serde(rename = "previousKeyString", skip_serializing_if = "Option::is_none")]
-    pub previous_key_string: Option<String>,
     /// When the grace period expires and the previous key becomes invalid. Null if gracePeriodSeconds was set to 0.
     #[serde(
         rename = "gracePeriodExpiresAt",
@@ -32,7 +29,6 @@ impl RotateApiKey200Response {
     pub fn new() -> RotateApiKey200Response {
         RotateApiKey200Response {
             api_key: None,
-            previous_key_string: None,
             grace_period_expires_at: None,
         }
     }

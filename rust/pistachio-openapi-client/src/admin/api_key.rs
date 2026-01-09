@@ -244,7 +244,6 @@ impl FromJson<RotateApiKey200Response> for RotateApiKeyResponse {
 
         Ok(Self {
             api_key,
-            previous_key_string: json.previous_key_string.unwrap_or_default(),
             grace_period_expires_at: json
                 .grace_period_expires_at
                 .and_then(|s| parse_timestamp(Some(s)).ok()),
