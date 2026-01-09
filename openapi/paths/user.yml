@@ -1,0 +1,307 @@
+# User Self-Service Endpoints
+
+# =============================================================================
+# Current User Profile
+# =============================================================================
+
+me:
+  get:
+    operationId: getCurrentUser
+    summary: Get current user
+    description: |
+      Gets the profile of the currently authenticated user.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    responses:
+      '200':
+        description: Current user profile
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user_self_service.yml#/GetCurrentUserResponse'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+  patch:
+    operationId: updateCurrentUser
+    summary: Update current user
+    description: |
+      Updates the profile of the currently authenticated user.
+      Only display name and photo URL can be updated.
+      Email and phone changes require verification flows.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    requestBody:
+      description: Profile update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user_self_service.yml#/UpdateCurrentUserRequest'
+    responses:
+      '200':
+        description: User profile updated
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user_self_service.yml#/UpdateCurrentUserResponse'
+      '400':
+        description: Invalid update parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteCurrentUser
+    summary: Delete current user
+    description: |
+      Permanently deletes the currently authenticated user's account.
+      This operation is irreversible.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    responses:
+      '204':
+        description: Account deleted
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Sessions
+# =============================================================================
+
+me-sessions:
+  get:
+    operationId: listSessions
+    summary: List active sessions
+    description: |
+      Lists all active sessions for the current user.
+      Includes information about device, IP address, and last activity.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    responses:
+      '200':
+        description: List of sessions
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user_self_service.yml#/ListSessionsResponse'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+me-session-by-id:
+  delete:
+    operationId: deleteSession
+    summary: Delete a session
+    description: |
+      Revokes a specific session, signing out that device.
+      Cannot delete the current session (use sign out instead).
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    parameters:
+      - name: sessionId
+        in: path
+        description: The session ID to revoke
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Session revoked
+      '400':
+        description: Cannot delete current session
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Session not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Linked Providers
+# =============================================================================
+
+me-providers:
+  get:
+    operationId: listLinkedProviders
+    summary: List linked providers
+    description: |
+      Lists authentication providers linked to the current user's account.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    responses:
+      '200':
+        description: List of linked providers
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user_self_service.yml#/ListLinkedProvidersResponse'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: linkProvider
+    summary: Link a provider
+    description: |
+      Links an additional authentication provider to the current user's account.
+      This allows the user to sign in using multiple providers.
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    requestBody:
+      description: Provider link parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/user_self_service.yml#/LinkProviderRequest'
+    responses:
+      '200':
+        description: Provider linked
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/user_self_service.yml#/LinkProviderResponse'
+      '400':
+        description: Invalid provider credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Provider already linked to another account
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+me-provider-by-id:
+  delete:
+    operationId: unlinkProvider
+    summary: Unlink a provider
+    description: |
+      Unlinks an authentication provider from the current user's account.
+      Cannot unlink the last provider (user must have at least one sign-in method).
+    tags:
+      - User
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    parameters:
+      - name: provider
+        in: path
+        description: The provider ID to unlink
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Provider unlinked
+      '400':
+        description: Cannot unlink last provider
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Provider not linked
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'

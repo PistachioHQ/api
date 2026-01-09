@@ -13,6 +13,127 @@ use crate::generated::{apis::ResponseContent, models};
 use reqwest;
 use serde::{Deserialize, Serialize, de::Error as _};
 
+/// struct for typed errors of method [`confirm_email_verification`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ConfirmEmailVerificationError {
+    Status400(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`exchange_token`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ExchangeTokenError {
+    Status400(models::CheckHealth400Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`list_auth_providers`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ListAuthProvidersError {
+    Status400(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`oauth_authorize`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OauthAuthorizeError {
+    Status400(models::CheckHealth400Response),
+    Status403(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`oauth_callback`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OauthCallbackError {
+    Status400(models::CheckHealth400Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`oidc_authorize`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OidcAuthorizeError {
+    Status400(models::CheckHealth400Response),
+    Status403(models::CheckHealth400Response),
+    Status404(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`oidc_callback`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OidcCallbackError {
+    Status400(models::CheckHealth400Response),
+    Status401(models::CheckHealth400Response),
+    Status404(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`refresh_token`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RefreshTokenError {
+    Status400(models::CheckHealth400Response),
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`send_email_verification`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SendEmailVerificationError {
+    Status400(models::CheckHealth400Response),
+    Status401(models::CheckHealth400Response),
+    Status429(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`sign_in_anonymously`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SignInAnonymouslyError {
+    Status400(models::CheckHealth400Response),
+    Status403(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`sign_out`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SignOutError {
+    Status401(models::CheckHealth400Response),
+    Status500(models::CheckHealth400Response),
+    Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`validate_api_key`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -41,6 +162,694 @@ pub enum ValidateTokenError {
     Status500(models::CheckHealth400Response),
     Status503(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
+}
+
+/// Confirms email verification using the code from the verification email.
+pub async fn confirm_email_verification(
+    configuration: &configuration::Configuration,
+    confirm_email_verification_request: models::ConfirmEmailVerificationRequest,
+) -> Result<models::ConfirmEmailVerification200Response, Error<ConfirmEmailVerificationError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_confirm_email_verification_request = confirm_email_verification_request;
+
+    let uri_str = format!("{}/auth/email/confirm", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_confirm_email_verification_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::ConfirmEmailVerification200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ConfirmEmailVerification200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<ConfirmEmailVerificationError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Exchanges a custom token (created via Admin API) for ID and refresh tokens. Used for server-side authentication flows.
+pub async fn exchange_token(
+    configuration: &configuration::Configuration,
+    exchange_token_request: models::ExchangeTokenRequest,
+) -> Result<models::RefreshToken200Response, Error<ExchangeTokenError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_exchange_token_request = exchange_token_request;
+
+    let uri_str = format!("{}/auth/token/exchange", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_exchange_token_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::RefreshToken200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RefreshToken200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<ExchangeTokenError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Lists the available authentication providers for the project. Use this to display available sign-in options to users.
+pub async fn list_auth_providers(
+    configuration: &configuration::Configuration,
+    tenant_id: Option<&str>,
+) -> Result<models::ListAuthProviders200Response, Error<ListAuthProvidersError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_query_tenant_id = tenant_id;
+
+    let uri_str = format!("{}/auth/providers", configuration.base_path);
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_tenant_id {
+        req_builder = req_builder.query(&[("tenant_id", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::ListAuthProviders200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListAuthProviders200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<ListAuthProvidersError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Initiates an OAuth authentication flow with the specified provider. Redirects the user to the provider's authorization page.
+pub async fn oauth_authorize(
+    configuration: &configuration::Configuration,
+    provider: &str,
+    redirect_uri: &str,
+    state: &str,
+    scopes: Option<&str>,
+    tenant_id: Option<&str>,
+) -> Result<(), Error<OauthAuthorizeError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider = provider;
+    let p_query_redirect_uri = redirect_uri;
+    let p_query_state = state;
+    let p_query_scopes = scopes;
+    let p_query_tenant_id = tenant_id;
+
+    let uri_str = format!(
+        "{}/auth/oauth/{provider}/authorize",
+        configuration.base_path,
+        provider = crate::generated::apis::urlencode(p_path_provider)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    req_builder = req_builder.query(&[("redirect_uri", &p_query_redirect_uri.to_string())]);
+    req_builder = req_builder.query(&[("state", &p_query_state.to_string())]);
+    if let Some(ref param_value) = p_query_scopes {
+        req_builder = req_builder.query(&[("scopes", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_tenant_id {
+        req_builder = req_builder.query(&[("tenant_id", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OauthAuthorizeError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Completes an OAuth authentication flow by exchanging the authorization code for tokens and creating/signing in the user.
+pub async fn oauth_callback(
+    configuration: &configuration::Configuration,
+    provider: &str,
+    oauth_callback_request: models::OauthCallbackRequest,
+) -> Result<models::RefreshToken200Response, Error<OauthCallbackError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider = provider;
+    let p_body_oauth_callback_request = oauth_callback_request;
+
+    let uri_str = format!(
+        "{}/auth/oauth/{provider}/callback",
+        configuration.base_path,
+        provider = crate::generated::apis::urlencode(p_path_provider)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_oauth_callback_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::RefreshToken200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RefreshToken200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OauthCallbackError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Initiates an OIDC authentication flow with a custom OIDC provider. Redirects the user to the provider's authorization page.
+pub async fn oidc_authorize(
+    configuration: &configuration::Configuration,
+    provider_id: &str,
+    redirect_uri: &str,
+    state: &str,
+    scopes: Option<&str>,
+    tenant_id: Option<&str>,
+) -> Result<(), Error<OidcAuthorizeError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider_id = provider_id;
+    let p_query_redirect_uri = redirect_uri;
+    let p_query_state = state;
+    let p_query_scopes = scopes;
+    let p_query_tenant_id = tenant_id;
+
+    let uri_str = format!(
+        "{}/auth/oidc/{providerId}/authorize",
+        configuration.base_path,
+        providerId = crate::generated::apis::urlencode(p_path_provider_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    req_builder = req_builder.query(&[("redirect_uri", &p_query_redirect_uri.to_string())]);
+    req_builder = req_builder.query(&[("state", &p_query_state.to_string())]);
+    if let Some(ref param_value) = p_query_scopes {
+        req_builder = req_builder.query(&[("scopes", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_tenant_id {
+        req_builder = req_builder.query(&[("tenant_id", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OidcAuthorizeError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Completes an OIDC authentication flow by exchanging the authorization code for tokens and creating/signing in the user.
+pub async fn oidc_callback(
+    configuration: &configuration::Configuration,
+    provider_id: &str,
+    oauth_callback_request: models::OauthCallbackRequest,
+) -> Result<models::RefreshToken200Response, Error<OidcCallbackError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider_id = provider_id;
+    let p_body_oauth_callback_request = oauth_callback_request;
+
+    let uri_str = format!(
+        "{}/auth/oidc/{providerId}/callback",
+        configuration.base_path,
+        providerId = crate::generated::apis::urlencode(p_path_provider_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_oauth_callback_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::RefreshToken200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RefreshToken200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OidcCallbackError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Exchanges a refresh token for a new ID token and refresh token. Use this when the ID token has expired.
+pub async fn refresh_token(
+    configuration: &configuration::Configuration,
+    refresh_token_request: models::RefreshTokenRequest,
+) -> Result<models::RefreshToken200Response, Error<RefreshTokenError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_refresh_token_request = refresh_token_request;
+
+    let uri_str = format!("{}/auth/token/refresh", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_refresh_token_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::RefreshToken200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RefreshToken200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<RefreshTokenError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Sends an email verification link to the authenticated user's email address. Requires a valid ID token.
+pub async fn send_email_verification(
+    configuration: &configuration::Configuration,
+    send_email_verification_request: Option<models::SendEmailVerificationRequest>,
+) -> Result<models::SendEmailVerification200Response, Error<SendEmailVerificationError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_send_email_verification_request = send_email_verification_request;
+
+    let uri_str = format!("{}/auth/email/verify", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_send_email_verification_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::SendEmailVerification200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SendEmailVerification200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SendEmailVerificationError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Creates an anonymous user account and returns authentication tokens. Anonymous users can later be linked to a permanent identity.
+pub async fn sign_in_anonymously(
+    configuration: &configuration::Configuration,
+    sign_in_anonymously_request: Option<models::SignInAnonymouslyRequest>,
+) -> Result<models::RefreshToken200Response, Error<SignInAnonymouslyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_sign_in_anonymously_request = sign_in_anonymously_request;
+
+    let uri_str = format!("{}/auth/anonymous", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    req_builder = req_builder.json(&p_body_sign_in_anonymously_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::RefreshToken200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::RefreshToken200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SignInAnonymouslyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Signs out the current user by invalidating their session. Optionally revokes the refresh token or all sessions.
+pub async fn sign_out(
+    configuration: &configuration::Configuration,
+    sign_out_request: Option<models::SignOutRequest>,
+) -> Result<(), Error<SignOutError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_body_sign_out_request = sign_out_request;
+
+    let uri_str = format!("{}/auth/signout", configuration.base_path);
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_sign_out_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SignOutError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
 }
 
 /// Validates that the provided API key is valid.

@@ -145,6 +145,58 @@ pub enum ListTenantUsersError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`lookup_project_user`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum LookupProjectUserError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`lookup_tenant_user`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum LookupTenantUserError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`revoke_project_user_tokens`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RevokeProjectUserTokensError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`revoke_tenant_user_tokens`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RevokeTenantUserTokensError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`search_project_users`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -188,6 +240,32 @@ pub enum SearchTenantUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchTenantUsersPostError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`set_project_user_custom_claims`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SetProjectUserCustomClaimsError {
+    Status400(models::ListProjects400Response),
+    Status401(models::ListProjects400Response),
+    Status403(models::ListProjects400Response),
+    Status404(models::ListProjects400Response),
+    Status500(models::ListProjects400Response),
+    Status503(models::ListProjects400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`set_tenant_user_custom_claims`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SetTenantUserCustomClaimsError {
     Status400(models::ListProjects400Response),
     Status401(models::ListProjects400Response),
     Status403(models::ListProjects400Response),
@@ -938,6 +1016,272 @@ pub async fn list_tenant_users(
     }
 }
 
+/// Looks up a user within a project by email or phone number. Returns the user if found, or 404 if no user matches.
+pub async fn lookup_project_user(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    email: Option<&str>,
+    phone_number: Option<&str>,
+) -> Result<models::GetProjectUser200Response, Error<LookupProjectUserError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_query_email = email;
+    let p_query_phone_number = phone_number;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/users:lookup",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_email {
+        req_builder = req_builder.query(&[("email", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_phone_number {
+        req_builder = req_builder.query(&[("phoneNumber", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProjectUser200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProjectUser200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<LookupProjectUserError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Looks up a user within a tenant by email or phone number. Returns the user if found, or 404 if no user matches.
+pub async fn lookup_tenant_user(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    tenant_id: &str,
+    email: Option<&str>,
+    phone_number: Option<&str>,
+) -> Result<models::GetProjectUser200Response, Error<LookupTenantUserError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_tenant_id = tenant_id;
+    let p_query_email = email;
+    let p_query_phone_number = phone_number;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/users:lookup",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_email {
+        req_builder = req_builder.query(&[("email", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_phone_number {
+        req_builder = req_builder.query(&[("phoneNumber", &param_value.to_string())]);
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProjectUser200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProjectUser200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<LookupTenantUserError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Revokes all refresh tokens and sessions for a project-level user. The user will be required to re-authenticate on their next request.  **Important**: Active ID tokens remain valid until they expire (typically 1 hour). For immediate invalidation in security-critical scenarios, consider:  1. **Short token lifetimes**: Configure shorter ID token expiration in project settings 2. **Check `auth_time` claim**: Reject tokens issued before revocation by comparing    the `auth_time` claim against the revocation timestamp 3. **Disable the user**: Set `disabled: true` via updateUser to block all API access    immediately, regardless of token validity
+pub async fn revoke_project_user_tokens(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    pistachio_id: &str,
+) -> Result<(), Error<RevokeProjectUserTokensError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_pistachio_id = pistachio_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/users/{pistachioId}:revokeTokens",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        pistachioId = crate::generated_admin::apis::urlencode(p_path_pistachio_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<RevokeProjectUserTokensError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Revokes all refresh tokens and sessions for a tenant-level user. The user will be required to re-authenticate on their next request.  **Important**: Active ID tokens remain valid until they expire (typically 1 hour). For immediate invalidation in security-critical scenarios, consider:  1. **Short token lifetimes**: Configure shorter ID token expiration in project settings 2. **Check `auth_time` claim**: Reject tokens issued before revocation by comparing    the `auth_time` claim against the revocation timestamp 3. **Disable the user**: Set `disabled: true` via updateUser to block all API access    immediately, regardless of token validity
+pub async fn revoke_tenant_user_tokens(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    tenant_id: &str,
+    pistachio_id: &str,
+) -> Result<(), Error<RevokeTenantUserTokensError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_tenant_id = tenant_id;
+    let p_path_pistachio_id = pistachio_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}:revokeTokens",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id),
+        pistachioId = crate::generated_admin::apis::urlencode(p_path_pistachio_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<RevokeTenantUserTokensError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
 /// Searches for users within a project using full-text search.  Searchable fields: - email: User's email address - display_name: Human-readable display name - phone_number: Phone number in E.164 format - disabled: Whether account is disabled - email_verified: Whether email has been verified - created_at: Timestamp when created - updated_at: Timestamp when last updated  Example queries: - \"john\" - Search all fields - \"email:*@example.com\" - Users with emails from example.com - \"disabled:true\" - Disabled users only - \"email_verified:false AND created_at:[2024-01-01 TO *]\" - Unverified users created in 2024  For complex queries that exceed URL length limits, use POST instead.
 pub async fn search_project_users(
     configuration: &configuration::Configuration,
@@ -1254,6 +1598,159 @@ pub async fn search_tenant_users_post(
     } else {
         let content = resp.text().await?;
         let entity: Option<SearchTenantUsersPostError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Sets custom claims for a project-level user. Custom claims are included in the user's ID tokens and can be used for application-specific authorization.  Note: Custom claims are limited to 1000 bytes when JSON-encoded. Setting custom claims to null or an empty object clears all claims.
+pub async fn set_project_user_custom_claims(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    pistachio_id: &str,
+    set_project_user_custom_claims_request: models::SetProjectUserCustomClaimsRequest,
+) -> Result<models::GetProjectUser200Response, Error<SetProjectUserCustomClaimsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_pistachio_id = pistachio_id;
+    let p_body_set_project_user_custom_claims_request = set_project_user_custom_claims_request;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/users/{pistachioId}:customClaims",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        pistachioId = crate::generated_admin::apis::urlencode(p_path_pistachio_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::PATCH, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_set_project_user_custom_claims_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProjectUser200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProjectUser200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SetProjectUserCustomClaimsError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Sets custom claims for a tenant-level user. Custom claims are included in the user's ID tokens and can be used for application-specific authorization.  Note: Custom claims are limited to 1000 bytes when JSON-encoded. Setting custom claims to null or an empty object clears all claims.
+pub async fn set_tenant_user_custom_claims(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    tenant_id: &str,
+    pistachio_id: &str,
+    set_project_user_custom_claims_request: models::SetProjectUserCustomClaimsRequest,
+) -> Result<models::GetProjectUser200Response, Error<SetTenantUserCustomClaimsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_tenant_id = tenant_id;
+    let p_path_pistachio_id = pistachio_id;
+    let p_body_set_project_user_custom_claims_request = set_project_user_custom_claims_request;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}:customClaims",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        tenantId = crate::generated_admin::apis::urlencode(p_path_tenant_id),
+        pistachioId = crate::generated_admin::apis::urlencode(p_path_pistachio_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::PATCH, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_set_project_user_custom_claims_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetProjectUser200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetProjectUser200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SetTenantUserCustomClaimsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

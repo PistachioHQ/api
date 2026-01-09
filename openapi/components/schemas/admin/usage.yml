@@ -1,0 +1,214 @@
+# Usage and Quotas schemas for Admin API
+
+ProjectUsage:
+  type: object
+  description: Usage statistics for a project.
+  properties:
+    name:
+      type: string
+      description: Resource name in the format "projects/{project_id}/usage"
+      example: projects/my-project/usage
+    period:
+      type: object
+      description: The time period for the usage data.
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          description: Start of the period.
+          example: "2024-01-01T00:00:00Z"
+        endTime:
+          type: string
+          format: date-time
+          description: End of the period.
+          example: "2024-01-31T23:59:59Z"
+    activeUsers:
+      type: object
+      description: Active user metrics.
+      properties:
+        daily:
+          type: integer
+          format: int64
+          description: Daily active users (DAU).
+          example: 1500
+        weekly:
+          type: integer
+          format: int64
+          description: Weekly active users (WAU).
+          example: 8500
+        monthly:
+          type: integer
+          format: int64
+          description: Monthly active users (MAU).
+          example: 25000
+    authentications:
+      type: object
+      description: Authentication event counts.
+      properties:
+        signups:
+          type: integer
+          format: int64
+          description: Number of new user signups.
+          example: 500
+        logins:
+          type: integer
+          format: int64
+          description: Number of successful logins.
+          example: 45000
+        tokenRefreshes:
+          type: integer
+          format: int64
+          description: Number of token refreshes.
+          example: 120000
+        failedAttempts:
+          type: integer
+          format: int64
+          description: Number of failed authentication attempts.
+          example: 1200
+    apiCalls:
+      type: object
+      description: API call counts by category.
+      properties:
+        adminApi:
+          type: integer
+          format: int64
+          description: Number of Admin API calls.
+          example: 5000
+        publicApi:
+          type: integer
+          format: int64
+          description: Number of Public API calls.
+          example: 500000
+    storage:
+      type: object
+      description: Storage usage.
+      properties:
+        totalUsers:
+          type: integer
+          format: int64
+          description: Total number of users.
+          example: 50000
+        totalServiceAccounts:
+          type: integer
+          format: int64
+          description: Total number of service accounts.
+          example: 25
+        totalTenants:
+          type: integer
+          format: int64
+          description: Total number of tenants.
+          example: 100
+        totalApps:
+          type: integer
+          format: int64
+          description: Total number of apps.
+          example: 5
+
+ProjectQuotas:
+  type: object
+  description: Quota limits and current usage for a project.
+  properties:
+    name:
+      type: string
+      description: Resource name in the format "projects/{project_id}/quotas"
+      example: projects/my-project/quotas
+    users:
+      $ref: '#/QuotaLimit'
+    serviceAccounts:
+      $ref: '#/QuotaLimit'
+    tenants:
+      $ref: '#/QuotaLimit'
+    apps:
+      $ref: '#/QuotaLimit'
+    apiKeysPerApp:
+      $ref: '#/QuotaLimit'
+    requestsPerMinute:
+      $ref: '#/QuotaLimit'
+    requestsPerDay:
+      $ref: '#/QuotaLimit'
+
+QuotaLimit:
+  type: object
+  description: A quota limit with current usage.
+  properties:
+    limit:
+      type: integer
+      format: int64
+      description: |
+        The maximum allowed value.
+        -1 indicates unlimited.
+      example: 100000
+    current:
+      type: integer
+      format: int64
+      description: Current usage against this quota.
+      example: 50000
+    unit:
+      type: string
+      description: Unit of measurement.
+      example: users
+
+# Request/Response schemas
+
+GetUsageResponse:
+  type: object
+  description: Response containing project usage statistics.
+  properties:
+    usage:
+      $ref: '#/ProjectUsage'
+
+GetQuotasResponse:
+  type: object
+  description: Response containing project quotas.
+  properties:
+    quotas:
+      $ref: '#/ProjectQuotas'
+
+UpdateQuotasRequest:
+  type: object
+  description: |
+    Request body for updating project quotas.
+    Only provided fields are updated.
+  properties:
+    users:
+      type: integer
+      format: int64
+      description: Maximum number of users. -1 for unlimited.
+      example: 200000
+    serviceAccounts:
+      type: integer
+      format: int64
+      description: Maximum number of service accounts. -1 for unlimited.
+      example: 100
+    tenants:
+      type: integer
+      format: int64
+      description: Maximum number of tenants. -1 for unlimited.
+      example: 500
+    apps:
+      type: integer
+      format: int64
+      description: Maximum number of apps. -1 for unlimited.
+      example: 20
+    apiKeysPerApp:
+      type: integer
+      format: int64
+      description: Maximum API keys per app. -1 for unlimited.
+      example: 10
+    requestsPerMinute:
+      type: integer
+      format: int64
+      description: Maximum requests per minute. -1 for unlimited.
+      example: 10000
+    requestsPerDay:
+      type: integer
+      format: int64
+      description: Maximum requests per day. -1 for unlimited.
+      example: 1000000
+
+UpdateQuotasResponse:
+  type: object
+  description: Response containing the updated quotas.
+  properties:
+    quotas:
+      $ref: '#/ProjectQuotas'

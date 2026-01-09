@@ -1,0 +1,283 @@
+# MFA Admin Management Endpoints
+
+# =============================================================================
+# Project-Level User MFA Factors
+# =============================================================================
+
+projectUserMfaFactors:
+  get:
+    operationId: listProjectUserMfaFactors
+    summary: List MFA factors for a project user
+    description: |
+      Lists all enrolled MFA factors for a project-level user.
+      Returns TOTP, SMS, and email factors along with their verification status.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '200':
+        description: List of MFA factors
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/mfa.yml#/ListMfaFactorsResponse'
+      '400':
+        description: Invalid projectId or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectUserMfaFactorById:
+  delete:
+    operationId: deleteProjectUserMfaFactor
+    summary: Delete an MFA factor for a project user
+    description: |
+      Deletes (unenrolls) an MFA factor for a project-level user.
+      This allows administrators to help users who have lost access
+      to their MFA device.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+      - name: factorId
+        in: path
+        description: The MFA factor ID to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: MFA factor deleted
+      '400':
+        description: Invalid projectId, pistachioId, or factorId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, user, or MFA factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Tenant-Level User MFA Factors
+# =============================================================================
+
+tenantUserMfaFactors:
+  get:
+    operationId: listTenantUserMfaFactors
+    summary: List MFA factors for a tenant user
+    description: |
+      Lists all enrolled MFA factors for a tenant-level user.
+      Returns TOTP, SMS, and email factors along with their verification status.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '200':
+        description: List of MFA factors
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/mfa.yml#/ListMfaFactorsResponse'
+      '400':
+        description: Invalid projectId, tenantId, or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantUserMfaFactorById:
+  delete:
+    operationId: deleteTenantUserMfaFactor
+    summary: Delete an MFA factor for a tenant user
+    description: |
+      Deletes (unenrolls) an MFA factor for a tenant-level user.
+      This allows administrators to help users who have lost access
+      to their MFA device.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+      - name: factorId
+        in: path
+        description: The MFA factor ID to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: MFA factor deleted
+      '400':
+        description: Invalid projectId, tenantId, pistachioId, or factorId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, user, or MFA factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

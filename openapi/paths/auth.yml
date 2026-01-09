@@ -99,3 +99,845 @@ validate-service-account:
         $ref: '../components/responses/errors.yml#/InternalServerError'
       '503':
         $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Sign Out
+# =============================================================================
+
+signout:
+  post:
+    operationId: signOut
+    summary: Sign out
+    description: |
+      Signs out the current user by invalidating their session.
+      Optionally revokes the refresh token or all sessions.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    requestBody:
+      description: Sign out parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/SignOutRequest'
+    responses:
+      '204':
+        description: Successfully signed out
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Token Operations
+# =============================================================================
+
+token-refresh:
+  post:
+    operationId: refreshToken
+    summary: Refresh tokens
+    description: |
+      Exchanges a refresh token for a new ID token and refresh token.
+      Use this when the ID token has expired.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    requestBody:
+      description: Token refresh parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/RefreshTokenRequest'
+    responses:
+      '200':
+        description: Tokens refreshed
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/TokenResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or expired refresh token
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+token-exchange:
+  post:
+    operationId: exchangeToken
+    summary: Exchange custom token
+    description: |
+      Exchanges a custom token (created via Admin API) for ID and refresh tokens.
+      Used for server-side authentication flows.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    requestBody:
+      description: Token exchange parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/ExchangeTokenRequest'
+    responses:
+      '200':
+        description: Tokens issued
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/TokenResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or expired custom token
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Email Verification
+# =============================================================================
+
+email-verify:
+  post:
+    operationId: sendEmailVerification
+    summary: Send email verification
+    description: |
+      Sends an email verification link to the authenticated user's email address.
+      Requires a valid ID token.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    requestBody:
+      description: Email verification parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/SendEmailVerificationRequest'
+    responses:
+      '200':
+        description: Verification email sent
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/SendEmailVerificationResponse'
+      '400':
+        description: User has no email address
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '429':
+        description: Too many requests
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+email-confirm:
+  post:
+    operationId: confirmEmailVerification
+    summary: Confirm email verification
+    description: |
+      Confirms email verification using the code from the verification email.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    requestBody:
+      description: Email confirmation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/ConfirmEmailVerificationRequest'
+    responses:
+      '200':
+        description: Email verified
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/ConfirmEmailVerificationResponse'
+      '400':
+        description: Invalid or expired verification code
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Anonymous Authentication
+# =============================================================================
+
+anonymous:
+  post:
+    operationId: signInAnonymously
+    summary: Sign in anonymously
+    description: |
+      Creates an anonymous user account and returns authentication tokens.
+      Anonymous users can later be linked to a permanent identity.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    requestBody:
+      description: Anonymous auth parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/AnonymousAuthRequest'
+    responses:
+      '200':
+        description: Anonymous user created and authenticated
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/TokenResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Anonymous authentication is disabled
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# OAuth
+# =============================================================================
+
+oauth-authorize:
+  get:
+    operationId: oauthAuthorize
+    summary: Start OAuth flow
+    description: |
+      Initiates an OAuth authentication flow with the specified provider.
+      Redirects the user to the provider's authorization page.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: provider
+        in: path
+        description: OAuth provider (e.g., google, facebook, github)
+        required: true
+        schema:
+          type: string
+          enum:
+            - google
+            - facebook
+            - github
+            - apple
+            - microsoft
+            - twitter
+      - name: redirect_uri
+        in: query
+        description: URI to redirect to after authorization
+        required: true
+        schema:
+          type: string
+          format: uri
+      - name: state
+        in: query
+        description: Opaque state value for CSRF protection
+        required: true
+        schema:
+          type: string
+          maxLength: 1024
+      - name: scopes
+        in: query
+        description: Comma-separated OAuth scopes
+        required: false
+        schema:
+          type: string
+      - name: tenant_id
+        in: query
+        description: Tenant ID for multi-tenant projects
+        required: false
+        schema:
+          type: string
+    responses:
+      '302':
+        description: Redirect to OAuth provider
+        headers:
+          Location:
+            description: OAuth provider authorization URL
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: OAuth provider is not enabled
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+oauth-callback:
+  post:
+    operationId: oauthCallback
+    summary: Complete OAuth flow
+    description: |
+      Completes an OAuth authentication flow by exchanging the authorization
+      code for tokens and creating/signing in the user.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: provider
+        in: path
+        description: OAuth provider
+        required: true
+        schema:
+          type: string
+          enum:
+            - google
+            - facebook
+            - github
+            - apple
+            - microsoft
+            - twitter
+    requestBody:
+      description: OAuth callback parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/OAuthCallbackRequest'
+    responses:
+      '200':
+        description: Authentication successful
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/TokenResponse'
+      '400':
+        description: Invalid code or state
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: OAuth authentication failed
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# OIDC
+# =============================================================================
+
+oidc-authorize:
+  get:
+    operationId: oidcAuthorize
+    summary: Start OIDC flow
+    description: |
+      Initiates an OIDC authentication flow with a custom OIDC provider.
+      Redirects the user to the provider's authorization page.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: providerId
+        in: path
+        description: Custom OIDC provider ID configured in the project
+        required: true
+        schema:
+          type: string
+      - name: redirect_uri
+        in: query
+        description: URI to redirect to after authorization
+        required: true
+        schema:
+          type: string
+          format: uri
+      - name: state
+        in: query
+        description: Opaque state value for CSRF protection
+        required: true
+        schema:
+          type: string
+          maxLength: 1024
+      - name: scopes
+        in: query
+        description: Comma-separated OIDC scopes
+        required: false
+        schema:
+          type: string
+      - name: tenant_id
+        in: query
+        description: Tenant ID for multi-tenant projects
+        required: false
+        schema:
+          type: string
+    responses:
+      '302':
+        description: Redirect to OIDC provider
+        headers:
+          Location:
+            description: OIDC provider authorization URL
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: OIDC provider is not enabled
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: OIDC provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+oidc-callback:
+  post:
+    operationId: oidcCallback
+    summary: Complete OIDC flow
+    description: |
+      Completes an OIDC authentication flow by exchanging the authorization
+      code for tokens and creating/signing in the user.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: providerId
+        in: path
+        description: Custom OIDC provider ID
+        required: true
+        schema:
+          type: string
+    requestBody:
+      description: OIDC callback parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/OAuthCallbackRequest'
+    responses:
+      '200':
+        description: Authentication successful
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/TokenResponse'
+      '400':
+        description: Invalid code or state
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: OIDC authentication failed
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: OIDC provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Auth Providers
+# =============================================================================
+
+providers:
+  get:
+    operationId: listAuthProviders
+    summary: List authentication providers
+    description: |
+      Lists the available authentication providers for the project.
+      Use this to display available sign-in options to users.
+    tags:
+      - Auth
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: tenant_id
+        in: query
+        description: Optional tenant ID for multi-tenant projects
+        required: false
+        schema:
+          type: string
+    responses:
+      '200':
+        description: List of auth providers
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/ListAuthProvidersResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# MFA
+# =============================================================================
+
+mfa-factors:
+  get:
+    operationId: listMfaFactors
+    summary: List user's MFA factors
+    description: |
+      Lists the authenticated user's enrolled MFA factors.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    responses:
+      '200':
+        description: List of MFA factors
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/ListMfaFactorsResponse'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: enrollMfaFactor
+    summary: Enroll an MFA factor
+    description: |
+      Begins enrollment of a new MFA factor for the authenticated user.
+      For TOTP, returns the secret to display as a QR code.
+      For SMS/email, sends a verification code.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    requestBody:
+      description: MFA enrollment parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/EnrollMfaFactorRequest'
+    responses:
+      '200':
+        description: Factor enrollment started
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/EnrollMfaFactorResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '409':
+        description: Factor type already enrolled
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+mfa-factor-by-id:
+  get:
+    operationId: getMfaFactor
+    summary: Get an MFA factor
+    description: |
+      Gets details about a specific MFA factor.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    parameters:
+      - name: factorId
+        in: path
+        description: The MFA factor ID
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: MFA factor details
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/MfaFactor'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteMfaFactor
+    summary: Delete an MFA factor
+    description: |
+      Unenrolls an MFA factor from the authenticated user's account.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    parameters:
+      - name: factorId
+        in: path
+        description: The MFA factor ID to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Factor deleted
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+mfa-factor-verify:
+  post:
+    operationId: verifyMfaFactor
+    summary: Verify an MFA factor
+    description: |
+      Verifies an MFA factor during enrollment using the verification code.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+        BearerAuth: []
+    parameters:
+      - name: factorId
+        in: path
+        description: The MFA factor ID to verify
+        required: true
+        schema:
+          type: string
+    requestBody:
+      description: Verification parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/VerifyMfaFactorRequest'
+    responses:
+      '200':
+        description: Factor verified
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/VerifyMfaFactorResponse'
+      '400':
+        description: Invalid verification code
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+
+mfa-factor-challenge:
+  post:
+    operationId: challengeMfaFactor
+    summary: Create an MFA challenge
+    description: |
+      Creates a challenge for an MFA factor during sign-in.
+      For SMS/email factors, this sends the verification code.
+    tags:
+      - MFA
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: factorId
+        in: path
+        description: The MFA factor ID to challenge
+        required: true
+        schema:
+          type: string
+    requestBody:
+      description: Challenge parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth_flow.yml#/ChallengeMfaFactorRequest'
+    responses:
+      '200':
+        description: Challenge created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/auth_flow.yml#/ChallengeMfaFactorResponse'
+      '400':
+        description: Invalid request
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Factor not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '429':
+        description: Too many challenge attempts
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../components/responses/errors.yml#/ServiceUnavailable'

@@ -1,0 +1,353 @@
+# API Key Management Endpoints
+
+# =============================================================================
+# API Key Collection Endpoints
+# =============================================================================
+
+apiKeys:
+  get:
+    operationId: listApiKeys
+    summary: List API keys for an app
+    description: |
+      Lists all API keys for an app within a project.
+      Results are paginated with cursor-based pagination.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that owns the API keys
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+      - $ref: '../../components/parameters/pagination.yml#/PageSize'
+      - $ref: '../../components/parameters/pagination.yml#/Cursor'
+      - $ref: '../../components/parameters/pagination.yml#/Sort'
+    responses:
+      '200':
+        description: List of API keys
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/api_key.yml#/ListApiKeysResponse'
+      '400':
+        description: Invalid projectId or appId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  post:
+    operationId: createApiKey
+    summary: Create an API key
+    description: |
+      Creates a new API key for an app.
+      IMPORTANT: The full key string is only returned in this response.
+      Store it securely as it cannot be retrieved again.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that will own the API key
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+    requestBody:
+      description: API key creation parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/api_key.yml#/CreateApiKeyRequest'
+    responses:
+      '201':
+        description: API key created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/api_key.yml#/CreateApiKeyResponse'
+      '400':
+        description: Invalid projectId, appId, or request body
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or app not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Individual API Key Endpoints
+# =============================================================================
+
+apiKeyById:
+  get:
+    operationId: getApiKey
+    summary: Get an API key
+    description: |
+      Retrieves an API key by ID.
+      For security, only a masked key prefix is returned. The full key string
+      is only available when creating or rotating a key.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that owns the API key
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+      - name: keyId
+        in: path
+        description: The API key ID
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: API key details
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/api_key.yml#/GetApiKeyResponse'
+      '400':
+        description: Invalid projectId, appId, or keyId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, app, or API key not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  delete:
+    operationId: deleteApiKey
+    summary: Delete an API key
+    description: |
+      Permanently deletes an API key.
+      This operation is irreversible. Any requests using this key will fail.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that owns the API key
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+      - name: keyId
+        in: path
+        description: The API key ID
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: API key permanently deleted
+      '400':
+        description: Invalid projectId, appId, or keyId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, app, or API key not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# API Key Rotation
+# =============================================================================
+
+apiKeyRotate:
+  post:
+    operationId: rotateApiKey
+    summary: Rotate an API key
+    description: |
+      Rotates an API key, generating a new key string.
+      The previous key remains valid for a grace period (typically 24 hours)
+      to allow for key rotation without downtime.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that owns the API key
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+      - name: keyId
+        in: path
+        description: The API key ID to rotate
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: API key rotated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/api_key.yml#/RotateApiKeyResponse'
+      '400':
+        description: Invalid projectId, appId, or keyId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, app, or API key not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

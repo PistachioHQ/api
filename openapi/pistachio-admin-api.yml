@@ -25,6 +25,16 @@ tags:
     description: App management operations within projects
   - name: Auth Providers
     description: Authentication provider configuration for projects and tenants
+  - name: Service Accounts
+    description: Service account management for server-to-server authentication
+  - name: API Keys
+    description: API key management for client authentication
+  - name: Tokens
+    description: Custom token generation and verification
+  - name: MFA
+    description: Multi-factor authentication management
+  - name: Usage
+    description: Usage statistics and quota management
 
 paths:
   /admin/v1/projects:
@@ -83,6 +93,58 @@ paths:
     $ref: './paths/admin/auth_providers.yml#/tenantAuthProviderById'
   /admin/v1/projects/{projectId}/tenants/{tenantId}/authProviders:effective:
     $ref: './paths/admin/auth_providers.yml#/effectiveTenantAuthProviders'
+  # Service Accounts
+  /admin/v1/projects/{projectId}/serviceAccounts:
+    $ref: './paths/admin/service_accounts.yml#/serviceAccounts'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}:
+    $ref: './paths/admin/service_accounts.yml#/serviceAccountById'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}/key:
+    $ref: './paths/admin/service_accounts.yml#/serviceAccountKey'
+  # User Lookup and Actions - Project Level
+  /admin/v1/projects/{projectId}/users:lookup:
+    $ref: './paths/admin/users.yml#/projectUsersLookup'
+  /admin/v1/projects/{projectId}/users/{pistachioId}:revokeTokens:
+    $ref: './paths/admin/users.yml#/projectUserRevokeTokens'
+  /admin/v1/projects/{projectId}/users/{pistachioId}:customClaims:
+    $ref: './paths/admin/users.yml#/projectUserCustomClaims'
+  # User Lookup and Actions - Tenant Level
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users:lookup:
+    $ref: './paths/admin/users.yml#/tenantUsersLookup'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}:revokeTokens:
+    $ref: './paths/admin/users.yml#/tenantUserRevokeTokens'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}:customClaims:
+    $ref: './paths/admin/users.yml#/tenantUserCustomClaims'
+  # API Keys
+  /admin/v1/projects/{projectId}/apps/{appId}/apiKeys:
+    $ref: './paths/admin/api_keys.yml#/apiKeys'
+  /admin/v1/projects/{projectId}/apps/{appId}/apiKeys/{keyId}:
+    $ref: './paths/admin/api_keys.yml#/apiKeyById'
+  /admin/v1/projects/{projectId}/apps/{appId}/apiKeys/{keyId}:rotate:
+    $ref: './paths/admin/api_keys.yml#/apiKeyRotate'
+  # Tokens
+  /admin/v1/projects/{projectId}/customTokens:
+    $ref: './paths/admin/tokens.yml#/customTokens'
+  /admin/v1/projects/{projectId}/idTokens:verify:
+    $ref: './paths/admin/tokens.yml#/idTokensVerify'
+  /admin/v1/projects/{projectId}/sessionCookies:
+    $ref: './paths/admin/tokens.yml#/sessionCookies'
+  /admin/v1/projects/{projectId}/sessionCookies:verify:
+    $ref: './paths/admin/tokens.yml#/sessionCookiesVerify'
+  # MFA Admin - Project Level
+  /admin/v1/projects/{projectId}/users/{pistachioId}/mfa/factors:
+    $ref: './paths/admin/mfa.yml#/projectUserMfaFactors'
+  /admin/v1/projects/{projectId}/users/{pistachioId}/mfa/factors/{factorId}:
+    $ref: './paths/admin/mfa.yml#/projectUserMfaFactorById'
+  # MFA Admin - Tenant Level
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}/mfa/factors:
+    $ref: './paths/admin/mfa.yml#/tenantUserMfaFactors'
+  /admin/v1/projects/{projectId}/tenants/{tenantId}/users/{pistachioId}/mfa/factors/{factorId}:
+    $ref: './paths/admin/mfa.yml#/tenantUserMfaFactorById'
+  # Usage and Quotas
+  /admin/v1/projects/{projectId}/usage:
+    $ref: './paths/admin/usage.yml#/usage'
+  /admin/v1/projects/{projectId}/quotas:
+    $ref: './paths/admin/usage.yml#/quotas'
 
 components:
   securitySchemes:

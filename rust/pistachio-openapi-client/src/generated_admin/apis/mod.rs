@@ -113,10 +113,15 @@ impl From<&str> for ContentType {
     }
 }
 
+pub mod api_keys_api;
 pub mod apps_api;
 pub mod auth_providers_api;
+pub mod mfa_api;
 pub mod projects_api;
+pub mod service_accounts_api;
 pub mod tenants_api;
+pub mod tokens_api;
+pub mod usage_api;
 pub mod users_api;
 
 pub mod configuration;

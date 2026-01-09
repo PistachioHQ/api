@@ -1,0 +1,248 @@
+# API Key schemas for Admin API
+
+# Full API key - only returned at creation and rotation time
+ApiKey:
+  type: object
+  description: |
+    An API key for authenticating client SDK requests.
+    API keys identify the project and app making requests.
+
+    IMPORTANT: The full `keyString` is only returned when creating or rotating a key.
+    For security, subsequent GET requests return only a masked prefix.
+  required:
+    - name
+    - keyId
+    - keyString
+    - createdAt
+  properties:
+    name:
+      type: string
+      description: |
+        Resource name in the format:
+        "projects/{project_id}/apps/{app_id}/apiKeys/{key_id}"
+      example: projects/my-project/apps/my-app/apiKeys/key-abc123
+    keyId:
+      type: string
+      description: Unique key identifier.
+      example: key-abc123
+    keyString:
+      type: string
+      description: |
+        The full API key string to use for authentication.
+        This is the value that should be passed in the `key` query parameter.
+        IMPORTANT: This is only returned once at creation/rotation time.
+        Store it securely as it cannot be retrieved again.
+      example: AIzaSyB3abc123def456ghi789jkl012mno345
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: Human-readable display name for the key.
+      maxLength: 256
+      example: Production API Key
+    restrictions:
+      $ref: '#/ApiKeyRestrictions'
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the key was created.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: Timestamp when the key was last updated.
+      example: "2024-01-20T14:45:00Z"
+
+# Masked API key info - returned for list and get operations
+ApiKeyInfo:
+  type: object
+  description: |
+    API key metadata with masked key value.
+    For security, the full key string is only available at creation time.
+  required:
+    - name
+    - keyId
+    - keyPrefix
+    - createdAt
+  properties:
+    name:
+      type: string
+      description: |
+        Resource name in the format:
+        "projects/{project_id}/apps/{app_id}/apiKeys/{key_id}"
+      example: projects/my-project/apps/my-app/apiKeys/key-abc123
+    keyId:
+      type: string
+      description: Unique key identifier.
+      example: key-abc123
+    keyPrefix:
+      type: string
+      description: |
+        Masked prefix of the API key for identification purposes.
+        The full key is only available at creation time.
+      example: AIzaSyB3...o345
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: Human-readable display name for the key.
+      maxLength: 256
+      example: Production API Key
+    restrictions:
+      $ref: '#/ApiKeyRestrictions'
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the key was created.
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: Timestamp when the key was last updated.
+      example: "2024-01-20T14:45:00Z"
+
+ApiKeyRestrictions:
+  type: object
+  description: Restrictions applied to an API key.
+  properties:
+    browserKeyRestrictions:
+      $ref: '#/BrowserKeyRestrictions'
+    serverKeyRestrictions:
+      $ref: '#/ServerKeyRestrictions'
+    androidKeyRestrictions:
+      $ref: '#/AndroidKeyRestrictions'
+    iosKeyRestrictions:
+      $ref: '#/IosKeyRestrictions'
+
+BrowserKeyRestrictions:
+  type: object
+  description: Restrictions for browser API keys.
+  properties:
+    allowedReferrers:
+      type: array
+      description: |
+        List of allowed HTTP referrer patterns.
+        Supports wildcards: *.example.com
+      items:
+        type: string
+      example:
+        - "https://example.com/*"
+        - "https://*.example.com/*"
+
+ServerKeyRestrictions:
+  type: object
+  description: Restrictions for server API keys.
+  properties:
+    allowedIps:
+      type: array
+      description: |
+        List of allowed IP addresses or CIDR ranges.
+      items:
+        type: string
+      example:
+        - "192.168.1.0/24"
+        - "10.0.0.1"
+
+AndroidKeyRestrictions:
+  type: object
+  description: Restrictions for Android API keys.
+  properties:
+    allowedApplications:
+      type: array
+      description: List of allowed Android applications.
+      items:
+        $ref: '#/AndroidApplication'
+
+AndroidApplication:
+  type: object
+  description: An Android application identified by package name and SHA-256 fingerprint.
+  properties:
+    packageName:
+      type: string
+      description: The Android package name.
+      example: com.example.myapp
+    sha256CertFingerprint:
+      type: string
+      description: SHA-256 fingerprint of the signing certificate.
+      example: "AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90:AB:CD:EF:12:34:56:78:90"
+
+IosKeyRestrictions:
+  type: object
+  description: Restrictions for iOS API keys.
+  properties:
+    allowedBundleIds:
+      type: array
+      description: List of allowed iOS bundle identifiers.
+      items:
+        type: string
+      example:
+        - "com.example.myapp"
+        - "com.example.myapp.dev"
+
+# Request/Response schemas
+
+ListApiKeysResponse:
+  type: object
+  description: |
+    Response containing a list of API keys.
+    For security, only masked key prefixes are returned.
+    Full key strings are only available at creation time.
+  properties:
+    apiKeys:
+      type: array
+      description: The list of API keys with masked key values.
+      items:
+        $ref: '#/ApiKeyInfo'
+    pagination:
+      $ref: '../../schemas/common.yml#/Pagination'
+
+GetApiKeyResponse:
+  type: object
+  description: |
+    Response containing the requested API key metadata.
+    For security, only the masked key prefix is returned.
+    The full key string is only available at creation time.
+  properties:
+    apiKey:
+      $ref: '#/ApiKeyInfo'
+
+CreateApiKeyRequest:
+  type: object
+  description: Request body for creating an API key.
+  properties:
+    displayName:
+      type: string
+      description: Human-readable display name for the key.
+      maxLength: 256
+      example: Production API Key
+    restrictions:
+      $ref: '#/ApiKeyRestrictions'
+
+CreateApiKeyResponse:
+  type: object
+  description: |
+    Response containing the newly created API key.
+    IMPORTANT: The full `keyString` is only returned in this response.
+    Store it securely as it cannot be retrieved again.
+  properties:
+    apiKey:
+      $ref: '#/ApiKey'
+
+RotateApiKeyResponse:
+  type: object
+  description: |
+    Response containing the rotated API key.
+    IMPORTANT: The new keyString is only returned once and cannot be retrieved again.
+  properties:
+    apiKey:
+      $ref: '#/ApiKey'
+    previousKeyString:
+      type: string
+      description: |
+        The previous key string. This key will remain valid for a grace period
+        (typically 24 hours) to allow for key rotation without downtime.
+      example: AIzaSyB3old123def456ghi789jkl012mno345

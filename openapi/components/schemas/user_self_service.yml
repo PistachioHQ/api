@@ -1,0 +1,242 @@
+# User Self-Service schemas for Public API
+
+CurrentUser:
+  type: object
+  description: The current authenticated user's profile.
+  required:
+    - pistachioId
+    - emailVerified
+    - disabled
+    - createdAt
+  properties:
+    pistachioId:
+      type: string
+      description: The user's unique identifier.
+      pattern: '^[a-fA-F0-9]{30}00$'
+      example: a1b2c3d4e5f6789012345678901234500
+    tenantId:
+      type:
+        - string
+        - 'null'
+      description: Tenant ID if the user belongs to a tenant.
+      example: my-tenant
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: The user's email address.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the email address has been verified.
+      example: true
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: The user's phone number in E.164 format.
+      example: "+14155551234"
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: The user's display name.
+      maxLength: 256
+      example: John Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: URL to the user's profile photo.
+      example: "https://example.com/photo.jpg"
+    disabled:
+      type: boolean
+      description: Whether the account is disabled.
+      example: false
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2024-01-15T10:30:00Z"
+    lastSignInAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: When the user last signed in.
+      example: "2024-01-20T14:45:00Z"
+    providers:
+      type: array
+      description: Linked authentication providers.
+      items:
+        $ref: '#/LinkedProvider'
+
+LinkedProvider:
+  type: object
+  description: An authentication provider linked to the user's account.
+  properties:
+    providerId:
+      type: string
+      description: The provider identifier.
+      example: google.com
+    providerType:
+      type: string
+      enum:
+        - PDPKA
+        - OAUTH
+        - OIDC
+        - ANONYMOUS
+      description: The type of provider.
+      example: OAUTH
+    federatedId:
+      type: string
+      description: The user's ID with this provider.
+      example: "1234567890"
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: Email from this provider.
+      example: user@gmail.com
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: Display name from this provider.
+      example: John Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: Photo URL from this provider.
+      example: "https://lh3.googleusercontent.com/..."
+
+Session:
+  type: object
+  description: An active user session.
+  properties:
+    sessionId:
+      type: string
+      description: Unique session identifier.
+      example: session-abc123
+    userAgent:
+      type:
+        - string
+        - 'null'
+      description: User agent string from the session.
+      example: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    ipAddress:
+      type:
+        - string
+        - 'null'
+      description: IP address of the session.
+      example: "192.168.1.100"
+    createdAt:
+      type: string
+      format: date-time
+      description: When the session was created.
+      example: "2024-01-15T10:30:00Z"
+    lastActiveAt:
+      type: string
+      format: date-time
+      description: When the session was last active.
+      example: "2024-01-20T14:45:00Z"
+    current:
+      type: boolean
+      description: Whether this is the current session.
+      example: true
+
+# Request/Response schemas
+
+GetCurrentUserResponse:
+  type: object
+  description: Response containing the current user's profile.
+  properties:
+    user:
+      $ref: '#/CurrentUser'
+
+UpdateCurrentUserRequest:
+  type: object
+  description: |
+    Request body for updating the current user's profile.
+    Only provided fields are updated.
+  properties:
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: New display name. Set to null to clear.
+      maxLength: 256
+      example: Jane Doe
+    photoUrl:
+      type:
+        - string
+        - 'null'
+      format: uri
+      description: New photo URL. Set to null to clear.
+      example: "https://example.com/newphoto.jpg"
+
+UpdateCurrentUserResponse:
+  type: object
+  description: Response containing the updated user profile.
+  properties:
+    user:
+      $ref: '#/CurrentUser'
+
+ListSessionsResponse:
+  type: object
+  description: Response containing the user's active sessions.
+  properties:
+    sessions:
+      type: array
+      items:
+        $ref: '#/Session'
+
+ListLinkedProvidersResponse:
+  type: object
+  description: Response containing the user's linked providers.
+  properties:
+    providers:
+      type: array
+      items:
+        $ref: '#/LinkedProvider'
+
+LinkProviderRequest:
+  type: object
+  description: Request body for linking an authentication provider.
+  required:
+    - providerId
+  properties:
+    providerId:
+      type: string
+      description: |
+        The provider ID to link.
+        For OAuth providers: google, facebook, github, etc.
+        For OIDC providers: the custom provider ID.
+      example: google
+    idToken:
+      type: string
+      description: |
+        ID token from the provider to link.
+        Used for OAuth/OIDC providers.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    accessToken:
+      type: string
+      description: |
+        Access token from the provider.
+        Used for some OAuth providers.
+      example: ya29.abc123...
+
+LinkProviderResponse:
+  type: object
+  description: Response after linking a provider.
+  properties:
+    provider:
+      $ref: '#/LinkedProvider'
+    user:
+      $ref: '#/CurrentUser'

@@ -1,0 +1,200 @@
+# Usage and Quotas Endpoints
+
+# =============================================================================
+# Usage Statistics
+# =============================================================================
+
+usage:
+  get:
+    operationId: getProjectUsage
+    summary: Get project usage statistics
+    description: |
+      Retrieves usage statistics for a project.
+      Includes active user counts, authentication events, and API call metrics.
+    tags:
+      - Usage
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: startTime
+        in: query
+        description: Start time for the usage period (ISO 8601 format). Defaults to start of current month.
+        required: false
+        schema:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+      - name: endTime
+        in: query
+        description: End time for the usage period (ISO 8601 format). Defaults to current time.
+        required: false
+        schema:
+          type: string
+          format: date-time
+          example: "2024-01-31T23:59:59Z"
+    responses:
+      '200':
+        description: Project usage statistics
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/usage.yml#/GetUsageResponse'
+      '400':
+        description: Invalid projectId or time range
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Quotas Management
+# =============================================================================
+
+quotas:
+  get:
+    operationId: getProjectQuotas
+    summary: Get project quotas
+    description: |
+      Retrieves the current quotas and usage for a project.
+      Shows limits for users, service accounts, tenants, apps, and API rate limits.
+    tags:
+      - Usage
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    responses:
+      '200':
+        description: Project quotas
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/usage.yml#/GetQuotasResponse'
+      '400':
+        description: Invalid projectId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+  patch:
+    operationId: updateProjectQuotas
+    summary: Update project quotas
+    description: |
+      Updates quotas for a project.
+      Only provided fields are updated; omitted fields retain their current values.
+      Note: Quota increases may require additional billing arrangements.
+    tags:
+      - Usage
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Quota update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/usage.yml#/UpdateQuotasRequest'
+    responses:
+      '200':
+        description: Quotas updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/usage.yml#/UpdateQuotasResponse'
+      '400':
+        description: Invalid projectId or quota values
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied or quota increase not allowed
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

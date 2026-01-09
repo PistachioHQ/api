@@ -1,0 +1,74 @@
+# MFA schemas for Admin API
+
+MfaFactor:
+  type: object
+  description: |
+    A multi-factor authentication factor enrolled by a user.
+    Factors can be TOTP (time-based one-time password), SMS, or email.
+  required:
+    - factorId
+    - factorType
+    - createdAt
+  properties:
+    factorId:
+      type: string
+      description: Unique factor identifier.
+      example: factor-abc123
+    factorType:
+      type: string
+      description: The type of MFA factor.
+      enum:
+        - TOTP
+        - SMS
+        - EMAIL
+      example: TOTP
+    displayName:
+      type:
+        - string
+        - 'null'
+      description: User-provided name for the factor.
+      maxLength: 256
+      example: My Authenticator App
+    phoneNumber:
+      type:
+        - string
+        - 'null'
+      pattern: '^\+[1-9]\d{1,14}$'
+      description: Phone number for SMS factor (E.164 format).
+      example: "+14155551234"
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: Email address for email factor.
+      example: user@example.com
+    verified:
+      type: boolean
+      description: Whether the factor has been verified.
+      default: false
+      example: true
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the factor was enrolled.
+      example: "2024-01-15T10:30:00Z"
+    lastUsedAt:
+      type:
+        - string
+        - 'null'
+      format: date-time
+      description: Timestamp when the factor was last used.
+      example: "2024-01-20T14:45:00Z"
+
+# Request/Response schemas
+
+ListMfaFactorsResponse:
+  type: object
+  description: Response containing a user's MFA factors.
+  properties:
+    factors:
+      type: array
+      description: The list of enrolled MFA factors.
+      items:
+        $ref: '#/MfaFactor'

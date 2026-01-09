@@ -62,6 +62,10 @@ PaginationParams:
         - field: created_at
           direction: DESC
 
+# Alias for PaginationMeta (for backward compatibility)
+Pagination:
+  $ref: '#/PaginationMeta'
+
 PaginationMeta:
   type: object
   description: Pagination metadata for list and search responses.

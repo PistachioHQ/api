@@ -1,0 +1,281 @@
+# Token and Session Management Endpoints
+
+# =============================================================================
+# Custom Token Generation
+# =============================================================================
+
+customTokens:
+  post:
+    operationId: createCustomToken
+    summary: Create a custom token
+    description: |
+      Creates a custom token for server-side user authentication.
+      Custom tokens allow your server to authenticate users when you
+      manage your own user database or integrate with external identity providers.
+
+      The custom token can be exchanged for an ID token using the
+      public API's token exchange endpoint.
+    tags:
+      - Tokens
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Custom token creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/token.yml#/CreateCustomTokenRequest'
+    responses:
+      '200':
+        description: Custom token created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/token.yml#/CreateCustomTokenResponse'
+      '400':
+        description: Invalid request parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# ID Token Verification
+# =============================================================================
+
+idTokensVerify:
+  post:
+    operationId: verifyIdToken
+    summary: Verify an ID token
+    description: |
+      Verifies an ID token and returns the decoded claims.
+      Use this to validate tokens in your server-side code.
+
+      The checkRevoked parameter adds an additional backend check to verify
+      the user's session has not been revoked. This increases latency but
+      provides stronger security guarantees.
+    tags:
+      - Tokens
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Token verification parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/token.yml#/VerifyIdTokenRequest'
+    responses:
+      '200':
+        description: Token verification result
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/token.yml#/VerifyIdTokenResponse'
+      '400':
+        description: Invalid token format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials, or token is invalid/expired
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Session Cookie Management
+# =============================================================================
+
+sessionCookies:
+  post:
+    operationId: createSessionCookie
+    summary: Create a session cookie
+    description: |
+      Creates a long-lived session cookie from an ID token.
+      Session cookies are designed for traditional web applications
+      that use HTTP cookies for authentication.
+
+      The session cookie should be set as an HTTP-only, secure cookie
+      to prevent XSS attacks.
+    tags:
+      - Tokens
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Session cookie creation parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/token.yml#/CreateSessionCookieRequest'
+    responses:
+      '200':
+        description: Session cookie created
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/token.yml#/CreateSessionCookieResponse'
+      '400':
+        description: Invalid ID token or parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials, or ID token is invalid/expired
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+sessionCookiesVerify:
+  post:
+    operationId: verifySessionCookie
+    summary: Verify a session cookie
+    description: |
+      Verifies a session cookie and returns the decoded claims.
+      Use this in your server-side code to validate session cookies.
+
+      The checkRevoked parameter adds an additional backend check to verify
+      the user's session has not been revoked. This increases latency but
+      provides stronger security guarantees.
+    tags:
+      - Tokens
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+    requestBody:
+      description: Session cookie verification parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/token.yml#/VerifySessionCookieRequest'
+    responses:
+      '200':
+        description: Session cookie verification result
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/token.yml#/VerifySessionCookieResponse'
+      '400':
+        description: Invalid session cookie format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials, or session cookie is invalid/expired
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'

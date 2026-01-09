@@ -393,6 +393,78 @@ projectUsersImport:
       '503':
         $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
+projectUsersLookup:
+  get:
+    operationId: lookupProjectUser
+    summary: Lookup a project user by identifier
+    description: |
+      Looks up a user within a project by email or phone number.
+      Returns the user if found, or 404 if no user matches.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: email
+        in: query
+        description: The email address to look up
+        required: false
+        schema:
+          type: string
+          format: email
+          example: user@example.com
+      - name: phoneNumber
+        in: query
+        description: The phone number to look up (E.164 format)
+        required: false
+        schema:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+14155551234"
+    responses:
+      '200':
+        description: User found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid query parameters or must provide email or phoneNumber
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
 projectUsersSearch:
   get:
     operationId: searchProjectUsers
@@ -536,6 +608,152 @@ projectUsersSearch:
               $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Project-Level User Actions
+# =============================================================================
+
+projectUserRevokeTokens:
+  post:
+    operationId: revokeProjectUserTokens
+    summary: Revoke all tokens for a project user
+    description: |
+      Revokes all refresh tokens and sessions for a project-level user.
+      The user will be required to re-authenticate on their next request.
+
+      **Important**: Active ID tokens remain valid until they expire (typically 1 hour).
+      For immediate invalidation in security-critical scenarios, consider:
+
+      1. **Short token lifetimes**: Configure shorter ID token expiration in project settings
+      2. **Check `auth_time` claim**: Reject tokens issued before revocation by comparing
+         the `auth_time` claim against the revocation timestamp
+      3. **Disable the user**: Set `disabled: true` via updateUser to block all API access
+         immediately, regardless of token validity
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '204':
+        description: Tokens revoked successfully
+      '400':
+        description: Invalid projectId or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+projectUserCustomClaims:
+  patch:
+    operationId: setProjectUserCustomClaims
+    summary: Set custom claims for a project user
+    description: |
+      Sets custom claims for a project-level user.
+      Custom claims are included in the user's ID tokens and can be used
+      for application-specific authorization.
+
+      Note: Custom claims are limited to 1000 bytes when JSON-encoded.
+      Setting custom claims to null or an empty object clears all claims.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    requestBody:
+      description: Custom claims to set
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/SetCustomClaimsRequest'
+    responses:
+      '200':
+        description: Custom claims updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid projectId, pistachioId, or claims exceed size limit
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project or user not found
         content:
           application/json:
             schema:
@@ -1145,6 +1363,252 @@ tenantUsersSearch:
               $ref: '../../components/schemas/error.yml#/ProblemDetails'
       '404':
         description: Project or tenant not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Tenant-Level User Lookup
+# =============================================================================
+
+tenantUsersLookup:
+  get:
+    operationId: lookupTenantUser
+    summary: Lookup a tenant user by identifier
+    description: |
+      Looks up a user within a tenant by email or phone number.
+      Returns the user if found, or 404 if no user matches.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID to search users in
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: email
+        in: query
+        description: The email address to look up
+        required: false
+        schema:
+          type: string
+          format: email
+          example: user@example.com
+      - name: phoneNumber
+        in: query
+        description: The phone number to look up (E.164 format)
+        required: false
+        schema:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          example: "+14155551234"
+    responses:
+      '200':
+        description: User found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid query parameters or must provide email or phoneNumber
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+# =============================================================================
+# Tenant-Level User Actions
+# =============================================================================
+
+tenantUserRevokeTokens:
+  post:
+    operationId: revokeTenantUserTokens
+    summary: Revoke all tokens for a tenant user
+    description: |
+      Revokes all refresh tokens and sessions for a tenant-level user.
+      The user will be required to re-authenticate on their next request.
+
+      **Important**: Active ID tokens remain valid until they expire (typically 1 hour).
+      For immediate invalidation in security-critical scenarios, consider:
+
+      1. **Short token lifetimes**: Configure shorter ID token expiration in project settings
+      2. **Check `auth_time` claim**: Reject tokens issued before revocation by comparing
+         the `auth_time` claim against the revocation timestamp
+      3. **Disable the user**: Set `disabled: true` via updateUser to block all API access
+         immediately, regardless of token validity
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    responses:
+      '204':
+        description: Tokens revoked successfully
+      '400':
+        description: Invalid projectId, tenantId, or pistachioId format
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
+tenantUserCustomClaims:
+  patch:
+    operationId: setTenantUserCustomClaims
+    summary: Set custom claims for a tenant user
+    description: |
+      Sets custom claims for a tenant-level user.
+      Custom claims are included in the user's ID tokens and can be used
+      for application-specific authorization.
+
+      Note: Custom claims are limited to 1000 bytes when JSON-encoded.
+      Setting custom claims to null or an empty object clears all claims.
+    tags:
+      - Users
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the tenant
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: tenantId
+        in: path
+        description: The tenant ID that owns the user
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-zA-Z0-9_]+$'
+          maxLength: 128
+      - name: pistachioId
+        in: path
+        description: The user's pistachio_id (32 hex characters ending in '00')
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-fA-F0-9]{30}00$'
+    requestBody:
+      description: Custom claims to set
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/user.yml#/SetCustomClaimsRequest'
+    responses:
+      '200':
+        description: Custom claims updated
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/user.yml#/GetUserResponse'
+      '400':
+        description: Invalid projectId, tenantId, pistachioId, or claims exceed size limit
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, tenant, or user not found
         content:
           application/json:
             schema:

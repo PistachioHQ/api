@@ -528,3 +528,36 @@ SearchUsersResponse:
         $ref: '#/User'
     pagination:
       $ref: '../common.yml#/PaginationMeta'
+
+# =============================================================================
+# Request/Response Messages - Set Custom Claims
+# =============================================================================
+
+SetCustomClaimsRequest:
+  type: object
+  description: |
+    Request body for setting custom claims on a user.
+    Custom claims are included in the user's ID token and can be used
+    for application-specific authorization.
+  properties:
+    customClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: |
+        Custom claims to set on the user.
+        Maximum size: 1000 bytes when JSON-encoded.
+        Set to null or {} to clear all custom claims.
+      example:
+        role: admin
+        tier: premium
+        permissions:
+          - read
+          - write
+  required:
+    - customClaims
+  example:
+    customClaims:
+      role: admin
+      tier: premium

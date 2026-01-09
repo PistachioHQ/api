@@ -17,7 +17,11 @@ tags:
   - name: Health
     description: Service health checks
   - name: Auth
-    description: Authentication validation endpoints
+    description: Authentication and authorization endpoints
+  - name: MFA
+    description: Multi-factor authentication endpoints
+  - name: User
+    description: User self-service endpoints
 
 paths:
   /health:
@@ -28,6 +32,54 @@ paths:
     $ref: './paths/auth.yml#/validate-token'
   /auth/validate-service-account:
     $ref: './paths/auth.yml#/validate-service-account'
+  # Auth Operations
+  /auth/signout:
+    $ref: './paths/auth.yml#/signout'
+  /auth/token/refresh:
+    $ref: './paths/auth.yml#/token-refresh'
+  /auth/token/exchange:
+    $ref: './paths/auth.yml#/token-exchange'
+  # Email Verification
+  /auth/email/verify:
+    $ref: './paths/auth.yml#/email-verify'
+  /auth/email/confirm:
+    $ref: './paths/auth.yml#/email-confirm'
+  # Anonymous Auth
+  /auth/anonymous:
+    $ref: './paths/auth.yml#/anonymous'
+  # OAuth
+  /auth/oauth/{provider}/authorize:
+    $ref: './paths/auth.yml#/oauth-authorize'
+  /auth/oauth/{provider}/callback:
+    $ref: './paths/auth.yml#/oauth-callback'
+  # OIDC
+  /auth/oidc/{providerId}/authorize:
+    $ref: './paths/auth.yml#/oidc-authorize'
+  /auth/oidc/{providerId}/callback:
+    $ref: './paths/auth.yml#/oidc-callback'
+  # Auth Providers
+  /auth/providers:
+    $ref: './paths/auth.yml#/providers'
+  # MFA
+  /auth/mfa/factors:
+    $ref: './paths/auth.yml#/mfa-factors'
+  /auth/mfa/factors/{factorId}:
+    $ref: './paths/auth.yml#/mfa-factor-by-id'
+  /auth/mfa/factors/{factorId}/verify:
+    $ref: './paths/auth.yml#/mfa-factor-verify'
+  /auth/mfa/factors/{factorId}/challenge:
+    $ref: './paths/auth.yml#/mfa-factor-challenge'
+  # User Self-Service
+  /user/me:
+    $ref: './paths/user.yml#/me'
+  /user/me/sessions:
+    $ref: './paths/user.yml#/me-sessions'
+  /user/me/sessions/{sessionId}:
+    $ref: './paths/user.yml#/me-session-by-id'
+  /user/me/providers:
+    $ref: './paths/user.yml#/me-providers'
+  /user/me/providers/{provider}:
+    $ref: './paths/user.yml#/me-provider-by-id'
 
 components:
   securitySchemes:

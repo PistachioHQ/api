@@ -1,0 +1,220 @@
+# Token and Session schemas for Admin API
+
+# =============================================================================
+# Custom Token
+# =============================================================================
+
+CreateCustomTokenRequest:
+  type: object
+  description: |
+    Request body for creating a custom token.
+    Custom tokens allow server-side authentication of users when you
+    manage your own user database or need to integrate with external
+    identity providers.
+  required:
+    - pistachioId
+  properties:
+    pistachioId:
+      type: string
+      description: |
+        The pistachio_id of the user to create the token for.
+        Must be a valid user within the project.
+      pattern: '^[a-fA-F0-9]{30}00$'
+      example: a1b2c3d4e5f6789012345678901234500
+    tenantId:
+      type:
+        - string
+        - 'null'
+      description: |
+        Optional tenant ID if the user belongs to a tenant.
+        Required for multi-tenant projects.
+      example: my-tenant
+    additionalClaims:
+      type:
+        - object
+        - 'null'
+      additionalProperties: true
+      description: |
+        Optional additional claims to include in the custom token.
+        These claims will be merged with the user's existing custom claims.
+        Reserved claim names (iss, sub, aud, exp, iat, nbf) cannot be overwritten.
+      example:
+        premiumAccount: true
+        subscriptionTier: enterprise
+    expiresIn:
+      type: integer
+      format: int32
+      description: |
+        Token validity duration in seconds.
+        Default is 3600 (1 hour). Maximum is 86400 (24 hours).
+      minimum: 60
+      maximum: 86400
+      default: 3600
+      example: 3600
+
+CreateCustomTokenResponse:
+  type: object
+  description: Response containing the created custom token.
+  properties:
+    customToken:
+      type: string
+      description: |
+        The custom token (JWT) that can be used to sign in the user.
+        Exchange this token for an ID token using the token exchange endpoint.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# =============================================================================
+# ID Token Verification
+# =============================================================================
+
+VerifyIdTokenRequest:
+  type: object
+  description: Request body for verifying an ID token.
+  required:
+    - idToken
+  properties:
+    idToken:
+      type: string
+      description: The ID token to verify.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    checkRevoked:
+      type: boolean
+      description: |
+        Whether to check if the token has been revoked.
+        This adds a backend check and increases latency.
+      default: false
+      example: true
+
+VerifyIdTokenResponse:
+  type: object
+  description: Response containing the decoded and verified token claims.
+  properties:
+    valid:
+      type: boolean
+      description: Whether the token is valid.
+      example: true
+    pistachioId:
+      type: string
+      description: The user's pistachio_id.
+      pattern: '^[a-fA-F0-9]{30}00$'
+      example: a1b2c3d4e5f6789012345678901234500
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: The user's email address.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the user's email has been verified.
+      example: true
+    claims:
+      type: object
+      additionalProperties: true
+      description: All claims from the token.
+      example:
+        iss: https://pistachiohq.com/my-project
+        sub: a1b2c3d4e5f6789012345678901234500
+        aud: my-project
+        exp: 1704067200
+        iat: 1704063600
+        role: admin
+
+# =============================================================================
+# Session Cookies
+# =============================================================================
+
+CreateSessionCookieRequest:
+  type: object
+  description: |
+    Request body for creating a session cookie.
+    Session cookies provide long-lived authentication for web applications.
+  required:
+    - idToken
+  properties:
+    idToken:
+      type: string
+      description: |
+        The ID token to exchange for a session cookie.
+        Must be a valid, non-expired ID token.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    expiresIn:
+      type: integer
+      format: int64
+      description: |
+        Session duration in seconds.
+        Minimum is 300 (5 minutes). Maximum is 1209600 (14 days).
+      minimum: 300
+      maximum: 1209600
+      default: 604800
+      example: 604800
+
+CreateSessionCookieResponse:
+  type: object
+  description: Response containing the created session cookie.
+  properties:
+    sessionCookie:
+      type: string
+      description: |
+        The session cookie value.
+        Set this as an HTTP-only, secure cookie in your web application.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    expiresAt:
+      type: string
+      format: date-time
+      description: When the session cookie expires.
+      example: "2024-01-22T10:30:00Z"
+
+VerifySessionCookieRequest:
+  type: object
+  description: Request body for verifying a session cookie.
+  required:
+    - sessionCookie
+  properties:
+    sessionCookie:
+      type: string
+      description: The session cookie to verify.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    checkRevoked:
+      type: boolean
+      description: |
+        Whether to check if the session has been revoked.
+        This adds a backend check and increases latency.
+      default: false
+      example: true
+
+VerifySessionCookieResponse:
+  type: object
+  description: Response containing the decoded and verified session claims.
+  properties:
+    valid:
+      type: boolean
+      description: Whether the session cookie is valid.
+      example: true
+    pistachioId:
+      type: string
+      description: The user's pistachio_id.
+      pattern: '^[a-fA-F0-9]{30}00$'
+      example: a1b2c3d4e5f6789012345678901234500
+    email:
+      type:
+        - string
+        - 'null'
+      format: email
+      description: The user's email address.
+      example: user@example.com
+    emailVerified:
+      type: boolean
+      description: Whether the user's email has been verified.
+      example: true
+    claims:
+      type: object
+      additionalProperties: true
+      description: All claims from the session cookie.
+      example:
+        iss: https://pistachiohq.com/my-project
+        sub: a1b2c3d4e5f6789012345678901234500
+        aud: my-project
+        exp: 1704672000
+        iat: 1704063600
