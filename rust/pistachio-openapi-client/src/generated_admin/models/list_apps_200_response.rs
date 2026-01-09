@@ -18,7 +18,7 @@ pub struct ListApps200Response {
     #[serde(rename = "apps", skip_serializing_if = "Option::is_none")]
     pub apps: Option<Vec<models::ListApps200ResponseAppsInner>>,
     #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
-    pub pagination: Option<Box<models::ListProjects200ResponsePagination>>,
+    pub pagination: Option<Box<models::ListTenants200ResponsePagination>>,
 }
 
 impl ListApps200Response {

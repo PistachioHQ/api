@@ -18,7 +18,7 @@ pub struct ListApiKeys200Response {
     #[serde(rename = "apiKeys", skip_serializing_if = "Option::is_none")]
     pub api_keys: Option<Vec<models::ListApiKeys200ResponseApiKeysInner>>,
     #[serde(rename = "pagination", skip_serializing_if = "Option::is_none")]
-    pub pagination: Option<Box<models::ListProjects200ResponsePagination>>,
+    pub pagination: Option<Box<models::ListTenants200ResponsePagination>>,
 }
 
 impl ListApiKeys200Response {

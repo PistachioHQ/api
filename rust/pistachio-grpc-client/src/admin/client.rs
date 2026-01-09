@@ -1,3 +1,10 @@
+use pistachio_api_common::admin::api_key::{
+    CreateApiKeyError, CreateApiKeyRequest, CreateApiKeyResponse, DeleteApiKeyError,
+    DeleteApiKeyRequest, DeleteApiKeyResponse, GetApiKeyError, GetApiKeyRequest, GetApiKeyResponse,
+    ListApiKeysError, ListApiKeysRequest, ListApiKeysResponse, RotateApiKeyError,
+    RotateApiKeyRequest, RotateApiKeyResponse, UpdateApiKeyError, UpdateApiKeyRequest,
+    UpdateApiKeyResponse,
+};
 use pistachio_api_common::admin::app::{
     CreateAppError, CreateAppRequest, CreateAppResponse, DeleteAppError, DeleteAppRequest,
     DeleteAppResponse, GetAppConfigError, GetAppConfigRequest, GetAppConfigResponse, GetAppError,
@@ -19,6 +26,14 @@ use pistachio_api_common::admin::auth_provider::{
     UpdateTenantAuthProviderRequest, UpdateTenantAuthProviderResponse,
 };
 use pistachio_api_common::admin::client::PistachioAdminClient;
+use pistachio_api_common::admin::mfa::{
+    DeleteProjectUserMfaFactorError, DeleteProjectUserMfaFactorRequest,
+    DeleteProjectUserMfaFactorResponse, DeleteTenantUserMfaFactorError,
+    DeleteTenantUserMfaFactorRequest, DeleteTenantUserMfaFactorResponse,
+    ListProjectUserMfaFactorsError, ListProjectUserMfaFactorsRequest,
+    ListProjectUserMfaFactorsResponse, ListTenantUserMfaFactorsError,
+    ListTenantUserMfaFactorsRequest, ListTenantUserMfaFactorsResponse,
+};
 use pistachio_api_common::admin::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
@@ -27,12 +42,39 @@ use pistachio_api_common::admin::project::{
     SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
     UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
+use pistachio_api_common::admin::service_account::{
+    CreateServiceAccountError, CreateServiceAccountRequest, CreateServiceAccountResponse,
+    DeleteServiceAccountError, DeleteServiceAccountKeyError, DeleteServiceAccountKeyRequest,
+    DeleteServiceAccountKeyResponse, DeleteServiceAccountRequest, DeleteServiceAccountResponse,
+    DisableServiceAccountKeyError, DisableServiceAccountKeyRequest,
+    DisableServiceAccountKeyResponse, EnableServiceAccountKeyError, EnableServiceAccountKeyRequest,
+    EnableServiceAccountKeyResponse, GenerateServiceAccountKeyError,
+    GenerateServiceAccountKeyRequest, GenerateServiceAccountKeyResponse, GetServiceAccountError,
+    GetServiceAccountKeyError, GetServiceAccountKeyRequest, GetServiceAccountKeyResponse,
+    GetServiceAccountRequest, GetServiceAccountResponse, ListServiceAccountKeysError,
+    ListServiceAccountKeysRequest, ListServiceAccountKeysResponse, ListServiceAccountsError,
+    ListServiceAccountsRequest, ListServiceAccountsResponse, SearchServiceAccountsError,
+    SearchServiceAccountsRequest, SearchServiceAccountsResponse, UpdateServiceAccountError,
+    UpdateServiceAccountRequest, UpdateServiceAccountResponse,
+};
 use pistachio_api_common::admin::tenant::{
     CreateTenantError, CreateTenantRequest, CreateTenantResponse, DeleteTenantError,
     DeleteTenantRequest, DeleteTenantResponse, GetTenantError, GetTenantRequest, GetTenantResponse,
     ListTenantsError, ListTenantsRequest, ListTenantsResponse, SearchTenantsError,
     SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
     UpdateTenantResponse,
+};
+use pistachio_api_common::admin::token::{
+    CreateCustomTokenError, CreateCustomTokenRequest, CreateCustomTokenResponse,
+    CreateSessionCookieError, CreateSessionCookieRequest, CreateSessionCookieResponse,
+    RevokeRefreshTokensError, RevokeRefreshTokensRequest, RevokeRefreshTokensResponse,
+    VerifyIdTokenError, VerifyIdTokenRequest, VerifyIdTokenResponse, VerifySessionCookieError,
+    VerifySessionCookieRequest, VerifySessionCookieResponse,
+};
+use pistachio_api_common::admin::usage::{
+    GetProjectQuotasError, GetProjectQuotasRequest, GetProjectQuotasResponse, GetProjectUsageError,
+    GetProjectUsageRequest, GetProjectUsageResponse, UpdateProjectQuotasError,
+    UpdateProjectQuotasRequest, UpdateProjectQuotasResponse,
 };
 use pistachio_api_common::admin::user::{
     CreateProjectUserError, CreateProjectUserRequest, CreateProjectUserResponse,
@@ -60,6 +102,10 @@ use tracing::{debug, error, info, instrument, warn};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient as GrpcPistachioAdminClient;
 
+use super::api_key::{
+    handle_create_api_key, handle_delete_api_key, handle_get_api_key, handle_list_api_keys,
+    handle_rotate_api_key, handle_update_api_key,
+};
 use super::create_app::handle_create_app;
 use super::create_project::handle_create_project;
 use super::create_project_user::handle_create_project_user;
@@ -90,11 +136,26 @@ use super::list_projects::handle_list_projects;
 use super::list_tenant_auth_providers::handle_list_tenant_auth_providers;
 use super::list_tenant_users::handle_list_tenant_users;
 use super::list_tenants::handle_list_tenants;
+use super::mfa::{
+    handle_delete_project_user_mfa_factor, handle_delete_tenant_user_mfa_factor,
+    handle_list_project_user_mfa_factors, handle_list_tenant_user_mfa_factors,
+};
 use super::search_apps::handle_search_apps;
 use super::search_project_users::handle_search_project_users;
 use super::search_projects::handle_search_projects;
 use super::search_tenant_users::handle_search_tenant_users;
 use super::search_tenants::handle_search_tenants;
+use super::service_account::{
+    handle_create_service_account, handle_delete_service_account,
+    handle_delete_service_account_key, handle_disable_service_account_key,
+    handle_enable_service_account_key, handle_generate_service_account_key,
+    handle_get_service_account, handle_get_service_account_key, handle_list_service_account_keys,
+    handle_list_service_accounts, handle_search_service_accounts, handle_update_service_account,
+};
+use super::token::{
+    handle_create_custom_token, handle_create_session_cookie, handle_revoke_refresh_tokens,
+    handle_verify_id_token, handle_verify_session_cookie,
+};
 use super::undelete_app::handle_undelete_app;
 use super::undelete_project::handle_undelete_project;
 use super::update_app::handle_update_app;
@@ -104,6 +165,9 @@ use super::update_project_user::handle_update_project_user;
 use super::update_tenant::handle_update_tenant;
 use super::update_tenant_auth_provider::handle_update_tenant_auth_provider;
 use super::update_tenant_user::handle_update_tenant_user;
+use super::usage::{
+    handle_get_project_quotas, handle_get_project_usage, handle_update_project_quotas,
+};
 
 /// Interceptor that adds admin credentials to requests.
 #[derive(Debug, Clone)]
@@ -1092,6 +1156,596 @@ impl PistachioAdminClient for AdminClient {
             None => {
                 warn!("Attempted search_tenant_users with unconnected client");
                 Err(SearchTenantUsersError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // Service Account Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_service_account(
+        &mut self,
+        req: CreateServiceAccountRequest,
+    ) -> Result<CreateServiceAccountResponse, CreateServiceAccountError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_service_account");
+                handle_create_service_account(client, req).await
+            }
+            None => {
+                warn!("Attempted create_service_account with unconnected client");
+                Err(CreateServiceAccountError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_service_account(
+        &mut self,
+        req: GetServiceAccountRequest,
+    ) -> Result<GetServiceAccountResponse, GetServiceAccountError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_service_account");
+                handle_get_service_account(client, req).await
+            }
+            None => {
+                warn!("Attempted get_service_account with unconnected client");
+                Err(GetServiceAccountError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_service_account(
+        &mut self,
+        req: UpdateServiceAccountRequest,
+    ) -> Result<UpdateServiceAccountResponse, UpdateServiceAccountError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_service_account");
+                handle_update_service_account(client, req).await
+            }
+            None => {
+                warn!("Attempted update_service_account with unconnected client");
+                Err(UpdateServiceAccountError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_service_account(
+        &mut self,
+        req: DeleteServiceAccountRequest,
+    ) -> Result<DeleteServiceAccountResponse, DeleteServiceAccountError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_service_account");
+                handle_delete_service_account(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_service_account with unconnected client");
+                Err(DeleteServiceAccountError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_service_accounts(
+        &mut self,
+        req: ListServiceAccountsRequest,
+    ) -> Result<ListServiceAccountsResponse, ListServiceAccountsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_service_accounts");
+                handle_list_service_accounts(client, req).await
+            }
+            None => {
+                warn!("Attempted list_service_accounts with unconnected client");
+                Err(ListServiceAccountsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn search_service_accounts(
+        &mut self,
+        req: SearchServiceAccountsRequest,
+    ) -> Result<SearchServiceAccountsResponse, SearchServiceAccountsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting search_service_accounts");
+                handle_search_service_accounts(client, req).await
+            }
+            None => {
+                warn!("Attempted search_service_accounts with unconnected client");
+                Err(SearchServiceAccountsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn generate_service_account_key(
+        &mut self,
+        req: GenerateServiceAccountKeyRequest,
+    ) -> Result<GenerateServiceAccountKeyResponse, GenerateServiceAccountKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting generate_service_account_key");
+                handle_generate_service_account_key(client, req).await
+            }
+            None => {
+                warn!("Attempted generate_service_account_key with unconnected client");
+                Err(GenerateServiceAccountKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_service_account_keys(
+        &mut self,
+        req: ListServiceAccountKeysRequest,
+    ) -> Result<ListServiceAccountKeysResponse, ListServiceAccountKeysError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_service_account_keys");
+                handle_list_service_account_keys(client, req).await
+            }
+            None => {
+                warn!("Attempted list_service_account_keys with unconnected client");
+                Err(ListServiceAccountKeysError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_service_account_key(
+        &mut self,
+        req: GetServiceAccountKeyRequest,
+    ) -> Result<GetServiceAccountKeyResponse, GetServiceAccountKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_service_account_key");
+                handle_get_service_account_key(client, req).await
+            }
+            None => {
+                warn!("Attempted get_service_account_key with unconnected client");
+                Err(GetServiceAccountKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_service_account_key(
+        &mut self,
+        req: DeleteServiceAccountKeyRequest,
+    ) -> Result<DeleteServiceAccountKeyResponse, DeleteServiceAccountKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_service_account_key");
+                handle_delete_service_account_key(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_service_account_key with unconnected client");
+                Err(DeleteServiceAccountKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn disable_service_account_key(
+        &mut self,
+        req: DisableServiceAccountKeyRequest,
+    ) -> Result<DisableServiceAccountKeyResponse, DisableServiceAccountKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting disable_service_account_key");
+                handle_disable_service_account_key(client, req).await
+            }
+            None => {
+                warn!("Attempted disable_service_account_key with unconnected client");
+                Err(DisableServiceAccountKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn enable_service_account_key(
+        &mut self,
+        req: EnableServiceAccountKeyRequest,
+    ) -> Result<EnableServiceAccountKeyResponse, EnableServiceAccountKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting enable_service_account_key");
+                handle_enable_service_account_key(client, req).await
+            }
+            None => {
+                warn!("Attempted enable_service_account_key with unconnected client");
+                Err(EnableServiceAccountKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // API Key Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_api_key(
+        &mut self,
+        req: CreateApiKeyRequest,
+    ) -> Result<CreateApiKeyResponse, CreateApiKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_api_key");
+                handle_create_api_key(client, req).await
+            }
+            None => {
+                warn!("Attempted create_api_key with unconnected client");
+                Err(CreateApiKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_api_key(
+        &mut self,
+        req: GetApiKeyRequest,
+    ) -> Result<GetApiKeyResponse, GetApiKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_api_key");
+                handle_get_api_key(client, req).await
+            }
+            None => {
+                warn!("Attempted get_api_key with unconnected client");
+                Err(GetApiKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_api_key(
+        &mut self,
+        req: UpdateApiKeyRequest,
+    ) -> Result<UpdateApiKeyResponse, UpdateApiKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_api_key");
+                handle_update_api_key(client, req).await
+            }
+            None => {
+                warn!("Attempted update_api_key with unconnected client");
+                Err(UpdateApiKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_api_key(
+        &mut self,
+        req: DeleteApiKeyRequest,
+    ) -> Result<DeleteApiKeyResponse, DeleteApiKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_api_key");
+                handle_delete_api_key(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_api_key with unconnected client");
+                Err(DeleteApiKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_api_keys(
+        &mut self,
+        req: ListApiKeysRequest,
+    ) -> Result<ListApiKeysResponse, ListApiKeysError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_api_keys");
+                handle_list_api_keys(client, req).await
+            }
+            None => {
+                warn!("Attempted list_api_keys with unconnected client");
+                Err(ListApiKeysError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn rotate_api_key(
+        &mut self,
+        req: RotateApiKeyRequest,
+    ) -> Result<RotateApiKeyResponse, RotateApiKeyError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting rotate_api_key");
+                handle_rotate_api_key(client, req).await
+            }
+            None => {
+                warn!("Attempted rotate_api_key with unconnected client");
+                Err(RotateApiKeyError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // MFA Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_project_user_mfa_factors(
+        &mut self,
+        req: ListProjectUserMfaFactorsRequest,
+    ) -> Result<ListProjectUserMfaFactorsResponse, ListProjectUserMfaFactorsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_project_user_mfa_factors");
+                handle_list_project_user_mfa_factors(client, req).await
+            }
+            None => {
+                warn!("Attempted list_project_user_mfa_factors with unconnected client");
+                Err(ListProjectUserMfaFactorsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_project_user_mfa_factor(
+        &mut self,
+        req: DeleteProjectUserMfaFactorRequest,
+    ) -> Result<DeleteProjectUserMfaFactorResponse, DeleteProjectUserMfaFactorError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_project_user_mfa_factor");
+                handle_delete_project_user_mfa_factor(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_project_user_mfa_factor with unconnected client");
+                Err(DeleteProjectUserMfaFactorError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn list_tenant_user_mfa_factors(
+        &mut self,
+        req: ListTenantUserMfaFactorsRequest,
+    ) -> Result<ListTenantUserMfaFactorsResponse, ListTenantUserMfaFactorsError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting list_tenant_user_mfa_factors");
+                handle_list_tenant_user_mfa_factors(client, req).await
+            }
+            None => {
+                warn!("Attempted list_tenant_user_mfa_factors with unconnected client");
+                Err(ListTenantUserMfaFactorsError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn delete_tenant_user_mfa_factor(
+        &mut self,
+        req: DeleteTenantUserMfaFactorRequest,
+    ) -> Result<DeleteTenantUserMfaFactorResponse, DeleteTenantUserMfaFactorError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting delete_tenant_user_mfa_factor");
+                handle_delete_tenant_user_mfa_factor(client, req).await
+            }
+            None => {
+                warn!("Attempted delete_tenant_user_mfa_factor with unconnected client");
+                Err(DeleteTenantUserMfaFactorError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // Token Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_custom_token(
+        &mut self,
+        req: CreateCustomTokenRequest,
+    ) -> Result<CreateCustomTokenResponse, CreateCustomTokenError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_custom_token");
+                handle_create_custom_token(client, req).await
+            }
+            None => {
+                warn!("Attempted create_custom_token with unconnected client");
+                Err(CreateCustomTokenError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn verify_id_token(
+        &mut self,
+        req: VerifyIdTokenRequest,
+    ) -> Result<VerifyIdTokenResponse, VerifyIdTokenError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting verify_id_token");
+                handle_verify_id_token(client, req).await
+            }
+            None => {
+                warn!("Attempted verify_id_token with unconnected client");
+                Err(VerifyIdTokenError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn create_session_cookie(
+        &mut self,
+        req: CreateSessionCookieRequest,
+    ) -> Result<CreateSessionCookieResponse, CreateSessionCookieError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting create_session_cookie");
+                handle_create_session_cookie(client, req).await
+            }
+            None => {
+                warn!("Attempted create_session_cookie with unconnected client");
+                Err(CreateSessionCookieError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn verify_session_cookie(
+        &mut self,
+        req: VerifySessionCookieRequest,
+    ) -> Result<VerifySessionCookieResponse, VerifySessionCookieError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting verify_session_cookie");
+                handle_verify_session_cookie(client, req).await
+            }
+            None => {
+                warn!("Attempted verify_session_cookie with unconnected client");
+                Err(VerifySessionCookieError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn revoke_refresh_tokens(
+        &mut self,
+        req: RevokeRefreshTokensRequest,
+    ) -> Result<RevokeRefreshTokensResponse, RevokeRefreshTokensError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting revoke_refresh_tokens");
+                handle_revoke_refresh_tokens(client, req).await
+            }
+            None => {
+                warn!("Attempted revoke_refresh_tokens with unconnected client");
+                Err(RevokeRefreshTokensError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    // =========================================================================
+    // Usage & Quota Operations
+    // =========================================================================
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_project_usage(
+        &mut self,
+        req: GetProjectUsageRequest,
+    ) -> Result<GetProjectUsageResponse, GetProjectUsageError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_project_usage");
+                handle_get_project_usage(client, req).await
+            }
+            None => {
+                warn!("Attempted get_project_usage with unconnected client");
+                Err(GetProjectUsageError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn get_project_quotas(
+        &mut self,
+        req: GetProjectQuotasRequest,
+    ) -> Result<GetProjectQuotasResponse, GetProjectQuotasError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting get_project_quotas");
+                handle_get_project_quotas(client, req).await
+            }
+            None => {
+                warn!("Attempted get_project_quotas with unconnected client");
+                Err(GetProjectQuotasError::PistachioApiClientError(
+                    PistachioApiClientError::NotConnected,
+                ))
+            }
+        }
+    }
+
+    #[instrument(skip(self, req), level = "debug")]
+    async fn update_project_quotas(
+        &mut self,
+        req: UpdateProjectQuotasRequest,
+    ) -> Result<UpdateProjectQuotasResponse, UpdateProjectQuotasError> {
+        match &mut self.inner {
+            Some(client) => {
+                debug!("Attempting update_project_quotas");
+                handle_update_project_quotas(client, req).await
+            }
+            None => {
+                warn!("Attempted update_project_quotas with unconnected client");
+                Err(UpdateProjectQuotasError::PistachioApiClientError(
                     PistachioApiClientError::NotConnected,
                 ))
             }

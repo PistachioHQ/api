@@ -1,6 +1,13 @@
 use crate::credentials::AdminCredentials;
 use crate::error::PistachioApiClientError;
 
+use super::api_key::{
+    CreateApiKeyError, CreateApiKeyRequest, CreateApiKeyResponse, DeleteApiKeyError,
+    DeleteApiKeyRequest, DeleteApiKeyResponse, GetApiKeyError, GetApiKeyRequest, GetApiKeyResponse,
+    ListApiKeysError, ListApiKeysRequest, ListApiKeysResponse, RotateApiKeyError,
+    RotateApiKeyRequest, RotateApiKeyResponse, UpdateApiKeyError, UpdateApiKeyRequest,
+    UpdateApiKeyResponse,
+};
 use super::app::{
     CreateAppError, CreateAppRequest, CreateAppResponse, DeleteAppError, DeleteAppRequest,
     DeleteAppResponse, GetAppConfigError, GetAppConfigRequest, GetAppConfigResponse, GetAppError,
@@ -21,6 +28,14 @@ use super::auth_provider::{
     UpdateProjectAuthProviderResponse, UpdateTenantAuthProviderError,
     UpdateTenantAuthProviderRequest, UpdateTenantAuthProviderResponse,
 };
+use super::mfa::{
+    DeleteProjectUserMfaFactorError, DeleteProjectUserMfaFactorRequest,
+    DeleteProjectUserMfaFactorResponse, DeleteTenantUserMfaFactorError,
+    DeleteTenantUserMfaFactorRequest, DeleteTenantUserMfaFactorResponse,
+    ListProjectUserMfaFactorsError, ListProjectUserMfaFactorsRequest,
+    ListProjectUserMfaFactorsResponse, ListTenantUserMfaFactorsError,
+    ListTenantUserMfaFactorsRequest, ListTenantUserMfaFactorsResponse,
+};
 use super::project::{
     CreateProjectError, CreateProjectRequest, CreateProjectResponse, DeleteProjectError,
     DeleteProjectRequest, DeleteProjectResponse, GetAdminSdkConfigError, GetAdminSdkConfigRequest,
@@ -29,12 +44,39 @@ use super::project::{
     SearchProjectsRequest, SearchProjectsResponse, UndeleteProjectError, UndeleteProjectRequest,
     UndeleteProjectResponse, UpdateProjectError, UpdateProjectRequest, UpdateProjectResponse,
 };
+use super::service_account::{
+    CreateServiceAccountError, CreateServiceAccountRequest, CreateServiceAccountResponse,
+    DeleteServiceAccountError, DeleteServiceAccountKeyError, DeleteServiceAccountKeyRequest,
+    DeleteServiceAccountKeyResponse, DeleteServiceAccountRequest, DeleteServiceAccountResponse,
+    DisableServiceAccountKeyError, DisableServiceAccountKeyRequest,
+    DisableServiceAccountKeyResponse, EnableServiceAccountKeyError, EnableServiceAccountKeyRequest,
+    EnableServiceAccountKeyResponse, GenerateServiceAccountKeyError,
+    GenerateServiceAccountKeyRequest, GenerateServiceAccountKeyResponse, GetServiceAccountError,
+    GetServiceAccountKeyError, GetServiceAccountKeyRequest, GetServiceAccountKeyResponse,
+    GetServiceAccountRequest, GetServiceAccountResponse, ListServiceAccountKeysError,
+    ListServiceAccountKeysRequest, ListServiceAccountKeysResponse, ListServiceAccountsError,
+    ListServiceAccountsRequest, ListServiceAccountsResponse, SearchServiceAccountsError,
+    SearchServiceAccountsRequest, SearchServiceAccountsResponse, UpdateServiceAccountError,
+    UpdateServiceAccountRequest, UpdateServiceAccountResponse,
+};
 use super::tenant::{
     CreateTenantError, CreateTenantRequest, CreateTenantResponse, DeleteTenantError,
     DeleteTenantRequest, DeleteTenantResponse, GetTenantError, GetTenantRequest, GetTenantResponse,
     ListTenantsError, ListTenantsRequest, ListTenantsResponse, SearchTenantsError,
     SearchTenantsRequest, SearchTenantsResponse, UpdateTenantError, UpdateTenantRequest,
     UpdateTenantResponse,
+};
+use super::token::{
+    CreateCustomTokenError, CreateCustomTokenRequest, CreateCustomTokenResponse,
+    CreateSessionCookieError, CreateSessionCookieRequest, CreateSessionCookieResponse,
+    RevokeRefreshTokensError, RevokeRefreshTokensRequest, RevokeRefreshTokensResponse,
+    VerifyIdTokenError, VerifyIdTokenRequest, VerifyIdTokenResponse, VerifySessionCookieError,
+    VerifySessionCookieRequest, VerifySessionCookieResponse,
+};
+use super::usage::{
+    GetProjectQuotasError, GetProjectQuotasRequest, GetProjectQuotasResponse, GetProjectUsageError,
+    GetProjectUsageRequest, GetProjectUsageResponse, UpdateProjectQuotasError,
+    UpdateProjectQuotasRequest, UpdateProjectQuotasResponse,
 };
 use super::user::{
     CreateProjectUserError, CreateProjectUserRequest, CreateProjectUserResponse,
@@ -446,4 +488,215 @@ pub trait PistachioAdminClient: Sized {
         &mut self,
         req: SearchTenantUsersRequest,
     ) -> Result<SearchTenantUsersResponse, SearchTenantUsersError>;
+
+    // =========================================================================
+    // Service Account Operations
+    // =========================================================================
+
+    /// Creates a new service account within a project.
+    async fn create_service_account(
+        &mut self,
+        req: CreateServiceAccountRequest,
+    ) -> Result<CreateServiceAccountResponse, CreateServiceAccountError>;
+
+    /// Retrieves a service account by its ID.
+    async fn get_service_account(
+        &mut self,
+        req: GetServiceAccountRequest,
+    ) -> Result<GetServiceAccountResponse, GetServiceAccountError>;
+
+    /// Updates an existing service account.
+    async fn update_service_account(
+        &mut self,
+        req: UpdateServiceAccountRequest,
+    ) -> Result<UpdateServiceAccountResponse, UpdateServiceAccountError>;
+
+    /// Permanently deletes a service account.
+    async fn delete_service_account(
+        &mut self,
+        req: DeleteServiceAccountRequest,
+    ) -> Result<DeleteServiceAccountResponse, DeleteServiceAccountError>;
+
+    /// Lists all service accounts within a project.
+    async fn list_service_accounts(
+        &mut self,
+        req: ListServiceAccountsRequest,
+    ) -> Result<ListServiceAccountsResponse, ListServiceAccountsError>;
+
+    /// Searches for service accounts within a project.
+    async fn search_service_accounts(
+        &mut self,
+        req: SearchServiceAccountsRequest,
+    ) -> Result<SearchServiceAccountsResponse, SearchServiceAccountsError>;
+
+    /// Generates a new key for a service account.
+    async fn generate_service_account_key(
+        &mut self,
+        req: GenerateServiceAccountKeyRequest,
+    ) -> Result<GenerateServiceAccountKeyResponse, GenerateServiceAccountKeyError>;
+
+    /// Lists keys for a service account.
+    async fn list_service_account_keys(
+        &mut self,
+        req: ListServiceAccountKeysRequest,
+    ) -> Result<ListServiceAccountKeysResponse, ListServiceAccountKeysError>;
+
+    /// Retrieves a specific service account key.
+    async fn get_service_account_key(
+        &mut self,
+        req: GetServiceAccountKeyRequest,
+    ) -> Result<GetServiceAccountKeyResponse, GetServiceAccountKeyError>;
+
+    /// Permanently deletes a service account key.
+    async fn delete_service_account_key(
+        &mut self,
+        req: DeleteServiceAccountKeyRequest,
+    ) -> Result<DeleteServiceAccountKeyResponse, DeleteServiceAccountKeyError>;
+
+    /// Disables a service account key.
+    async fn disable_service_account_key(
+        &mut self,
+        req: DisableServiceAccountKeyRequest,
+    ) -> Result<DisableServiceAccountKeyResponse, DisableServiceAccountKeyError>;
+
+    /// Re-enables a disabled service account key.
+    async fn enable_service_account_key(
+        &mut self,
+        req: EnableServiceAccountKeyRequest,
+    ) -> Result<EnableServiceAccountKeyResponse, EnableServiceAccountKeyError>;
+
+    // =========================================================================
+    // API Key Operations
+    // =========================================================================
+
+    /// Creates a new API key for an app.
+    async fn create_api_key(
+        &mut self,
+        req: CreateApiKeyRequest,
+    ) -> Result<CreateApiKeyResponse, CreateApiKeyError>;
+
+    /// Retrieves an API key by ID.
+    async fn get_api_key(
+        &mut self,
+        req: GetApiKeyRequest,
+    ) -> Result<GetApiKeyResponse, GetApiKeyError>;
+
+    /// Updates an existing API key.
+    async fn update_api_key(
+        &mut self,
+        req: UpdateApiKeyRequest,
+    ) -> Result<UpdateApiKeyResponse, UpdateApiKeyError>;
+
+    /// Permanently deletes an API key.
+    async fn delete_api_key(
+        &mut self,
+        req: DeleteApiKeyRequest,
+    ) -> Result<DeleteApiKeyResponse, DeleteApiKeyError>;
+
+    /// Lists all API keys for an app.
+    async fn list_api_keys(
+        &mut self,
+        req: ListApiKeysRequest,
+    ) -> Result<ListApiKeysResponse, ListApiKeysError>;
+
+    /// Rotates an API key, generating a new key string.
+    async fn rotate_api_key(
+        &mut self,
+        req: RotateApiKeyRequest,
+    ) -> Result<RotateApiKeyResponse, RotateApiKeyError>;
+
+    // =========================================================================
+    // MFA Operations
+    // =========================================================================
+
+    /// Lists MFA factors for a project-level user.
+    async fn list_project_user_mfa_factors(
+        &mut self,
+        req: ListProjectUserMfaFactorsRequest,
+    ) -> Result<ListProjectUserMfaFactorsResponse, ListProjectUserMfaFactorsError>;
+
+    /// Deletes an MFA factor from a project-level user.
+    async fn delete_project_user_mfa_factor(
+        &mut self,
+        req: DeleteProjectUserMfaFactorRequest,
+    ) -> Result<DeleteProjectUserMfaFactorResponse, DeleteProjectUserMfaFactorError>;
+
+    /// Lists MFA factors for a tenant-level user.
+    async fn list_tenant_user_mfa_factors(
+        &mut self,
+        req: ListTenantUserMfaFactorsRequest,
+    ) -> Result<ListTenantUserMfaFactorsResponse, ListTenantUserMfaFactorsError>;
+
+    /// Deletes an MFA factor from a tenant-level user.
+    async fn delete_tenant_user_mfa_factor(
+        &mut self,
+        req: DeleteTenantUserMfaFactorRequest,
+    ) -> Result<DeleteTenantUserMfaFactorResponse, DeleteTenantUserMfaFactorError>;
+
+    // =========================================================================
+    // Token Operations
+    // =========================================================================
+
+    /// Creates a custom token for a user.
+    ///
+    /// Custom tokens can be used for server-side authentication flows
+    /// where the server needs to sign in a user on the client's behalf.
+    async fn create_custom_token(
+        &mut self,
+        req: CreateCustomTokenRequest,
+    ) -> Result<CreateCustomTokenResponse, CreateCustomTokenError>;
+
+    /// Verifies an ID token.
+    ///
+    /// Returns the decoded token claims if the token is valid.
+    async fn verify_id_token(
+        &mut self,
+        req: VerifyIdTokenRequest,
+    ) -> Result<VerifyIdTokenResponse, VerifyIdTokenError>;
+
+    /// Creates a session cookie from an ID token.
+    ///
+    /// Session cookies are used for server-side session management.
+    async fn create_session_cookie(
+        &mut self,
+        req: CreateSessionCookieRequest,
+    ) -> Result<CreateSessionCookieResponse, CreateSessionCookieError>;
+
+    /// Verifies a session cookie.
+    ///
+    /// Returns the decoded token claims if the session is valid.
+    async fn verify_session_cookie(
+        &mut self,
+        req: VerifySessionCookieRequest,
+    ) -> Result<VerifySessionCookieResponse, VerifySessionCookieError>;
+
+    /// Revokes all refresh tokens for a user.
+    ///
+    /// This effectively signs out the user from all devices.
+    async fn revoke_refresh_tokens(
+        &mut self,
+        req: RevokeRefreshTokensRequest,
+    ) -> Result<RevokeRefreshTokensResponse, RevokeRefreshTokensError>;
+
+    // =========================================================================
+    // Usage & Quota Operations
+    // =========================================================================
+
+    /// Gets usage statistics for a project.
+    async fn get_project_usage(
+        &mut self,
+        req: GetProjectUsageRequest,
+    ) -> Result<GetProjectUsageResponse, GetProjectUsageError>;
+
+    /// Gets quota limits for a project.
+    async fn get_project_quotas(
+        &mut self,
+        req: GetProjectQuotasRequest,
+    ) -> Result<GetProjectQuotasResponse, GetProjectQuotasError>;
+
+    /// Updates quota limits for a project.
+    async fn update_project_quotas(
+        &mut self,
+        req: UpdateProjectQuotasRequest,
+    ) -> Result<UpdateProjectQuotasResponse, UpdateProjectQuotasError>;
 }

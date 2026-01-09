@@ -232,6 +232,25 @@ CreateApiKeyResponse:
     apiKey:
       $ref: '#/ApiKey'
 
+UpdateApiKeyRequest:
+  type: object
+  description: Request body for updating an API key.
+  properties:
+    displayName:
+      type: string
+      description: New human-readable display name for the key.
+      maxLength: 256
+      example: Updated Production API Key
+    restrictions:
+      $ref: '#/ApiKeyRestrictions'
+
+UpdateApiKeyResponse:
+  type: object
+  description: Response containing the updated API key metadata.
+  properties:
+    apiKey:
+      $ref: '#/ApiKeyInfo'
+
 RotateApiKeyRequest:
   type: object
   description: Request body for rotating an API key.

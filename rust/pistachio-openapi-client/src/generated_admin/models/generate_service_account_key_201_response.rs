@@ -18,7 +18,7 @@ use serde_with::serde_as;
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GenerateServiceAccountKey201Response {
     #[serde(rename = "key", skip_serializing_if = "Option::is_none")]
-    pub key: Option<Box<models::GenerateServiceAccountKey201ResponseKey>>,
+    pub key: Option<Box<models::ListServiceAccountKeys200ResponseKeysInner>>,
     /// Base64-encoded private key data in PKCS#8 format. This is only returned once at key creation time.
     #[serde_as(as = "Option<serde_with::base64::Base64>")]
     #[serde(rename = "privateKeyData", skip_serializing_if = "Option::is_none")]

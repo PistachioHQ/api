@@ -17,12 +17,12 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateCustomTokenError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -30,12 +30,12 @@ pub enum CreateCustomTokenError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateSessionCookieError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -43,12 +43,12 @@ pub enum CreateSessionCookieError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum VerifyIdTokenError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -56,12 +56,12 @@ pub enum VerifyIdTokenError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum VerifySessionCookieError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 

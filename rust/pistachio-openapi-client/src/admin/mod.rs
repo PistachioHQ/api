@@ -1,3 +1,4 @@
+mod api_key;
 mod client;
 mod create_app;
 mod create_project;
@@ -29,11 +30,14 @@ mod list_projects;
 mod list_tenant_auth_providers;
 mod list_tenant_users;
 mod list_tenants;
+mod mfa;
 mod search_apps;
 mod search_project_users;
 mod search_projects;
 mod search_tenant_users;
 mod search_tenants;
+mod service_account;
+mod token;
 mod undelete_app;
 mod undelete_project;
 mod update_app;
@@ -43,5 +47,6 @@ mod update_project_user;
 mod update_tenant;
 mod update_tenant_auth_provider;
 mod update_tenant_user;
+mod usage;
 
 pub use client::AdminClient;

@@ -96,10 +96,18 @@ paths:
   # Service Accounts
   /admin/v1/projects/{projectId}/serviceAccounts:
     $ref: './paths/admin/service_accounts.yml#/serviceAccounts'
+  /admin/v1/projects/{projectId}/serviceAccounts:search:
+    $ref: './paths/admin/service_accounts.yml#/searchServiceAccounts'
   /admin/v1/projects/{projectId}/serviceAccounts/{id}:
     $ref: './paths/admin/service_accounts.yml#/serviceAccountById'
-  /admin/v1/projects/{projectId}/serviceAccounts/{id}/key:
-    $ref: './paths/admin/service_accounts.yml#/serviceAccountKey'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}/keys:
+    $ref: './paths/admin/service_accounts.yml#/serviceAccountKeys'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}:
+    $ref: './paths/admin/service_accounts.yml#/serviceAccountKeyById'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}:disable:
+    $ref: './paths/admin/service_accounts.yml#/disableServiceAccountKey'
+  /admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}:enable:
+    $ref: './paths/admin/service_accounts.yml#/enableServiceAccountKey'
   # User Lookup and Actions - Project Level
   /admin/v1/projects/{projectId}/users:lookup:
     $ref: './paths/admin/users.yml#/projectUsersLookup'

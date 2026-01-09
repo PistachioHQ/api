@@ -17,12 +17,12 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateApiKeyError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -30,12 +30,12 @@ pub enum CreateApiKeyError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteApiKeyError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -43,12 +43,12 @@ pub enum DeleteApiKeyError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetApiKeyError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -56,12 +56,12 @@ pub enum GetApiKeyError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ListApiKeysError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -69,12 +69,25 @@ pub enum ListApiKeysError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RotateApiKeyError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`update_api_key`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum UpdateApiKeyError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -437,6 +450,84 @@ pub async fn rotate_api_key(
     } else {
         let content = resp.text().await?;
         let entity: Option<RotateApiKeyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Updates an existing API key's metadata. Only the specified fields will be updated; unspecified fields remain unchanged.
+pub async fn update_api_key(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    app_id: &str,
+    key_id: &str,
+    update_api_key_request: models::UpdateApiKeyRequest,
+) -> Result<models::UpdateApiKey200Response, Error<UpdateApiKeyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_app_id = app_id;
+    let p_path_key_id = key_id;
+    let p_body_update_api_key_request = update_api_key_request;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/apps/{appId}/apiKeys/{keyId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        appId = crate::generated_admin::apis::urlencode(p_path_app_id),
+        keyId = crate::generated_admin::apis::urlencode(p_path_key_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::PATCH, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_update_api_key_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::UpdateApiKey200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::UpdateApiKey200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<UpdateApiKeyError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

@@ -214,6 +214,81 @@ apiKeyById:
       '503':
         $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
 
+  patch:
+    operationId: updateApiKey
+    summary: Update an API key
+    description: |
+      Updates an existing API key's metadata.
+      Only the specified fields will be updated; unspecified fields remain unchanged.
+    tags:
+      - API Keys
+    security:
+      - ApiKeyAuth: []
+        ServiceAccountAuth: []
+    parameters:
+      - name: projectId
+        in: path
+        description: The project ID that owns the app
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{4,28}[a-z0-9]$'
+      - name: appId
+        in: path
+        description: The app ID that owns the API key
+        required: true
+        schema:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{2,62}[a-z0-9]$'
+      - name: keyId
+        in: path
+        description: The API key ID
+        required: true
+        schema:
+          type: string
+    requestBody:
+      description: API key update parameters
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/api_key.yml#/UpdateApiKeyRequest'
+    responses:
+      '200':
+        description: API key updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/admin/api_key.yml#/UpdateApiKeyResponse'
+      '400':
+        description: Invalid projectId, appId, keyId, or request body
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '401':
+        description: Invalid or missing credentials
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '403':
+        description: Permission denied
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: Project, app, or API key not found
+        content:
+          application/json:
+            schema:
+              $ref: '../../components/schemas/error.yml#/ProblemDetails'
+      '500':
+        $ref: '../../components/responses/errors.yml#/InternalServerError'
+      '503':
+        $ref: '../../components/responses/errors.yml#/ServiceUnavailable'
+
   delete:
     operationId: deleteApiKey
     summary: Delete an API key

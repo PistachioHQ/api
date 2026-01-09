@@ -17,13 +17,13 @@ use serde::{Deserialize, Serialize, de::Error as _};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateServiceAccountError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status409(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status409(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -31,12 +31,51 @@ pub enum CreateServiceAccountError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteServiceAccountError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`delete_service_account_key`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum DeleteServiceAccountKeyError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`disable_service_account_key`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum DisableServiceAccountKeyError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`enable_service_account_key`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum EnableServiceAccountKeyError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -44,12 +83,12 @@ pub enum DeleteServiceAccountError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GenerateServiceAccountKeyError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -57,12 +96,38 @@ pub enum GenerateServiceAccountKeyError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum GetServiceAccountError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`get_service_account_key`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GetServiceAccountKeyError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`list_service_account_keys`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ListServiceAccountKeysError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -70,12 +135,25 @@ pub enum GetServiceAccountError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ListServiceAccountsError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`search_service_accounts`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SearchServiceAccountsError {
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -83,12 +161,12 @@ pub enum ListServiceAccountsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateServiceAccountError {
-    Status400(models::ListProjects400Response),
-    Status401(models::ListProjects400Response),
-    Status403(models::ListProjects400Response),
-    Status404(models::ListProjects400Response),
-    Status500(models::ListProjects400Response),
-    Status503(models::ListProjects400Response),
+    Status400(models::ListTenants400Response),
+    Status401(models::ListTenants400Response),
+    Status403(models::ListTenants400Response),
+    Status404(models::ListTenants400Response),
+    Status500(models::ListTenants400Response),
+    Status503(models::ListTenants400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -217,6 +295,212 @@ pub async fn delete_service_account(
     }
 }
 
+/// Permanently deletes a service account key. This operation is irreversible.
+pub async fn delete_service_account_key(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    id: &str,
+    key_id: &str,
+) -> Result<(), Error<DeleteServiceAccountKeyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_id = id;
+    let p_path_key_id = key_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        id = crate::generated_admin::apis::urlencode(p_path_id),
+        keyId = crate::generated_admin::apis::urlencode(p_path_key_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::DELETE, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<DeleteServiceAccountKeyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Disables a service account key without deleting it. Disabled keys cannot be used for authentication.
+pub async fn disable_service_account_key(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    id: &str,
+    key_id: &str,
+) -> Result<models::DisableServiceAccountKey200Response, Error<DisableServiceAccountKeyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_id = id;
+    let p_path_key_id = key_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}:disable",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        id = crate::generated_admin::apis::urlencode(p_path_id),
+        keyId = crate::generated_admin::apis::urlencode(p_path_key_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::DisableServiceAccountKey200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::DisableServiceAccountKey200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<DisableServiceAccountKeyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Re-enables a previously disabled service account key.
+pub async fn enable_service_account_key(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    id: &str,
+    key_id: &str,
+) -> Result<models::EnableServiceAccountKey200Response, Error<EnableServiceAccountKeyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_id = id;
+    let p_path_key_id = key_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}:enable",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        id = crate::generated_admin::apis::urlencode(p_path_id),
+        keyId = crate::generated_admin::apis::urlencode(p_path_key_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::EnableServiceAccountKey200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::EnableServiceAccountKey200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<EnableServiceAccountKeyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
 /// Generates a new key for a service account. The private key data is only returned once in the response and cannot be retrieved again. Store the key securely.
 pub async fn generate_service_account_key(
     configuration: &configuration::Configuration,
@@ -230,7 +514,7 @@ pub async fn generate_service_account_key(
     let p_body_generate_service_account_key_request = generate_service_account_key_request;
 
     let uri_str = format!(
-        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/key",
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys",
         configuration.base_path,
         projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
         id = crate::generated_admin::apis::urlencode(p_path_id)
@@ -362,6 +646,149 @@ pub async fn get_service_account(
     }
 }
 
+/// Retrieves a specific key by ID. Note: Private key data is never returned after initial generation.
+pub async fn get_service_account_key(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    id: &str,
+    key_id: &str,
+) -> Result<models::GetServiceAccountKey200Response, Error<GetServiceAccountKeyError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_id = id;
+    let p_path_key_id = key_id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys/{keyId}",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        id = crate::generated_admin::apis::urlencode(p_path_id),
+        keyId = crate::generated_admin::apis::urlencode(p_path_key_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::GetServiceAccountKey200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::GetServiceAccountKey200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<GetServiceAccountKeyError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Lists all keys for a service account. Note: Private key data is never returned after initial generation.
+pub async fn list_service_account_keys(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    id: &str,
+) -> Result<models::ListServiceAccountKeys200Response, Error<ListServiceAccountKeysError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_path_id = id;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts/{id}/keys",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id),
+        id = crate::generated_admin::apis::urlencode(p_path_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::ListServiceAccountKeys200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::ListServiceAccountKeys200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<ListServiceAccountKeysError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
 /// Lists all service accounts within a project. Results are paginated with cursor-based pagination.
 pub async fn list_service_accounts(
     configuration: &configuration::Configuration,
@@ -436,6 +863,78 @@ pub async fn list_service_accounts(
     } else {
         let content = resp.text().await?;
         let entity: Option<ListServiceAccountsError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Searches for service accounts within a project. Supports full-text search across multiple fields and filtering.
+pub async fn search_service_accounts(
+    configuration: &configuration::Configuration,
+    project_id: &str,
+    search_service_accounts_request: models::SearchServiceAccountsRequest,
+) -> Result<models::SearchServiceAccounts200Response, Error<SearchServiceAccountsError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_project_id = project_id;
+    let p_body_search_service_accounts_request = search_service_accounts_request;
+
+    let uri_str = format!(
+        "{}/admin/v1/projects/{projectId}/serviceAccounts:search",
+        configuration.base_path,
+        projectId = crate::generated_admin::apis::urlencode(p_path_project_id)
+    );
+    let mut req_builder = configuration
+        .client
+        .request(reqwest::Method::POST, &uri_str);
+
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.query(&[("key", value)]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref token) = configuration.bearer_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    req_builder = req_builder.json(&p_body_search_service_accounts_request);
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => {
+                return Err(Error::from(serde_json::Error::custom(
+                    "Received `text/plain` content type response that cannot be converted to `models::SearchServiceAccounts200Response`",
+                )));
+            }
+            ContentType::Unsupported(unknown_type) => {
+                return Err(Error::from(serde_json::Error::custom(format!(
+                    "Received `{unknown_type}` content type response that cannot be converted to `models::SearchServiceAccounts200Response`"
+                ))));
+            }
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<SearchServiceAccountsError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
