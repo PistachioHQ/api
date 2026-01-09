@@ -1,0 +1,230 @@
+syntax = "proto3";
+
+package pistachio.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "pistachio/types/v1/mfa.proto";
+
+// =============================================================================
+// User MFA Self-Service Operations
+// =============================================================================
+//
+// These operations allow authenticated users to manage their own MFA factors.
+
+// ListMfaFactorsRequest lists the authenticated user's enrolled MFA factors.
+message ListMfaFactorsRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// ListMfaFactorsResponse contains the user's MFA factors.
+message ListMfaFactorsResponse {
+  // The list of enrolled MFA factors.
+  repeated pistachio.types.v1.MfaFactor factors = 1;
+}
+
+// EnrollMfaFactorRequest starts enrollment of a new MFA factor.
+message EnrollMfaFactorRequest {
+  // The type of factor to enroll.
+  // Required.
+  pistachio.types.v1.MfaFactorType factor_type = 1 [(buf.validate.field).enum = {
+    defined_only: true
+    not_in: [0]
+  }];
+
+  // User-provided name for the factor.
+  // Max 256 characters.
+  string display_name = 2 [(buf.validate.field).string.max_len = 256];
+
+  // Phone number for SMS factor (E.164 format).
+  // Required for SMS factors.
+  string phone_number = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {pattern: "^\\+[1-9]\\d{1,14}$"}
+  }];
+}
+
+// EnrollMfaFactorResponse contains enrollment information.
+//
+// For TOTP factors, the response includes the secret and URI for QR code display.
+// For SMS/email factors, a verification code is sent and a challenge_id is returned.
+message EnrollMfaFactorResponse {
+  // The ID of the enrolled factor.
+  // Use this with VerifyMfaFactor to complete enrollment.
+  string factor_id = 1;
+
+  // Base32-encoded TOTP secret (for TOTP factors).
+  // Display this as a QR code or manual entry key.
+  string totp_secret = 2;
+
+  // otpauth:// URI for TOTP factors.
+  // Encode this as a QR code for authenticator apps.
+  string totp_uri = 3;
+
+  // Challenge ID for SMS/email factors.
+  // A verification code was sent to the phone/email.
+  string challenge_id = 4;
+}
+
+// VerifyMfaFactorRequest verifies an MFA factor during enrollment.
+message VerifyMfaFactorRequest {
+  // The factor ID from EnrollMfaFactorResponse.
+  // Required.
+  string factor_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // The verification code.
+  // For TOTP: current 6-digit code from authenticator app.
+  // For SMS/email: the code sent to the phone/email.
+  // Required.
+  string code = 2 [(buf.validate.field).string = {
+    len: 6
+    pattern: "^\\d{6}$"
+  }];
+}
+
+// VerifyMfaFactorResponse confirms factor verification.
+message VerifyMfaFactorResponse {
+  // Whether the factor was successfully verified.
+  bool verified = 1;
+
+  // The verified factor.
+  pistachio.types.v1.MfaFactor factor = 2;
+}
+
+// UnenrollMfaFactorRequest removes an MFA factor from the user's account.
+message UnenrollMfaFactorRequest {
+  // The factor ID to remove.
+  // Required.
+  string factor_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// UnenrollMfaFactorResponse is returned after the factor is removed.
+message UnenrollMfaFactorResponse {
+  // Empty response. The MFA factor has been removed.
+}
+
+// ChallengeMfaFactorRequest initiates an MFA challenge for a factor.
+//
+// For TOTP factors, no action is needed - the user enters the current code.
+// For SMS/email factors, this sends a verification code.
+message ChallengeMfaFactorRequest {
+  // The factor ID to challenge.
+  // Required.
+  string factor_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // reCAPTCHA token required for bot protection when sending SMS/email codes.
+  // Required for SMS and email factors.
+  string recaptcha_token = 2;
+}
+
+// ChallengeMfaFactorResponse contains the challenge information.
+message ChallengeMfaFactorResponse {
+  // Challenge ID to use when verifying.
+  // For SMS/email factors, a code was sent.
+  string challenge_id = 1;
+
+  // When the challenge expires.
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+// CompleteMfaChallengeRequest completes an MFA challenge during authentication.
+message CompleteMfaChallengeRequest {
+  // The challenge ID from ChallengeMfaFactorResponse or the pending MFA state.
+  // Required.
+  string challenge_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // The verification code.
+  // For TOTP: current 6-digit code from authenticator app.
+  // For SMS/email: the code sent to the phone/email.
+  // Required.
+  string code = 2 [(buf.validate.field).string = {
+    len: 6
+    pattern: "^\\d{6}$"
+  }];
+}
+
+// CompleteMfaChallengeResponse contains the authentication result after MFA.
+message CompleteMfaChallengeResponse {
+  // JWT ID token for authenticating API requests.
+  string id_token = 1;
+
+  // Refresh token for obtaining new ID tokens.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The user's pistachio_id.
+  string pistachio_id = 4;
+}
+
+// =============================================================================
+// Recovery Codes
+// =============================================================================
+//
+// Recovery codes provide a fallback authentication method when MFA factors
+// are unavailable. Users should store these codes securely offline.
+
+// GenerateRecoveryCodesRequest generates new recovery codes for the user.
+//
+// Generating new codes invalidates any previously generated codes.
+message GenerateRecoveryCodesRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// GenerateRecoveryCodesResponse contains the newly generated recovery codes.
+//
+// IMPORTANT: These codes are only shown once. Store them securely.
+message GenerateRecoveryCodesResponse {
+  // The generated recovery codes.
+  // Typically 10 codes, each usable only once.
+  // IMPORTANT: Store these codes securely offline. They cannot be retrieved again.
+  repeated string recovery_codes = 1;
+}
+
+// GetRecoveryCodeCountRequest retrieves the number of remaining recovery codes.
+message GetRecoveryCodeCountRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// GetRecoveryCodeCountResponse contains the count of remaining codes.
+message GetRecoveryCodeCountResponse {
+  // Number of unused recovery codes remaining.
+  int32 remaining_count = 1;
+
+  // Total number of recovery codes originally generated.
+  int32 total_count = 2;
+}
+
+// VerifyRecoveryCodeRequest verifies a recovery code during MFA challenge.
+message VerifyRecoveryCodeRequest {
+  // The challenge ID from the MFA challenge response.
+  // Required.
+  string challenge_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // The recovery code to verify.
+  // Required. Format: XXXX-XXXX-XXXX (alphanumeric with hyphens).
+  string recovery_code = 2 [(buf.validate.field).string = {
+    min_len: 10
+    max_len: 20
+    pattern: "^[A-Z0-9-]+$"
+  }];
+}
+
+// VerifyRecoveryCodeResponse contains the authentication result after using a recovery code.
+message VerifyRecoveryCodeResponse {
+  // JWT ID token for authenticating API requests.
+  string id_token = 1;
+
+  // Refresh token for obtaining new ID tokens.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The user's pistachio_id.
+  string pistachio_id = 4;
+
+  // Number of recovery codes remaining after this use.
+  int32 remaining_codes = 5;
+}

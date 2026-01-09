@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ProjectUsage contains usage statistics for a project over a time period.
+message ProjectUsage {
+  // Resource name in the format "projects/{project_id}/usage"
+  string name = 1;
+
+  // The time period for the usage data.
+  UsagePeriod period = 2;
+
+  // Active user metrics.
+  ActiveUsers active_users = 3;
+
+  // Authentication event counts.
+  AuthenticationMetrics authentications = 4;
+
+  // API call counts by category.
+  ApiCallMetrics api_calls = 5;
+
+  // Storage usage counts.
+  StorageMetrics storage = 6;
+}
+
+// UsagePeriod specifies the time range for usage data.
+message UsagePeriod {
+  // Start of the period (inclusive).
+  google.protobuf.Timestamp start_time = 1;
+
+  // End of the period (inclusive).
+  google.protobuf.Timestamp end_time = 2;
+}
+
+// ActiveUsers contains active user metrics at different time scales.
+message ActiveUsers {
+  // Daily active users (DAU).
+  int64 daily = 1;
+
+  // Weekly active users (WAU).
+  int64 weekly = 2;
+
+  // Monthly active users (MAU).
+  int64 monthly = 3;
+}
+
+// AuthenticationMetrics contains counts of authentication events.
+message AuthenticationMetrics {
+  // Number of new user signups.
+  int64 signups = 1;
+
+  // Number of successful logins.
+  int64 logins = 2;
+
+  // Number of token refreshes.
+  int64 token_refreshes = 3;
+
+  // Number of failed authentication attempts.
+  int64 failed_attempts = 4;
+}
+
+// ApiCallMetrics contains API call counts by category.
+message ApiCallMetrics {
+  // Number of Admin API calls.
+  int64 admin_api = 1;
+
+  // Number of Public API calls.
+  int64 public_api = 2;
+}
+
+// StorageMetrics contains resource counts for storage usage.
+message StorageMetrics {
+  // Total number of users.
+  int64 total_users = 1;
+
+  // Total number of service accounts.
+  int64 total_service_accounts = 2;
+
+  // Total number of tenants.
+  int64 total_tenants = 3;
+
+  // Total number of apps.
+  int64 total_apps = 4;
+}
+
+// ProjectQuotas contains quota limits and current usage for a project.
+message ProjectQuotas {
+  // Resource name in the format "projects/{project_id}/quotas"
+  string name = 1;
+
+  // User quota.
+  QuotaLimit users = 2;
+
+  // Service account quota.
+  QuotaLimit service_accounts = 3;
+
+  // Tenant quota.
+  QuotaLimit tenants = 4;
+
+  // App quota.
+  QuotaLimit apps = 5;
+
+  // API keys per app quota.
+  QuotaLimit api_keys_per_app = 6;
+
+  // Requests per minute rate limit.
+  QuotaLimit requests_per_minute = 7;
+
+  // Requests per day rate limit.
+  QuotaLimit requests_per_day = 8;
+
+  // Requests per second rate limit (burst protection).
+  QuotaLimit requests_per_second = 9;
+}
+
+// QuotaLimit represents a quota with its limit and current usage.
+message QuotaLimit {
+  // The maximum allowed value.
+  // -1 indicates unlimited.
+  int64 limit = 1;
+
+  // Current usage against this quota.
+  int64 current = 2;
+
+  // Unit of measurement (e.g., "users", "requests").
+  string unit = 3;
+}

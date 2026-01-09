@@ -1,0 +1,275 @@
+syntax = "proto3";
+
+package pistachio.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/session.proto";
+
+// =============================================================================
+// Token Operations
+// =============================================================================
+
+// RefreshTokenRequest exchanges a refresh token for new tokens.
+message RefreshTokenRequest {
+  // The refresh token to exchange.
+  // Required.
+  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// RefreshTokenResponse contains new authentication tokens.
+message RefreshTokenResponse {
+  // New JWT ID token.
+  string id_token = 1;
+
+  // New refresh token.
+  // May be the same as the input or a rotated token.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The user's pistachio_id.
+  string pistachio_id = 4;
+}
+
+// ExchangeTokenRequest exchanges a custom token for authentication tokens.
+//
+// Custom tokens are created server-side using the Admin API's CreateCustomToken.
+message ExchangeTokenRequest {
+  // The custom token to exchange.
+  // Required.
+  string custom_token = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// ExchangeTokenResponse contains authentication tokens.
+message ExchangeTokenResponse {
+  // JWT ID token.
+  string id_token = 1;
+
+  // Refresh token for obtaining new ID tokens.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The user's pistachio_id.
+  string pistachio_id = 4;
+}
+
+// =============================================================================
+// Sign Out
+// =============================================================================
+
+// SignOutRequest signs out the current user.
+message SignOutRequest {
+  // Optional refresh token to revoke.
+  // If not provided, only the current session is invalidated.
+  string refresh_token = 1;
+
+  // Whether to revoke all sessions for the user.
+  // Requires a valid ID token in the authentication context.
+  bool all_sessions = 2;
+}
+
+// SignOutResponse is returned after signing out.
+message SignOutResponse {
+  // Empty response. The user has been signed out.
+}
+
+// =============================================================================
+// Anonymous Authentication
+// =============================================================================
+
+// SignInAnonymouslyRequest creates an anonymous user account.
+//
+// Anonymous users can later be upgraded to permanent accounts by
+// linking an authentication provider.
+message SignInAnonymouslyRequest {
+  // Optional tenant ID for multi-tenant projects.
+  string tenant_id = 1 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      min_len: 1
+      max_len: 128
+      pattern: "^[a-zA-Z0-9_]+$"
+    }
+  }];
+}
+
+// SignInAnonymouslyResponse contains authentication tokens for the anonymous user.
+message SignInAnonymouslyResponse {
+  // JWT ID token.
+  string id_token = 1;
+
+  // Refresh token.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The anonymous user's pistachio_id.
+  string pistachio_id = 4;
+
+  // Always true for anonymous sign-in.
+  bool is_new_user = 5;
+}
+
+// =============================================================================
+// Email Verification
+// =============================================================================
+
+// SendEmailVerificationRequest sends an email verification link.
+message SendEmailVerificationRequest {
+  // Optional URL to redirect to after email verification.
+  // Must be whitelisted in the project's authorized domains.
+  string continue_url = 1 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {uri: true}
+  }];
+}
+
+// SendEmailVerificationResponse confirms the email was sent.
+message SendEmailVerificationResponse {
+  // The email address the verification was sent to.
+  string email = 1;
+}
+
+// ConfirmEmailVerificationRequest confirms email verification.
+message ConfirmEmailVerificationRequest {
+  // The out-of-band verification code from the email link.
+  // Required.
+  string oob_code = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// ConfirmEmailVerificationResponse confirms the email was verified.
+message ConfirmEmailVerificationResponse {
+  // The verified email address.
+  string email = 1;
+
+  // Confirmation that the email is now verified.
+  bool email_verified = 2;
+}
+
+// =============================================================================
+// OAuth/OIDC
+// =============================================================================
+
+// GetOAuthAuthorizationUrlRequest gets the authorization URL for an OAuth provider.
+message GetOAuthAuthorizationUrlRequest {
+  // The provider ID to authenticate with.
+  // Examples: "google", "github", "facebook", or custom OIDC provider IDs.
+  // Required.
+  string provider_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // The URI to redirect to after authorization.
+  // Must be registered in the project's authorized redirect URIs.
+  // Required.
+  string redirect_uri = 2 [(buf.validate.field).string = {
+    min_len: 1
+    uri: true
+  }];
+
+  // Opaque value for maintaining state between request and callback.
+  // Use this to prevent CSRF attacks.
+  string state = 3 [(buf.validate.field).string.max_len = 1024];
+
+  // Additional OAuth scopes to request from the provider.
+  // Default scopes (email, profile) are always included.
+  repeated string scopes = 4;
+
+  // Optional tenant ID for multi-tenant projects.
+  string tenant_id = 5 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      min_len: 1
+      max_len: 128
+      pattern: "^[a-zA-Z0-9_]+$"
+    }
+  }];
+}
+
+// GetOAuthAuthorizationUrlResponse contains the authorization URL.
+message GetOAuthAuthorizationUrlResponse {
+  // The authorization URL to redirect the user to.
+  string authorization_url = 1;
+}
+
+// HandleOAuthCallbackRequest processes the OAuth callback from a provider.
+message HandleOAuthCallbackRequest {
+  // The provider ID that initiated the OAuth flow.
+  // Required.
+  string provider_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // The authorization code from the OAuth provider.
+  // Required.
+  string code = 2 [(buf.validate.field).string.min_len = 1];
+
+  // The state parameter from the original authorize request.
+  // Used to prevent CSRF attacks.
+  string state = 3;
+
+  // The redirect URI used in the authorize request.
+  // Required.
+  string redirect_uri = 4 [(buf.validate.field).string = {
+    min_len: 1
+    uri: true
+  }];
+}
+
+// HandleOAuthCallbackResponse contains authentication tokens from the OAuth flow.
+message HandleOAuthCallbackResponse {
+  // JWT ID token.
+  string id_token = 1;
+
+  // Refresh token.
+  string refresh_token = 2;
+
+  // Number of seconds until the ID token expires.
+  int64 expires_in = 3;
+
+  // The user's pistachio_id.
+  string pistachio_id = 4;
+
+  // Whether this is a newly created user.
+  bool is_new_user = 5;
+}
+
+// =============================================================================
+// Auth Providers
+// =============================================================================
+
+// ListAuthProvidersRequest lists available authentication providers.
+message ListAuthProvidersRequest {
+  // Optional tenant ID for multi-tenant projects.
+  // Returns tenant-specific provider configuration if set.
+  string tenant_id = 1 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      min_len: 1
+      max_len: 128
+      pattern: "^[a-zA-Z0-9_]+$"
+    }
+  }];
+}
+
+// ListAuthProvidersResponse contains available authentication providers.
+message ListAuthProvidersResponse {
+  // The list of available authentication providers.
+  repeated AuthProviderInfo providers = 1;
+}
+
+// AuthProviderInfo contains public information about an authentication provider.
+message AuthProviderInfo {
+  // The provider identifier.
+  // Examples: "pdpka", "google", "github", "oidc:okta"
+  string provider_id = 1;
+
+  // The type of provider.
+  pistachio.types.v1.ProviderType provider_type = 2;
+
+  // Human-readable display name for the provider.
+  string display_name = 3;
+
+  // Whether the provider is enabled.
+  bool enabled = 4;
+}

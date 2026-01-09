@@ -88,6 +88,7 @@ LinkedProvider:
         - PDPKA
         - OAUTH
         - OIDC
+        - SAML
         - ANONYMOUS
       description: The type of provider.
       example: OAUTH
@@ -150,6 +151,22 @@ Session:
       type: boolean
       description: Whether this is the current session.
       example: true
+    deviceType:
+      type:
+        - string
+        - 'null'
+      description: |
+        Type of device used for this session. Derived from user agent analysis.
+        Examples: desktop, mobile, tablet, unknown
+      example: "desktop"
+    location:
+      type:
+        - string
+        - 'null'
+      description: |
+        Approximate geographic location derived from IP address.
+        Empty if location cannot be determined.
+      example: "San Francisco, CA, US"
 
 # Request/Response schemas
 

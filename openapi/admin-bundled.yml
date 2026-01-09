@@ -12104,6 +12104,26 @@ paths:
                                                         type: string
                                                         description: Unit of measurement.
                                                         example: users
+                                            requestsPerSecond:
+                                                type: object
+                                                description: A quota limit with current usage.
+                                                properties:
+                                                    limit:
+                                                        type: integer
+                                                        format: int64
+                                                        description: |
+                                                            The maximum allowed value.
+                                                            -1 indicates unlimited.
+                                                        example: 100000
+                                                    current:
+                                                        type: integer
+                                                        format: int64
+                                                        description: Current usage against this quota.
+                                                        example: 50000
+                                                    unit:
+                                                        type: string
+                                                        description: Unit of measurement.
+                                                        example: users
                 '400':
                     description: Invalid projectId format
                     content:
@@ -12564,6 +12584,11 @@ paths:
                                     format: int64
                                     description: Maximum requests per day. -1 for unlimited.
                                     example: 1000000
+                                requestsPerSecond:
+                                    type: integer
+                                    format: int64
+                                    description: Maximum requests per second (burst protection). -1 for unlimited.
+                                    example: 100
             responses:
                 '200':
                     description: Quotas updated
@@ -12702,6 +12727,26 @@ paths:
                                                         description: Unit of measurement.
                                                         example: users
                                             requestsPerDay:
+                                                type: object
+                                                description: A quota limit with current usage.
+                                                properties:
+                                                    limit:
+                                                        type: integer
+                                                        format: int64
+                                                        description: |
+                                                            The maximum allowed value.
+                                                            -1 indicates unlimited.
+                                                        example: 100000
+                                                    current:
+                                                        type: integer
+                                                        format: int64
+                                                        description: Current usage against this quota.
+                                                        example: 50000
+                                                    unit:
+                                                        type: string
+                                                        description: Unit of measurement.
+                                                        example: users
+                                            requestsPerSecond:
                                                 type: object
                                                 description: A quota limit with current usage.
                                                 properties:
@@ -24594,8 +24639,8 @@ paths:
             summary: Rotate an API key
             description: |
                 Rotates an API key, generating a new key string.
-                The previous key remains valid for a grace period (typically 24 hours)
-                to allow for key rotation without downtime.
+                The previous key remains valid for a configurable grace period
+                (default 24 hours) to allow for key rotation without downtime.
             tags:
                 - API Keys
             security:
@@ -24622,6 +24667,27 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                description: Optional rotation parameters
+                required: false
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            description: Request body for rotating an API key.
+                            properties:
+                                gracePeriodSeconds:
+                                    type: integer
+                                    format: int64
+                                    description: |
+                                        Grace period in seconds during which the previous key remains valid.
+                                        Allows for zero-downtime key rotation.
+                                        Default: 86400 (24 hours). Maximum: 604800 (7 days).
+                                        Set to 0 to immediately invalidate the previous key.
+                                    minimum: 0
+                                    maximum: 604800
+                                    default: 86400
+                                    example: 86400
             responses:
                 '200':
                     description: API key rotated successfully
@@ -24749,9 +24815,16 @@ paths:
                                     previousKeyString:
                                         type: string
                                         description: |
-                                            The previous key string. This key will remain valid for a grace period
-                                            (typically 24 hours) to allow for key rotation without downtime.
+                                            The previous key string. This key will remain valid for the configured
+                                            grace period to allow for key rotation without downtime.
                                         example: AIzaSyB3old123def456ghi789jkl012mno345
+                                    gracePeriodExpiresAt:
+                                        type: string
+                                        format: date-time
+                                        description: |
+                                            When the grace period expires and the previous key becomes invalid.
+                                            Null if gracePeriodSeconds was set to 0.
+                                        example: "2024-01-16T10:30:00Z"
                 '400':
                     description: Invalid projectId, appId, or keyId format
                     content:
@@ -30089,12 +30162,15 @@ paths:
                             properties:
                                 keyAlgorithm:
                                     type: string
-                                    description: The algorithm for the key pair. Defaults to RSA_2048.
+                                    description: |
+                                        The algorithm for the key pair. Defaults to RSA_2048.
+                                        ED25519 is recommended for new keys due to smaller signatures and faster verification.
                                     enum:
                                         - RSA_2048
                                         - RSA_4096
                                         - EC_P256
                                         - EC_P384
+                                        - ED25519
                                     default: RSA_2048
                                     example: RSA_2048
                                 validBeforeTime:
@@ -30142,6 +30218,7 @@ paths:
                                                     - RSA_4096
                                                     - EC_P256
                                                     - EC_P384
+                                                    - ED25519
                                                 example: RSA_2048
                                             keyOrigin:
                                                 type: string

@@ -126,6 +126,8 @@ ProjectQuotas:
       $ref: '#/QuotaLimit'
     requestsPerDay:
       $ref: '#/QuotaLimit'
+    requestsPerSecond:
+      $ref: '#/QuotaLimit'
 
 QuotaLimit:
   type: object
@@ -205,6 +207,11 @@ UpdateQuotasRequest:
       format: int64
       description: Maximum requests per day. -1 for unlimited.
       example: 1000000
+    requestsPerSecond:
+      type: integer
+      format: int64
+      description: Maximum requests per second (burst protection). -1 for unlimited.
+      example: 100
 
 UpdateQuotasResponse:
   type: object

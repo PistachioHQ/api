@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "pistachio/types/v1/usage.proto";
+
+// =============================================================================
+// Project Usage Operations
+// =============================================================================
+
+// GetProjectUsageRequest retrieves usage statistics for a project.
+message GetProjectUsageRequest {
+  // The project ID to get usage for.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Start of the time period for usage data.
+  // If not specified, defaults to the start of the current billing period.
+  optional google.protobuf.Timestamp start_time = 2;
+
+  // End of the time period for usage data.
+  // If not specified, defaults to now.
+  optional google.protobuf.Timestamp end_time = 3;
+}
+
+// GetProjectUsageResponse contains the project's usage statistics.
+message GetProjectUsageResponse {
+  // The project's usage statistics.
+  pistachio.types.v1.ProjectUsage usage = 1;
+}
+
+// =============================================================================
+// Project Quota Operations
+// =============================================================================
+
+// GetProjectQuotasRequest retrieves quota limits for a project.
+message GetProjectQuotasRequest {
+  // The project ID to get quotas for.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+}
+
+// GetProjectQuotasResponse contains the project's quota limits.
+message GetProjectQuotasResponse {
+  // The project's quota limits and current usage.
+  pistachio.types.v1.ProjectQuotas quotas = 1;
+}
+
+// UpdateProjectQuotasRequest updates quota limits for a project.
+//
+// Only provided fields are updated. Use -1 to indicate unlimited.
+message UpdateProjectQuotasRequest {
+  // The project ID to update quotas for.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // Maximum number of users. -1 for unlimited.
+  optional int64 users = 2;
+
+  // Maximum number of service accounts. -1 for unlimited.
+  optional int64 service_accounts = 3;
+
+  // Maximum number of tenants. -1 for unlimited.
+  optional int64 tenants = 4;
+
+  // Maximum number of apps. -1 for unlimited.
+  optional int64 apps = 5;
+
+  // Maximum API keys per app. -1 for unlimited.
+  optional int64 api_keys_per_app = 6;
+
+  // Maximum requests per minute. -1 for unlimited.
+  optional int64 requests_per_minute = 7;
+
+  // Maximum requests per day. -1 for unlimited.
+  optional int64 requests_per_day = 8;
+}
+
+// UpdateProjectQuotasResponse contains the updated quota limits.
+message UpdateProjectQuotasResponse {
+  // The updated project quota limits.
+  pistachio.types.v1.ProjectQuotas quotas = 1;
+}

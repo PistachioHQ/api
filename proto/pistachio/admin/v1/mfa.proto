@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/mfa.proto";
+
+// =============================================================================
+// Admin MFA Operations
+// =============================================================================
+//
+// These operations allow administrators to manage MFA factors for users.
+// Users manage their own MFA factors through the public API.
+
+// ListProjectUserMfaFactorsRequest lists MFA factors for a project-level user.
+message ListProjectUserMfaFactorsRequest {
+  // The project ID that owns the user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// ListProjectUserMfaFactorsResponse contains the user's MFA factors.
+message ListProjectUserMfaFactorsResponse {
+  // The list of enrolled MFA factors.
+  repeated pistachio.types.v1.MfaFactor factors = 1;
+}
+
+// DeleteProjectUserMfaFactorRequest removes an MFA factor from a project-level user.
+message DeleteProjectUserMfaFactorRequest {
+  // The project ID that owns the user.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // The factor ID to delete.
+  // Required.
+  string factor_id = 3 [(buf.validate.field).string.min_len = 1];
+}
+
+// DeleteProjectUserMfaFactorResponse is returned after a factor is deleted.
+message DeleteProjectUserMfaFactorResponse {
+  // Empty response. The MFA factor has been removed.
+}
+
+// ListTenantUserMfaFactorsRequest lists MFA factors for a tenant-level user.
+message ListTenantUserMfaFactorsRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that owns the user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 3 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+}
+
+// ListTenantUserMfaFactorsResponse contains the user's MFA factors.
+message ListTenantUserMfaFactorsResponse {
+  // The list of enrolled MFA factors.
+  repeated pistachio.types.v1.MfaFactor factors = 1;
+}
+
+// DeleteTenantUserMfaFactorRequest removes an MFA factor from a tenant-level user.
+message DeleteTenantUserMfaFactorRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID that owns the user.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 3 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // The factor ID to delete.
+  // Required.
+  string factor_id = 4 [(buf.validate.field).string.min_len = 1];
+}
+
+// DeleteTenantUserMfaFactorResponse is returned after a factor is deleted.
+message DeleteTenantUserMfaFactorResponse {
+  // Empty response. The MFA factor has been removed.
+}

@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "pistachio/types/v1/api_key.proto";
+import "pistachio/types/v1/pagination.proto";
+
+// =============================================================================
+// API Key Operations
+// =============================================================================
+
+// CreateApiKeyRequest creates a new API key for an app.
+message CreateApiKeyRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID that will own this API key.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Human-readable display name for the key.
+  // Max 256 characters.
+  string display_name = 3 [(buf.validate.field).string.max_len = 256];
+
+  // Restrictions to apply to this API key.
+  pistachio.types.v1.ApiKeyRestrictions restrictions = 4;
+}
+
+// CreateApiKeyResponse contains the newly created API key.
+//
+// IMPORTANT: The key_string is only returned in this response.
+// Store it securely as it cannot be retrieved again.
+message CreateApiKeyResponse {
+  // The created API key with full key_string.
+  pistachio.types.v1.ApiKey api_key = 1;
+}
+
+// GetApiKeyRequest retrieves an API key by ID.
+message GetApiKeyRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID that owns the API key.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // The API key ID.
+  // Required.
+  string key_id = 3 [(buf.validate.field).string.min_len = 1];
+}
+
+// GetApiKeyResponse contains the requested API key metadata.
+//
+// For security, only the masked key prefix is returned.
+// The full key string is only available at creation time.
+message GetApiKeyResponse {
+  // The API key with masked key_prefix.
+  pistachio.types.v1.ApiKeyInfo api_key = 1;
+}
+
+// UpdateApiKeyRequest updates an existing API key.
+message UpdateApiKeyRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID that owns the API key.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // The API key ID.
+  // Required.
+  string key_id = 3 [(buf.validate.field).string.min_len = 1];
+
+  // New display name.
+  optional string display_name = 4 [(buf.validate.field).string.max_len = 256];
+
+  // New restrictions.
+  // If provided, replaces the existing restrictions entirely.
+  optional pistachio.types.v1.ApiKeyRestrictions restrictions = 5;
+}
+
+// UpdateApiKeyResponse contains the updated API key metadata.
+message UpdateApiKeyResponse {
+  // The updated API key with masked key_prefix.
+  pistachio.types.v1.ApiKeyInfo api_key = 1;
+}
+
+// DeleteApiKeyRequest permanently deletes an API key.
+message DeleteApiKeyRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID that owns the API key.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // The API key ID.
+  // Required.
+  string key_id = 3 [(buf.validate.field).string.min_len = 1];
+}
+
+// DeleteApiKeyResponse is returned after an API key is deleted.
+message DeleteApiKeyResponse {
+  // Empty response. The API key has been permanently deleted.
+}
+
+// ListApiKeysRequest lists API keys for an app.
+message ListApiKeysRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID to list API keys from.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Pagination parameters including page size, cursor, and sort.
+  //
+  // Sortable fields: display_name, created_at, updated_at
+  // Default sort: created_at DESC
+  pistachio.types.v1.PaginationParams pagination = 3;
+}
+
+// ListApiKeysResponse contains a page of API keys.
+//
+// For security, only masked key prefixes are returned.
+message ListApiKeysResponse {
+  // The list of API keys with masked key values.
+  repeated pistachio.types.v1.ApiKeyInfo api_keys = 1;
+
+  // Pagination metadata including next cursor and total count.
+  pistachio.types.v1.PaginationMeta pagination = 2;
+}
+
+// RotateApiKeyRequest generates a new key string for an existing API key.
+message RotateApiKeyRequest {
+  // The project ID that owns the app.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The app ID that owns the API key.
+  // Required.
+  string app_id = 2 [(buf.validate.field).string.min_len = 1];
+
+  // The API key ID.
+  // Required.
+  string key_id = 3 [(buf.validate.field).string.min_len = 1];
+
+  // Grace period in seconds during which the previous key remains valid.
+  // Allows for zero-downtime key rotation.
+  // Default: 86400 (24 hours). Maximum: 604800 (7 days).
+  // Set to 0 to immediately invalidate the previous key.
+  optional int64 grace_period_seconds = 4 [(buf.validate.field).int64 = {
+    gte: 0
+    lte: 604800
+  }];
+}
+
+// RotateApiKeyResponse contains the rotated API key.
+//
+// IMPORTANT: The new key_string is only returned once and cannot be retrieved again.
+message RotateApiKeyResponse {
+  // The API key with new key_string.
+  pistachio.types.v1.ApiKey api_key = 1;
+
+  // The previous key string.
+  // This key remains valid for the configured grace period
+  // to allow for key rotation without downtime.
+  string previous_key_string = 2;
+
+  // When the grace period expires and the previous key becomes invalid.
+  // Not set if grace_period_seconds was 0 (immediate invalidation).
+  optional google.protobuf.Timestamp grace_period_expires_at = 3;
+}

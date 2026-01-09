@@ -71,6 +71,8 @@ pub enum ProviderType {
     Oauth,
     #[serde(rename = "OIDC")]
     Oidc,
+    #[serde(rename = "SAML")]
+    Saml,
     #[serde(rename = "ANONYMOUS")]
     Anonymous,
 }

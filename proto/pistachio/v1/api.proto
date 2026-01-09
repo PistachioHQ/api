@@ -3,15 +3,17 @@ syntax = "proto3";
 package pistachio.v1;
 
 import "pistachio/v1/auth.proto";
+import "pistachio/v1/auth_flow.proto";
 import "pistachio/v1/health.proto";
+import "pistachio/v1/mfa.proto";
+import "pistachio/v1/user.proto";
 
 // =============================================================================
 // Authentication Service
 // =============================================================================
 //
-// Authentication provides client authentication and user identity endpoints
-// Path: /v1/accounts:*
-// Requires API key
+// AuthService provides credential validation endpoints.
+// Used internally for validating API keys, tokens, and service accounts.
 service AuthService {
   // ValidateApiKey validates that the provided API key is valid.
   rpc ValidateApiKey(ValidateApiKeyRequest) returns (ValidateApiKeyResponse);
@@ -23,6 +25,267 @@ service AuthService {
   rpc ValidateServiceAccount(ValidateServiceAccountRequest) returns (ValidateServiceAccountResponse);
 }
 
+// =============================================================================
+// Authentication Flow Service
+// =============================================================================
+//
+// AuthFlowService provides authentication flow operations for client applications.
+// Includes token management, OAuth flows, anonymous auth, and email verification.
+// Requires API key authentication.
+service AuthFlowService {
+  // RefreshToken exchanges a refresh token for new authentication tokens.
+  //
+  // Use this to obtain new tokens when the ID token is about to expire.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid refresh token format
+  // - UNAUTHENTICATED: Refresh token is invalid or expired
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // ExchangeToken exchanges a custom token for authentication tokens.
+  //
+  // Custom tokens are created server-side using the Admin API.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid custom token format
+  // - UNAUTHENTICATED: Custom token is invalid or expired
+  rpc ExchangeToken(ExchangeTokenRequest) returns (ExchangeTokenResponse);
+
+  // SignOut signs out the current user.
+  //
+  // Can optionally revoke the refresh token or all sessions.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc SignOut(SignOutRequest) returns (SignOutResponse);
+
+  // SignInAnonymously creates an anonymous user account.
+  //
+  // Anonymous users can interact with the app without creating a full account.
+  // They can later be upgraded by linking an authentication provider.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid tenant_id format
+  // - NOT_FOUND: Tenant does not exist
+  // - FAILED_PRECONDITION: Anonymous auth is not enabled
+  rpc SignInAnonymously(SignInAnonymouslyRequest) returns (SignInAnonymouslyResponse);
+
+  // SendEmailVerification sends an email verification link.
+  //
+  // Requires an authenticated user with an email address.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - FAILED_PRECONDITION: User has no email or email is already verified
+  rpc SendEmailVerification(SendEmailVerificationRequest) returns (SendEmailVerificationResponse);
+
+  // ConfirmEmailVerification confirms email verification with an OOB code.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid or expired OOB code
+  rpc ConfirmEmailVerification(ConfirmEmailVerificationRequest) returns (ConfirmEmailVerificationResponse);
+
+  // GetOAuthAuthorizationUrl gets the authorization URL for an OAuth provider.
+  //
+  // Returns a URL that the client should redirect the user to for OAuth sign-in.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid provider_id or redirect_uri
+  // - NOT_FOUND: Provider does not exist or is not enabled
+  rpc GetOAuthAuthorizationUrl(GetOAuthAuthorizationUrlRequest) returns (GetOAuthAuthorizationUrlResponse);
+
+  // HandleOAuthCallback processes the OAuth callback from a provider.
+  //
+  // Exchanges the authorization code for authentication tokens.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid code, state, or redirect_uri
+  // - UNAUTHENTICATED: OAuth flow failed
+  rpc HandleOAuthCallback(HandleOAuthCallbackRequest) returns (HandleOAuthCallbackResponse);
+
+  // ListAuthProviders lists available authentication providers.
+  //
+  // Returns the providers configured for the project (or tenant).
+  //
+  // Errors:
+  // - NOT_FOUND: Tenant does not exist
+  rpc ListAuthProviders(ListAuthProvidersRequest) returns (ListAuthProvidersResponse);
+}
+
+// =============================================================================
+// User Self-Service
+// =============================================================================
+//
+// UserService provides self-service operations for authenticated users.
+// Allows users to manage their profile, sessions, and linked providers.
+// Requires user authentication (ID token).
+service UserService {
+  // GetCurrentUser retrieves the authenticated user's profile.
+  //
+  // Returns the current user's profile data including email, display name,
+  // and linked authentication providers.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
+
+  // UpdateCurrentUser updates the authenticated user's profile.
+  //
+  // Only display_name and photo_url can be updated by the user.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - INVALID_ARGUMENT: Invalid field format
+  rpc UpdateCurrentUser(UpdateCurrentUserRequest) returns (UpdateCurrentUserResponse);
+
+  // DeleteCurrentUser permanently deletes the authenticated user's account.
+  //
+  // This operation is irreversible. All user data will be deleted.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc DeleteCurrentUser(DeleteCurrentUserRequest) returns (DeleteCurrentUserResponse);
+
+  // ListSessions lists the authenticated user's active sessions.
+  //
+  // The current session is marked in the response.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+
+  // RevokeSession revokes a specific session.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - NOT_FOUND: Session does not exist
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+
+  // RevokeAllSessions revokes all sessions except the current one.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+
+  // ListLinkedProviders lists authentication providers linked to the user's account.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc ListLinkedProviders(ListLinkedProvidersRequest) returns (ListLinkedProvidersResponse);
+
+  // LinkProvider links an authentication provider to the user's account.
+  //
+  // Allows users to add additional sign-in methods.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - INVALID_ARGUMENT: Invalid provider_id or credentials
+  // - ALREADY_EXISTS: Provider is already linked to another account
+  rpc LinkProvider(LinkProviderRequest) returns (LinkProviderResponse);
+
+  // UnlinkProvider removes an authentication provider from the user's account.
+  //
+  // Users must keep at least one sign-in method.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - NOT_FOUND: Provider is not linked to this account
+  // - FAILED_PRECONDITION: Cannot unlink the only sign-in method
+  rpc UnlinkProvider(UnlinkProviderRequest) returns (UnlinkProviderResponse);
+}
+
+// =============================================================================
+// MFA Service
+// =============================================================================
+//
+// MfaService provides multi-factor authentication operations for users.
+// Allows users to enroll, manage, and use MFA factors.
+// Requires user authentication (ID token).
+service MfaService {
+  // ListMfaFactors lists the authenticated user's enrolled MFA factors.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc ListMfaFactors(ListMfaFactorsRequest) returns (ListMfaFactorsResponse);
+
+  // EnrollMfaFactor starts enrollment of a new MFA factor.
+  //
+  // For TOTP: Returns a secret and URI for QR code display.
+  // For SMS/email: Sends a verification code to the user.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - INVALID_ARGUMENT: Invalid factor_type or phone_number
+  // - FAILED_PRECONDITION: MFA is not enabled for this project
+  rpc EnrollMfaFactor(EnrollMfaFactorRequest) returns (EnrollMfaFactorResponse);
+
+  // VerifyMfaFactor verifies an MFA factor during enrollment.
+  //
+  // Completes the enrollment by verifying the user has access to the factor.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - INVALID_ARGUMENT: Invalid factor_id or code
+  // - NOT_FOUND: Factor does not exist
+  rpc VerifyMfaFactor(VerifyMfaFactorRequest) returns (VerifyMfaFactorResponse);
+
+  // UnenrollMfaFactor removes an MFA factor from the user's account.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - NOT_FOUND: Factor does not exist
+  rpc UnenrollMfaFactor(UnenrollMfaFactorRequest) returns (UnenrollMfaFactorResponse);
+
+  // ChallengeMfaFactor initiates an MFA challenge for a factor.
+  //
+  // For SMS/email factors, sends a verification code.
+  // For TOTP factors, no action is needed.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid factor_id or recaptcha_token
+  // - NOT_FOUND: Factor does not exist
+  rpc ChallengeMfaFactor(ChallengeMfaFactorRequest) returns (ChallengeMfaFactorResponse);
+
+  // CompleteMfaChallenge completes an MFA challenge during authentication.
+  //
+  // Called after the user provides their MFA code to complete sign-in.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid challenge_id or code
+  // - UNAUTHENTICATED: Code is incorrect
+  rpc CompleteMfaChallenge(CompleteMfaChallengeRequest) returns (CompleteMfaChallengeResponse);
+
+  // GenerateRecoveryCodes generates new recovery codes for the authenticated user.
+  //
+  // Recovery codes provide a fallback authentication method when MFA factors
+  // are unavailable. Generating new codes invalidates any previously generated codes.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - FAILED_PRECONDITION: User has no MFA factors enrolled
+  rpc GenerateRecoveryCodes(GenerateRecoveryCodesRequest) returns (GenerateRecoveryCodesResponse);
+
+  // GetRecoveryCodeCount retrieves the number of remaining recovery codes.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  rpc GetRecoveryCodeCount(GetRecoveryCodeCountRequest) returns (GetRecoveryCodeCountResponse);
+
+  // VerifyRecoveryCode verifies a recovery code during MFA challenge.
+  //
+  // Recovery codes can be used as a fallback when other MFA factors are unavailable.
+  // Each code can only be used once.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid challenge_id or recovery_code format
+  // - UNAUTHENTICATED: Recovery code is invalid or already used
+  rpc VerifyRecoveryCode(VerifyRecoveryCodeRequest) returns (VerifyRecoveryCodeResponse);
+}
+
+// =============================================================================
+// Health Service
+// =============================================================================
+//
 // HealthService provides health check endpoints for the Pistachio API.
 service HealthService {
   // Check returns the health status of the service.

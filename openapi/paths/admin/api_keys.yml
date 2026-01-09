@@ -288,8 +288,8 @@ apiKeyRotate:
     summary: Rotate an API key
     description: |
       Rotates an API key, generating a new key string.
-      The previous key remains valid for a grace period (typically 24 hours)
-      to allow for key rotation without downtime.
+      The previous key remains valid for a configurable grace period
+      (default 24 hours) to allow for key rotation without downtime.
     tags:
       - API Keys
     security:
@@ -316,6 +316,13 @@ apiKeyRotate:
         required: true
         schema:
           type: string
+    requestBody:
+      description: Optional rotation parameters
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/admin/api_key.yml#/RotateApiKeyRequest'
     responses:
       '200':
         description: API key rotated successfully

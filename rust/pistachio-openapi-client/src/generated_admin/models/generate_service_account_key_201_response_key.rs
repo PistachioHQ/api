@@ -72,6 +72,8 @@ pub enum KeyAlgorithm {
     EcP256,
     #[serde(rename = "EC_P384")]
     EcP384,
+    #[serde(rename = "ED25519")]
+    Ed25519,
 }
 
 impl Default for KeyAlgorithm {

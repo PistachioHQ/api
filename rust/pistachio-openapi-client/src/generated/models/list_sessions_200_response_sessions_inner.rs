@@ -42,6 +42,22 @@ pub struct ListSessions200ResponseSessionsInner {
     /// Whether this is the current session.
     #[serde(rename = "current", skip_serializing_if = "Option::is_none")]
     pub current: Option<bool>,
+    /// Type of device used for this session. Derived from user agent analysis. Examples: desktop, mobile, tablet, unknown
+    #[serde(
+        rename = "deviceType",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub device_type: Option<Option<String>>,
+    /// Approximate geographic location derived from IP address. Empty if location cannot be determined.
+    #[serde(
+        rename = "location",
+        default,
+        with = "::serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub location: Option<Option<String>>,
 }
 
 impl ListSessions200ResponseSessionsInner {
@@ -54,6 +70,8 @@ impl ListSessions200ResponseSessionsInner {
             created_at: None,
             last_active_at: None,
             current: None,
+            device_type: None,
+            location: None,
         }
     }
 }

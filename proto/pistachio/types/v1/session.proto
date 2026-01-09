@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Session represents an active user session.
+//
+// Sessions are created when users sign in and track the authentication
+// state across requests. Users can have multiple concurrent sessions
+// from different devices.
+message Session {
+  // Unique session identifier.
+  string session_id = 1;
+
+  // User agent string from the session's originating request.
+  string user_agent = 2;
+
+  // IP address of the client that created the session.
+  string ip_address = 3;
+
+  // Timestamp when the session was created.
+  google.protobuf.Timestamp created_at = 4;
+
+  // Timestamp when the session was last active.
+  google.protobuf.Timestamp last_active_at = 5;
+
+  // Whether this is the current session making the request.
+  bool current = 6;
+
+  // Type of device used for this session.
+  // Derived from user agent analysis.
+  // Examples: "desktop", "mobile", "tablet", "unknown"
+  string device_type = 7;
+
+  // Approximate geographic location derived from IP address.
+  // Examples: "San Francisco, CA, US", "London, UK"
+  // Empty if location cannot be determined.
+  string location = 8;
+}
+
+// LinkedProvider represents an authentication provider linked to a user's account.
+//
+// Users can link multiple providers to a single account, allowing them to
+// sign in using any linked identity.
+message LinkedProvider {
+  // The provider identifier.
+  // Examples: "google.com", "facebook.com", "github.com"
+  string provider_id = 1;
+
+  // The type of provider.
+  ProviderType provider_type = 2;
+
+  // The user's ID with this provider.
+  string federated_id = 3;
+
+  // Email from this provider, if available.
+  string email = 4;
+
+  // Display name from this provider, if available.
+  string display_name = 5;
+
+  // Photo URL from this provider, if available.
+  string photo_url = 6;
+}
+
+// ProviderType specifies the type of authentication provider.
+enum ProviderType {
+  // Unspecified provider type.
+  PROVIDER_TYPE_UNSPECIFIED = 0;
+
+  // Passphrase-derived public key authentication (password-based).
+  PROVIDER_TYPE_PDPKA = 1;
+
+  // OAuth 2.0 provider.
+  PROVIDER_TYPE_OAUTH = 2;
+
+  // OpenID Connect provider.
+  PROVIDER_TYPE_OIDC = 3;
+
+  // SAML provider.
+  PROVIDER_TYPE_SAML = 4;
+
+  // Anonymous/guest authentication.
+  PROVIDER_TYPE_ANONYMOUS = 5;
+}
+
+// CurrentUser represents the authenticated user's profile for self-service operations.
+//
+// This is a subset of the full User type, containing only fields that
+// are relevant for user self-service operations.
+message CurrentUser {
+  // The user's unique identifier.
+  // 32 hex characters ending in '00'.
+  string pistachio_id = 1;
+
+  // Tenant ID if the user belongs to a tenant.
+  // Empty for project-level users.
+  string tenant_id = 2;
+
+  // The user's email address.
+  string email = 3;
+
+  // Whether the email address has been verified.
+  bool email_verified = 4;
+
+  // The user's phone number in E.164 format.
+  string phone_number = 5;
+
+  // The user's display name.
+  string display_name = 6;
+
+  // URL to the user's profile photo.
+  string photo_url = 7;
+
+  // Whether the account is disabled.
+  bool disabled = 8;
+
+  // Timestamp when the account was created.
+  google.protobuf.Timestamp created_at = 9;
+
+  // Timestamp when the user last signed in.
+  optional google.protobuf.Timestamp last_sign_in_at = 10;
+
+  // Authentication providers linked to this account.
+  repeated LinkedProvider providers = 11;
+}

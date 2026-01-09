@@ -407,3 +407,106 @@ ChallengeMfaFactorResponse:
       format: date-time
       description: When the challenge expires.
       example: "2024-01-15T10:35:00Z"
+
+CompleteMfaChallengeRequest:
+  type: object
+  description: Request body for completing an MFA challenge.
+  required:
+    - challengeId
+    - code
+  properties:
+    challengeId:
+      type: string
+      description: The challenge ID from the MFA challenge response.
+      example: challenge-xyz789
+    code:
+      type: string
+      description: |
+        The verification code.
+        For TOTP: current 6-digit code from authenticator app.
+        For SMS/email: the code sent to the phone/email.
+      pattern: '^\d{6}$'
+      example: "123456"
+
+# =============================================================================
+# Recovery Codes
+# =============================================================================
+
+GenerateRecoveryCodesResponse:
+  type: object
+  description: |
+    Response containing newly generated recovery codes.
+    IMPORTANT: These codes are only shown once. Store them securely offline.
+  properties:
+    recoveryCodes:
+      type: array
+      description: |
+        The generated recovery codes. Typically 10 codes, each usable only once.
+        Store these codes securely offline. They cannot be retrieved again.
+      items:
+        type: string
+      example:
+        - "ABCD-EFGH-IJKL"
+        - "MNOP-QRST-UVWX"
+        - "YZAB-CDEF-GHIJ"
+
+GetRecoveryCodeCountResponse:
+  type: object
+  description: Response containing the count of remaining recovery codes.
+  properties:
+    remainingCount:
+      type: integer
+      format: int32
+      description: Number of unused recovery codes remaining.
+      example: 8
+    totalCount:
+      type: integer
+      format: int32
+      description: Total number of recovery codes originally generated.
+      example: 10
+
+VerifyRecoveryCodeRequest:
+  type: object
+  description: Request body for verifying a recovery code during MFA challenge.
+  required:
+    - challengeId
+    - recoveryCode
+  properties:
+    challengeId:
+      type: string
+      description: The challenge ID from the MFA challenge response.
+      example: challenge-xyz789
+    recoveryCode:
+      type: string
+      description: |
+        The recovery code to verify.
+        Format: XXXX-XXXX-XXXX (alphanumeric with hyphens).
+      pattern: '^[A-Z0-9-]+$'
+      example: "ABCD-EFGH-IJKL"
+
+VerifyRecoveryCodeResponse:
+  type: object
+  description: Response after successfully verifying a recovery code.
+  properties:
+    idToken:
+      type: string
+      description: JWT ID token for authenticating API requests.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    refreshToken:
+      type: string
+      description: Refresh token for obtaining new ID tokens.
+      example: AMf-vBw7abc123def456...
+    expiresIn:
+      type: integer
+      format: int64
+      description: Number of seconds until the ID token expires.
+      example: 3600
+    pistachioId:
+      type: string
+      description: The user's pistachio_id.
+      example: a1b2c3d4e5f6789012345678901234500
+    remainingCodes:
+      type: integer
+      format: int32
+      description: Number of recovery codes remaining after this use.
+      example: 7

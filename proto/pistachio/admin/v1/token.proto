@@ -1,0 +1,214 @@
+syntax = "proto3";
+
+package pistachio.admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+// =============================================================================
+// Custom Token Operations
+// =============================================================================
+
+// CreateCustomTokenRequest creates a custom token for server-side authentication.
+//
+// Custom tokens allow server-side authentication of users when you manage
+// your own user database or need to integrate with external identity providers.
+message CreateCustomTokenRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The pistachio_id of the user to create the token for.
+  // Required. Must be a valid user within the project.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // Optional tenant ID if the user belongs to a tenant.
+  // Required for multi-tenant projects.
+  string tenant_id = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      min_len: 1
+      max_len: 128
+      pattern: "^[a-zA-Z0-9_]+$"
+    }
+  }];
+
+  // Optional additional claims to include in the custom token.
+  // These claims will be merged with the user's existing custom claims.
+  // Reserved claim names (iss, sub, aud, exp, iat, nbf) cannot be overwritten.
+  google.protobuf.Struct additional_claims = 4;
+
+  // Token validity duration.
+  // Default is 1 hour. Maximum is 24 hours.
+  // Minimum is 1 minute.
+  google.protobuf.Duration expires_in = 5;
+}
+
+// CreateCustomTokenResponse contains the created custom token.
+message CreateCustomTokenResponse {
+  // The custom token (JWT) that can be used to sign in the user.
+  // Exchange this token for an ID token using the token exchange endpoint.
+  string custom_token = 1;
+}
+
+// =============================================================================
+// ID Token Verification
+// =============================================================================
+
+// VerifyIdTokenRequest verifies an ID token and returns its claims.
+message VerifyIdTokenRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The ID token to verify.
+  // Required.
+  string id_token = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Whether to check if the token has been revoked.
+  // This adds a backend check and increases latency.
+  bool check_revoked = 3;
+}
+
+// VerifyIdTokenResponse contains the decoded and verified token claims.
+message VerifyIdTokenResponse {
+  // Whether the token is valid.
+  bool valid = 1;
+
+  // The user's pistachio_id.
+  string pistachio_id = 2;
+
+  // The user's email address.
+  string email = 3;
+
+  // Whether the user's email has been verified.
+  bool email_verified = 4;
+
+  // All claims from the token.
+  google.protobuf.Struct claims = 5;
+}
+
+// =============================================================================
+// Session Cookie Operations
+// =============================================================================
+
+// CreateSessionCookieRequest creates a session cookie from an ID token.
+//
+// Session cookies provide long-lived authentication for web applications.
+message CreateSessionCookieRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The ID token to exchange for a session cookie.
+  // Required. Must be a valid, non-expired ID token.
+  string id_token = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Session duration.
+  // Default is 7 days. Minimum is 5 minutes. Maximum is 14 days.
+  google.protobuf.Duration expires_in = 3;
+}
+
+// CreateSessionCookieResponse contains the created session cookie.
+message CreateSessionCookieResponse {
+  // The session cookie value.
+  // Set this as an HTTP-only, secure cookie in your web application.
+  string session_cookie = 1;
+
+  // When the session cookie expires.
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+// VerifySessionCookieRequest verifies a session cookie and returns its claims.
+message VerifySessionCookieRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The session cookie to verify.
+  // Required.
+  string session_cookie = 2 [(buf.validate.field).string.min_len = 1];
+
+  // Whether to check if the session has been revoked.
+  // This adds a backend check and increases latency.
+  bool check_revoked = 3;
+}
+
+// VerifySessionCookieResponse contains the decoded and verified session claims.
+message VerifySessionCookieResponse {
+  // Whether the session cookie is valid.
+  bool valid = 1;
+
+  // The user's pistachio_id.
+  string pistachio_id = 2;
+
+  // The user's email address.
+  string email = 3;
+
+  // Whether the user's email has been verified.
+  bool email_verified = 4;
+
+  // All claims from the session cookie.
+  google.protobuf.Struct claims = 5;
+}
+
+// =============================================================================
+// Token Revocation
+// =============================================================================
+
+// RevokeRefreshTokensRequest revokes all refresh tokens for a user.
+//
+// This invalidates all existing sessions for the user, forcing them to
+// re-authenticate on their next request.
+message RevokeRefreshTokensRequest {
+  // The project ID.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The user's pistachio_id.
+  // Required. Must be 32 hex characters ending in '00'.
+  string pistachio_id = 2 [(buf.validate.field).string = {
+    len: 32
+    pattern: "^[a-fA-F0-9]{30}00$"
+  }];
+
+  // Optional tenant ID if the user belongs to a tenant.
+  string tenant_id = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      min_len: 1
+      max_len: 128
+      pattern: "^[a-zA-Z0-9_]+$"
+    }
+  }];
+}
+
+// RevokeRefreshTokensResponse is returned after tokens are revoked.
+message RevokeRefreshTokensResponse {
+  // Empty response. All refresh tokens have been revoked.
+}

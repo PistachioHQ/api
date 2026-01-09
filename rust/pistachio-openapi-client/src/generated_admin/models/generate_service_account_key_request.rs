@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// GenerateServiceAccountKeyRequest : Request body for generating a new service account key.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GenerateServiceAccountKeyRequest {
-    /// The algorithm for the key pair. Defaults to RSA_2048.
+    /// The algorithm for the key pair. Defaults to RSA_2048. ED25519 is recommended for new keys due to smaller signatures and faster verification.
     #[serde(rename = "keyAlgorithm", skip_serializing_if = "Option::is_none")]
     pub key_algorithm: Option<KeyAlgorithm>,
     /// Optional expiration time for the key.
@@ -31,7 +31,7 @@ impl GenerateServiceAccountKeyRequest {
         }
     }
 }
-/// The algorithm for the key pair. Defaults to RSA_2048.
+/// The algorithm for the key pair. Defaults to RSA_2048. ED25519 is recommended for new keys due to smaller signatures and faster verification.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum KeyAlgorithm {
     #[serde(rename = "RSA_2048")]
@@ -42,6 +42,8 @@ pub enum KeyAlgorithm {
     EcP256,
     #[serde(rename = "EC_P384")]
     EcP384,
+    #[serde(rename = "ED25519")]
+    Ed25519,
 }
 
 impl Default for KeyAlgorithm {

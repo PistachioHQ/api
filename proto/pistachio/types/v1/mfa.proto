@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// MfaFactor represents a multi-factor authentication factor enrolled by a user.
+//
+// Factors can be TOTP (time-based one-time password), SMS, or email.
+// Each factor has a verification status and usage tracking.
+message MfaFactor {
+  // Unique factor identifier.
+  string factor_id = 1;
+
+  // The type of MFA factor.
+  MfaFactorType factor_type = 2;
+
+  // User-provided name for the factor.
+  // Max 256 characters.
+  string display_name = 3;
+
+  // Phone number for SMS factor (E.164 format).
+  // Only set for SMS factors.
+  string phone_number = 4;
+
+  // Email address for email factor.
+  // Only set for email factors.
+  string email = 5;
+
+  // Whether the factor has been verified.
+  // Unverified factors cannot be used for authentication.
+  bool verified = 6;
+
+  // Timestamp when the factor was enrolled.
+  google.protobuf.Timestamp created_at = 7;
+
+  // Timestamp when the factor was last used for authentication.
+  optional google.protobuf.Timestamp last_used_at = 8;
+}
+
+// MfaFactorType specifies the type of multi-factor authentication.
+enum MfaFactorType {
+  // Unspecified factor type.
+  MFA_FACTOR_TYPE_UNSPECIFIED = 0;
+
+  // Time-based One-Time Password using authenticator apps.
+  // Compatible with Google Authenticator, Authy, etc.
+  MFA_FACTOR_TYPE_TOTP = 1;
+
+  // SMS-based verification code.
+  MFA_FACTOR_TYPE_SMS = 2;
+
+  // Email-based verification code.
+  MFA_FACTOR_TYPE_EMAIL = 3;
+}

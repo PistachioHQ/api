@@ -31,6 +31,8 @@ pub struct GetProjectQuotas200ResponseQuotas {
     pub requests_per_minute: Option<Box<models::GetProjectQuotas200ResponseQuotasUsers>>,
     #[serde(rename = "requestsPerDay", skip_serializing_if = "Option::is_none")]
     pub requests_per_day: Option<Box<models::GetProjectQuotas200ResponseQuotasUsers>>,
+    #[serde(rename = "requestsPerSecond", skip_serializing_if = "Option::is_none")]
+    pub requests_per_second: Option<Box<models::GetProjectQuotas200ResponseQuotasUsers>>,
 }
 
 impl GetProjectQuotas200ResponseQuotas {
@@ -45,6 +47,7 @@ impl GetProjectQuotas200ResponseQuotas {
             api_keys_per_app: None,
             requests_per_minute: None,
             requests_per_day: None,
+            requests_per_second: None,
         }
     }
 }

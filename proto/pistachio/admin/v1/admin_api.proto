@@ -2,10 +2,15 @@ syntax = "proto3";
 
 package pistachio.admin.v1;
 
+import "pistachio/admin/v1/api_key.proto";
 import "pistachio/admin/v1/app.proto";
 import "pistachio/admin/v1/auth_provider.proto";
+import "pistachio/admin/v1/mfa.proto";
 import "pistachio/admin/v1/project.proto";
+import "pistachio/admin/v1/service_account.proto";
 import "pistachio/admin/v1/tenant.proto";
+import "pistachio/admin/v1/token.proto";
+import "pistachio/admin/v1/usage.proto";
 import "pistachio/admin/v1/user.proto";
 
 // =============================================================================
@@ -537,4 +542,340 @@ service PistachioAdmin {
   // - NOT_FOUND: Project or tenant does not exist
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchTenantUsers(SearchTenantUsersRequest) returns (SearchTenantUsersResponse);
+
+  // =============================================================================
+  // Service Account Operations
+  // =============================================================================
+
+  // CreateServiceAccount creates a new service account within a project.
+  //
+  // Service accounts are used for server-to-server authentication using
+  // cryptographic keys instead of passwords.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or display_name format
+  // - ALREADY_EXISTS: Service account ID is already taken within this project
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateServiceAccount(CreateServiceAccountRequest) returns (CreateServiceAccountResponse);
+
+  // GetServiceAccount retrieves a service account by its ID.
+  //
+  // Returns the service account details including email and disabled status.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or service_account_id format
+  // - NOT_FOUND: Project or service account does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetServiceAccount(GetServiceAccountRequest) returns (GetServiceAccountResponse);
+
+  // UpdateServiceAccount updates an existing service account.
+  //
+  // Updates the display name, description, or disabled status.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or field format
+  // - NOT_FOUND: Project or service account does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateServiceAccount(UpdateServiceAccountRequest) returns (UpdateServiceAccountResponse);
+
+  // DeleteServiceAccount permanently deletes a service account.
+  //
+  // This operation is irreversible. All keys associated with the service
+  // account will also be deleted.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or service_account_id format
+  // - NOT_FOUND: Project or service account does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteServiceAccount(DeleteServiceAccountRequest) returns (DeleteServiceAccountResponse);
+
+  // ListServiceAccounts lists all service accounts within a project.
+  //
+  // Results are paginated and sorted by creation time by default.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, page_size, or page_token
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListServiceAccounts(ListServiceAccountsRequest) returns (ListServiceAccountsResponse);
+
+  // SearchServiceAccounts searches for service accounts within a project.
+  //
+  // Provides advanced search capabilities including full-text search,
+  // field-specific queries, and flexible sorting.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or search query
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc SearchServiceAccounts(SearchServiceAccountsRequest) returns (SearchServiceAccountsResponse);
+
+  // GenerateServiceAccountKey generates a new key for a service account.
+  //
+  // The private key data is only returned once in the response.
+  // Store it securely as it cannot be retrieved again.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or key_algorithm
+  // - NOT_FOUND: Project or service account does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GenerateServiceAccountKey(GenerateServiceAccountKeyRequest) returns (GenerateServiceAccountKeyResponse);
+
+  // ListServiceAccountKeys lists all keys for a service account.
+  //
+  // Returns key metadata only; private key data is never returned after creation.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or service_account_id format
+  // - NOT_FOUND: Project or service account does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListServiceAccountKeys(ListServiceAccountKeysRequest) returns (ListServiceAccountKeysResponse);
+
+  // GetServiceAccountKey retrieves a specific key by ID.
+  //
+  // Returns key metadata only; private key data is never returned after creation.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or key_id format
+  // - NOT_FOUND: Project, service account, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetServiceAccountKey(GetServiceAccountKeyRequest) returns (GetServiceAccountKeyResponse);
+
+  // DeleteServiceAccountKey permanently deletes a key.
+  //
+  // This operation is irreversible. Applications using this key will
+  // no longer be able to authenticate.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or key_id format
+  // - NOT_FOUND: Project, service account, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteServiceAccountKey(DeleteServiceAccountKeyRequest) returns (DeleteServiceAccountKeyResponse);
+
+  // DisableServiceAccountKey disables a key without deleting it.
+  //
+  // Disabled keys cannot be used for authentication but can be re-enabled.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or key_id format
+  // - NOT_FOUND: Project, service account, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DisableServiceAccountKey(DisableServiceAccountKeyRequest) returns (DisableServiceAccountKeyResponse);
+
+  // EnableServiceAccountKey re-enables a disabled key.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, service_account_id, or key_id format
+  // - NOT_FOUND: Project, service account, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc EnableServiceAccountKey(EnableServiceAccountKeyRequest) returns (EnableServiceAccountKeyResponse);
+
+  // =============================================================================
+  // API Key Operations
+  // =============================================================================
+
+  // CreateApiKey creates a new API key for an app.
+  //
+  // The full key string is only returned in this response.
+  // Store it securely as it cannot be retrieved again.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, or restrictions format
+  // - NOT_FOUND: Project or app does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateApiKey(CreateApiKeyRequest) returns (CreateApiKeyResponse);
+
+  // GetApiKey retrieves an API key by ID.
+  //
+  // Returns key metadata with masked key prefix only.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, or key_id format
+  // - NOT_FOUND: Project, app, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetApiKey(GetApiKeyRequest) returns (GetApiKeyResponse);
+
+  // UpdateApiKey updates an existing API key.
+  //
+  // Updates the display name or restrictions.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, key_id, or field format
+  // - NOT_FOUND: Project, app, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateApiKey(UpdateApiKeyRequest) returns (UpdateApiKeyResponse);
+
+  // DeleteApiKey permanently deletes an API key.
+  //
+  // This operation is irreversible. Applications using this key will
+  // no longer be able to authenticate.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, or key_id format
+  // - NOT_FOUND: Project, app, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteApiKey(DeleteApiKeyRequest) returns (DeleteApiKeyResponse);
+
+  // ListApiKeys lists all API keys for an app.
+  //
+  // Returns key metadata with masked key prefixes only.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, page_size, or page_token
+  // - NOT_FOUND: Project or app does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListApiKeys(ListApiKeysRequest) returns (ListApiKeysResponse);
+
+  // RotateApiKey generates a new key string for an existing API key.
+  //
+  // The previous key string remains valid for a grace period (typically 24 hours)
+  // to allow for key rotation without downtime.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, app_id, or key_id format
+  // - NOT_FOUND: Project, app, or key does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc RotateApiKey(RotateApiKeyRequest) returns (RotateApiKeyResponse);
+
+  // =============================================================================
+  // User MFA Administration
+  // =============================================================================
+
+  // ListProjectUserMfaFactors lists MFA factors for a project-level user.
+  //
+  // Allows administrators to view a user's enrolled MFA factors.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or pistachio_id format
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListProjectUserMfaFactors(ListProjectUserMfaFactorsRequest) returns (ListProjectUserMfaFactorsResponse);
+
+  // DeleteProjectUserMfaFactor removes an MFA factor from a project-level user.
+  //
+  // Allows administrators to remove a user's MFA factor, for example when
+  // a user loses access to their authenticator device.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, pistachio_id, or factor_id format
+  // - NOT_FOUND: Project, user, or factor does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteProjectUserMfaFactor(DeleteProjectUserMfaFactorRequest) returns (DeleteProjectUserMfaFactorResponse);
+
+  // ListTenantUserMfaFactors lists MFA factors for a tenant-level user.
+  //
+  // Allows administrators to view a user's enrolled MFA factors.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, or pistachio_id format
+  // - NOT_FOUND: Project, tenant, or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc ListTenantUserMfaFactors(ListTenantUserMfaFactorsRequest) returns (ListTenantUserMfaFactorsResponse);
+
+  // DeleteTenantUserMfaFactor removes an MFA factor from a tenant-level user.
+  //
+  // Allows administrators to remove a user's MFA factor, for example when
+  // a user loses access to their authenticator device.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, pistachio_id, or factor_id format
+  // - NOT_FOUND: Project, tenant, user, or factor does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc DeleteTenantUserMfaFactor(DeleteTenantUserMfaFactorRequest) returns (DeleteTenantUserMfaFactorResponse);
+
+  // =============================================================================
+  // Token Operations
+  // =============================================================================
+
+  // CreateCustomToken creates a custom token for server-side authentication.
+  //
+  // Custom tokens allow server-side authentication of users when integrating
+  // with external identity systems. The token can be exchanged for an ID token.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, pistachio_id, or claims format
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateCustomToken(CreateCustomTokenRequest) returns (CreateCustomTokenResponse);
+
+  // VerifyIdToken verifies an ID token and returns its claims.
+  //
+  // Validates the token signature, expiration, and optionally checks
+  // if the token has been revoked.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or id_token format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc VerifyIdToken(VerifyIdTokenRequest) returns (VerifyIdTokenResponse);
+
+  // CreateSessionCookie creates a session cookie from an ID token.
+  //
+  // Session cookies provide long-lived authentication for web applications
+  // and should be set as HTTP-only, secure cookies.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, id_token, or expires_in format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc CreateSessionCookie(CreateSessionCookieRequest) returns (CreateSessionCookieResponse);
+
+  // VerifySessionCookie verifies a session cookie and returns its claims.
+  //
+  // Validates the cookie signature, expiration, and optionally checks
+  // if the session has been revoked.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or session_cookie format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc VerifySessionCookie(VerifySessionCookieRequest) returns (VerifySessionCookieResponse);
+
+  // RevokeRefreshTokens revokes all refresh tokens for a user.
+  //
+  // This invalidates all existing sessions for the user, forcing them
+  // to re-authenticate on their next request.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or pistachio_id format
+  // - NOT_FOUND: Project or user does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc RevokeRefreshTokens(RevokeRefreshTokensRequest) returns (RevokeRefreshTokensResponse);
+
+  // =============================================================================
+  // Usage and Quotas
+  // =============================================================================
+
+  // GetProjectUsage retrieves usage statistics for a project.
+  //
+  // Returns metrics including active users, authentication events,
+  // API calls, and storage usage for the specified time period.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or time range format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetProjectUsage(GetProjectUsageRequest) returns (GetProjectUsageResponse);
+
+  // GetProjectQuotas retrieves quota limits for a project.
+  //
+  // Returns the configured limits and current usage for users,
+  // service accounts, tenants, apps, and rate limits.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id format
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc GetProjectQuotas(GetProjectQuotasRequest) returns (GetProjectQuotasResponse);
+
+  // UpdateProjectQuotas updates quota limits for a project.
+  //
+  // Only provided fields are updated. Use -1 to indicate unlimited.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id or quota values
+  // - NOT_FOUND: Project does not exist
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc UpdateProjectQuotas(UpdateProjectQuotasRequest) returns (UpdateProjectQuotasResponse);
 }

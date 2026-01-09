@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package pistachio.types.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ApiKey represents a full API key including the secret key string.
+//
+// The full key_string is only returned when creating or rotating a key.
+// For security, subsequent Get requests return ApiKeyInfo with only a masked prefix.
+message ApiKey {
+  // Resource name in the format:
+  // "projects/{project_id}/apps/{app_id}/apiKeys/{key_id}"
+  string name = 1;
+
+  // Unique key identifier.
+  string key_id = 2;
+
+  // The full API key string to use for authentication.
+  // This is the value that should be passed in requests.
+  // IMPORTANT: Only returned once at creation/rotation time.
+  string key_string = 3;
+
+  // Human-readable display name for the key.
+  // Max 256 characters.
+  string display_name = 4;
+
+  // Restrictions applied to this API key.
+  ApiKeyRestrictions restrictions = 5;
+
+  // Timestamp when the key was created.
+  google.protobuf.Timestamp created_at = 6;
+
+  // Timestamp when the key was last updated.
+  optional google.protobuf.Timestamp updated_at = 7;
+}
+
+// ApiKeyInfo represents API key metadata with masked key value.
+//
+// For security, the full key string is only available at creation time.
+// This message is returned for List and Get operations.
+message ApiKeyInfo {
+  // Resource name in the format:
+  // "projects/{project_id}/apps/{app_id}/apiKeys/{key_id}"
+  string name = 1;
+
+  // Unique key identifier.
+  string key_id = 2;
+
+  // Masked prefix of the API key for identification purposes.
+  // Example: "AIzaSyB3...o345"
+  string key_prefix = 3;
+
+  // Human-readable display name for the key.
+  string display_name = 4;
+
+  // Restrictions applied to this API key.
+  ApiKeyRestrictions restrictions = 5;
+
+  // Timestamp when the key was created.
+  google.protobuf.Timestamp created_at = 6;
+
+  // Timestamp when the key was last updated.
+  optional google.protobuf.Timestamp updated_at = 7;
+}
+
+// ApiKeyRestrictions specifies how an API key can be used.
+//
+// Only one type of restriction can be set at a time. If no restrictions
+// are set, the key can be used from any platform or origin.
+message ApiKeyRestrictions {
+  // Platform-specific restrictions. Only one can be set.
+  oneof platform_restrictions {
+    // Restrictions for browser/web API keys.
+    BrowserKeyRestrictions browser_key_restrictions = 1;
+
+    // Restrictions for server API keys.
+    ServerKeyRestrictions server_key_restrictions = 2;
+
+    // Restrictions for Android API keys.
+    AndroidKeyRestrictions android_key_restrictions = 3;
+
+    // Restrictions for iOS API keys.
+    IosKeyRestrictions ios_key_restrictions = 4;
+  }
+}
+
+// BrowserKeyRestrictions limits API key usage to specific web origins.
+message BrowserKeyRestrictions {
+  // List of allowed HTTP referrer patterns.
+  // Supports wildcards: *.example.com, https://example.com/*
+  repeated string allowed_referrers = 1;
+}
+
+// ServerKeyRestrictions limits API key usage to specific IP addresses.
+message ServerKeyRestrictions {
+  // List of allowed IP addresses or CIDR ranges.
+  // Examples: "192.168.1.0/24", "10.0.0.1"
+  repeated string allowed_ips = 1;
+}
+
+// AndroidKeyRestrictions limits API key usage to specific Android applications.
+message AndroidKeyRestrictions {
+  // List of allowed Android applications.
+  repeated AndroidApplication allowed_applications = 1;
+}
+
+// AndroidApplication identifies an Android app by package name and signing certificate.
+message AndroidApplication {
+  // The Android package name.
+  // Example: "com.example.myapp"
+  string package_name = 1;
+
+  // SHA-256 fingerprint of the signing certificate.
+  // Example: "AB:CD:EF:12:34:56:78:90:..."
+  string sha256_cert_fingerprint = 2;
+}
+
+// IosKeyRestrictions limits API key usage to specific iOS applications.
+message IosKeyRestrictions {
+  // List of allowed iOS bundle identifiers.
+  // Examples: "com.example.myapp", "com.example.myapp.dev"
+  repeated string allowed_bundle_ids = 1;
+}

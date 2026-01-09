@@ -35,6 +35,9 @@ pub struct UpdateProjectQuotasRequest {
     /// Maximum requests per day. -1 for unlimited.
     #[serde(rename = "requestsPerDay", skip_serializing_if = "Option::is_none")]
     pub requests_per_day: Option<i64>,
+    /// Maximum requests per second (burst protection). -1 for unlimited.
+    #[serde(rename = "requestsPerSecond", skip_serializing_if = "Option::is_none")]
+    pub requests_per_second: Option<i64>,
 }
 
 impl UpdateProjectQuotasRequest {
@@ -48,6 +51,7 @@ impl UpdateProjectQuotasRequest {
             api_keys_per_app: None,
             requests_per_minute: None,
             requests_per_day: None,
+            requests_per_second: None,
         }
     }
 }

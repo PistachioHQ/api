@@ -367,17 +367,19 @@ pub async fn list_api_keys(
     }
 }
 
-/// Rotates an API key, generating a new key string. The previous key remains valid for a grace period (typically 24 hours) to allow for key rotation without downtime.
+/// Rotates an API key, generating a new key string. The previous key remains valid for a configurable grace period (default 24 hours) to allow for key rotation without downtime.
 pub async fn rotate_api_key(
     configuration: &configuration::Configuration,
     project_id: &str,
     app_id: &str,
     key_id: &str,
+    rotate_api_key_request: Option<models::RotateApiKeyRequest>,
 ) -> Result<models::RotateApiKey200Response, Error<RotateApiKeyError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_project_id = project_id;
     let p_path_app_id = app_id;
     let p_path_key_id = key_id;
+    let p_body_rotate_api_key_request = rotate_api_key_request;
 
     let uri_str = format!(
         "{}/admin/v1/projects/{projectId}/apps/{appId}/apiKeys/{keyId}:rotate",
@@ -404,6 +406,7 @@ pub async fn rotate_api_key(
     if let Some(ref token) = configuration.bearer_access_token {
         req_builder = req_builder.bearer_auth(token.to_owned());
     };
+    req_builder = req_builder.json(&p_body_rotate_api_key_request);
 
     let req = req_builder.build()?;
     let resp = configuration.client.execute(req).await?;

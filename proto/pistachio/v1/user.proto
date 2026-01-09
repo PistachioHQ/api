@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package pistachio.v1;
+
+import "buf/validate/validate.proto";
+import "pistachio/types/v1/session.proto";
+
+// =============================================================================
+// User Self-Service Operations
+// =============================================================================
+//
+// These operations allow authenticated users to manage their own profile,
+// sessions, and linked authentication providers.
+
+// GetCurrentUserRequest retrieves the authenticated user's profile.
+message GetCurrentUserRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// GetCurrentUserResponse contains the authenticated user's profile.
+message GetCurrentUserResponse {
+  // The current user's profile.
+  pistachio.types.v1.CurrentUser user = 1;
+}
+
+// UpdateCurrentUserRequest updates the authenticated user's profile.
+//
+// Only provided fields are updated; omitted fields retain their current values.
+message UpdateCurrentUserRequest {
+  // New display name.
+  // Set to empty string to clear.
+  optional string display_name = 1 [(buf.validate.field).string.max_len = 256];
+
+  // New photo URL.
+  // Set to empty string to clear.
+  optional string photo_url = 2 [(buf.validate.field).string.uri = true];
+}
+
+// UpdateCurrentUserResponse contains the updated user profile.
+message UpdateCurrentUserResponse {
+  // The updated user profile.
+  pistachio.types.v1.CurrentUser user = 1;
+}
+
+// DeleteCurrentUserRequest permanently deletes the authenticated user's account.
+//
+// This operation is irreversible. All user data, sessions, and authentication
+// credentials will be permanently deleted.
+message DeleteCurrentUserRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// DeleteCurrentUserResponse is returned after the account is deleted.
+message DeleteCurrentUserResponse {
+  // Empty response. The account has been permanently deleted.
+}
+
+// =============================================================================
+// Session Operations
+// =============================================================================
+
+// ListSessionsRequest lists the authenticated user's active sessions.
+message ListSessionsRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// ListSessionsResponse contains the user's active sessions.
+message ListSessionsResponse {
+  // The list of active sessions.
+  // The current session is marked with current=true.
+  repeated pistachio.types.v1.Session sessions = 1;
+}
+
+// RevokeSessionRequest revokes a specific session.
+message RevokeSessionRequest {
+  // The session ID to revoke.
+  // Required.
+  string session_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// RevokeSessionResponse is returned after the session is revoked.
+message RevokeSessionResponse {
+  // Empty response. The session has been revoked.
+}
+
+// RevokeAllSessionsRequest revokes all sessions except the current one.
+message RevokeAllSessionsRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// RevokeAllSessionsResponse is returned after all other sessions are revoked.
+message RevokeAllSessionsResponse {
+  // Empty response. All other sessions have been revoked.
+}
+
+// =============================================================================
+// Linked Provider Operations
+// =============================================================================
+
+// ListLinkedProvidersRequest lists authentication providers linked to the user's account.
+message ListLinkedProvidersRequest {
+  // No parameters required. User is identified from the authentication context.
+}
+
+// ListLinkedProvidersResponse contains the user's linked providers.
+message ListLinkedProvidersResponse {
+  // The list of linked authentication providers.
+  repeated pistachio.types.v1.LinkedProvider providers = 1;
+}
+
+// LinkProviderRequest links an authentication provider to the user's account.
+message LinkProviderRequest {
+  // The provider ID to link.
+  // For OAuth providers: "google", "facebook", "github", etc.
+  // For OIDC providers: the custom provider ID.
+  // Required.
+  string provider_id = 1 [(buf.validate.field).string.min_len = 1];
+
+  // ID token from the provider to link.
+  // Used for OAuth/OIDC providers.
+  string id_token = 2;
+
+  // Access token from the provider.
+  // Used for some OAuth providers.
+  string access_token = 3;
+}
+
+// LinkProviderResponse contains the newly linked provider.
+message LinkProviderResponse {
+  // The newly linked provider.
+  pistachio.types.v1.LinkedProvider provider = 1;
+
+  // The updated user profile.
+  pistachio.types.v1.CurrentUser user = 2;
+}
+
+// UnlinkProviderRequest removes an authentication provider from the user's account.
+message UnlinkProviderRequest {
+  // The provider ID to unlink.
+  // Required.
+  string provider_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// UnlinkProviderResponse is returned after the provider is unlinked.
+message UnlinkProviderResponse {
+  // The updated user profile.
+  pistachio.types.v1.CurrentUser user = 1;
+}

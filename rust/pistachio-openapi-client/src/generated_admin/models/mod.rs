@@ -176,6 +176,8 @@ pub mod list_tenants_200_response_tenants_inner;
 pub use self::list_tenants_200_response_tenants_inner::ListTenants200ResponseTenantsInner;
 pub mod rotate_api_key_200_response;
 pub use self::rotate_api_key_200_response::RotateApiKey200Response;
+pub mod rotate_api_key_request;
+pub use self::rotate_api_key_request::RotateApiKeyRequest;
 pub mod search_apps_200_response;
 pub use self::search_apps_200_response::SearchApps200Response;
 pub mod search_apps_post_request;
