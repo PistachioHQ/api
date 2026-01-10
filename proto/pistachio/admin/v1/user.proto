@@ -581,3 +581,85 @@ message SearchTenantUsersResponse {
   // Pagination metadata including next cursor and total count.
   pistachio.types.v1.PaginationMeta pagination = 2;
 }
+
+// =============================================================================
+// User Lookup Operations
+// =============================================================================
+
+// LookupProjectUserRequest looks up a project-level user by email or phone number.
+// Exactly one of email or phone_number must be provided.
+message LookupProjectUserRequest {
+  // The project ID to search in.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The email address to look up.
+  // Exactly one of email or phone_number must be provided.
+  string email = 2 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      email: true
+      max_len: 256
+    }
+  }];
+
+  // The phone number to look up in E.164 format.
+  // Exactly one of email or phone_number must be provided.
+  string phone_number = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {pattern: "^\\+[1-9]\\d{1,14}$"}
+  }];
+}
+
+// LookupProjectUserResponse contains the user found by email or phone.
+message LookupProjectUserResponse {
+  // The user matching the lookup criteria.
+  pistachio.types.v1.User user = 1;
+}
+
+// LookupTenantUserRequest looks up a tenant-level user by email or phone number.
+// Exactly one of email or phone_number must be provided.
+message LookupTenantUserRequest {
+  // The project ID that owns the tenant.
+  // Required. Must be a valid project ID format.
+  string project_id = 1 [(buf.validate.field).string = {
+    min_len: 6
+    max_len: 30
+    pattern: "^[a-z][a-z0-9-]{4,28}[a-z0-9]$"
+  }];
+
+  // The tenant ID to search in.
+  // Required. Must be a valid tenant ID format.
+  string tenant_id = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 128
+    pattern: "^[a-zA-Z0-9_]+$"
+  }];
+
+  // The email address to look up.
+  // Exactly one of email or phone_number must be provided.
+  string email = 3 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {
+      email: true
+      max_len: 256
+    }
+  }];
+
+  // The phone number to look up in E.164 format.
+  // Exactly one of email or phone_number must be provided.
+  string phone_number = 4 [(buf.validate.field) = {
+    ignore: IGNORE_IF_ZERO_VALUE
+    string: {pattern: "^\\+[1-9]\\d{1,14}$"}
+  }];
+}
+
+// LookupTenantUserResponse contains the user found by email or phone.
+message LookupTenantUserResponse {
+  // The user matching the lookup criteria.
+  pistachio.types.v1.User user = 1;
+}

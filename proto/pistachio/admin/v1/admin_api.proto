@@ -457,6 +457,17 @@ service PistachioAdmin {
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchProjectUsers(SearchProjectUsersRequest) returns (SearchProjectUsersResponse);
 
+  // LookupProjectUser looks up a project-level user by email or phone number.
+  //
+  // Finds a user by their unique identifier (email or phone). Exactly one
+  // of email or phone_number must be provided.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, both or neither identifier provided
+  // - NOT_FOUND: Project does not exist or user not found
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc LookupProjectUser(LookupProjectUserRequest) returns (LookupProjectUserResponse);
+
   // =============================================================================
   // Tenant User Operations
   // =============================================================================
@@ -542,6 +553,17 @@ service PistachioAdmin {
   // - NOT_FOUND: Project or tenant does not exist
   // - PERMISSION_DENIED: Insufficient permissions
   rpc SearchTenantUsers(SearchTenantUsersRequest) returns (SearchTenantUsersResponse);
+
+  // LookupTenantUser looks up a tenant-level user by email or phone number.
+  //
+  // Finds a user by their unique identifier (email or phone). Exactly one
+  // of email or phone_number must be provided.
+  //
+  // Errors:
+  // - INVALID_ARGUMENT: Invalid project_id, tenant_id, both or neither identifier provided
+  // - NOT_FOUND: Project, tenant does not exist, or user not found
+  // - PERMISSION_DENIED: Insufficient permissions
+  rpc LookupTenantUser(LookupTenantUserRequest) returns (LookupTenantUserResponse);
 
   // =============================================================================
   // Service Account Operations
