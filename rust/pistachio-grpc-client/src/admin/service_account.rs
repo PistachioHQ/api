@@ -18,7 +18,8 @@ use pistachio_api_common::admin::service_account::{
     UpdateServiceAccountResponse,
 };
 use pistachio_api_common::error::ValidationError;
-use prost_types::Timestamp;
+use prost_types::value::Kind;
+use prost_types::{Struct, Timestamp, Value};
 use tonic::Code;
 use tonic::service::Interceptor;
 use tonic::service::interceptor::InterceptedService;
@@ -27,6 +28,31 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 use pistachio_api::pistachio::types::v1 as proto_types;
+
+/// Convert a proto Struct to a serde_json Value.
+fn struct_to_json(s: &Struct) -> serde_json::Value {
+    let map: serde_json::Map<String, serde_json::Value> = s
+        .fields
+        .iter()
+        .map(|(k, v)| (k.clone(), value_to_json(v)))
+        .collect();
+    serde_json::Value::Object(map)
+}
+
+/// Convert a proto Value to a serde_json Value.
+fn value_to_json(v: &Value) -> serde_json::Value {
+    match &v.kind {
+        Some(Kind::NullValue(_)) => serde_json::Value::Null,
+        Some(Kind::NumberValue(n)) => serde_json::json!(*n),
+        Some(Kind::StringValue(s)) => serde_json::Value::String(s.clone()),
+        Some(Kind::BoolValue(b)) => serde_json::Value::Bool(*b),
+        Some(Kind::StructValue(s)) => struct_to_json(s),
+        Some(Kind::ListValue(list)) => {
+            serde_json::Value::Array(list.values.iter().map(value_to_json).collect())
+        }
+        None => serde_json::Value::Null,
+    }
+}
 
 use crate::types::{
     IntoProto, error_details_from_status, pagination_meta_from_proto, pagination_params_to_proto,
@@ -474,10 +500,17 @@ pub(crate) async fn handle_generate_service_account_key<I: Interceptor>(
     let key = response.key.ok_or(ValidationError::MissingField("key"))?;
     let key = service_account_key_from_proto(key);
 
+    // Convert the proto Struct to serde_json::Value
+    let key_file = response
+        .key_file
+        .as_ref()
+        .map(struct_to_json)
+        .unwrap_or(serde_json::Value::Null);
+
     Ok(GenerateServiceAccountKeyResponse {
         key,
         private_key_data: response.private_key_data.to_vec(),
-        key_file_json: response.key_file_json,
+        key_file,
     })
 }
 

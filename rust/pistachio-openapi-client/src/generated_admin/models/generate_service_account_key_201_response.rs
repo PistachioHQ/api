@@ -23,9 +23,9 @@ pub struct GenerateServiceAccountKey201Response {
     #[serde_as(as = "Option<serde_with::base64::Base64>")]
     #[serde(rename = "privateKeyData", skip_serializing_if = "Option::is_none")]
     pub private_key_data: Option<Vec<u8>>,
-    /// JSON key file contents for SDK authentication. Contains the private key and service account metadata. This is only returned once at key creation time.
-    #[serde(rename = "keyFileJson", skip_serializing_if = "Option::is_none")]
-    pub key_file_json: Option<String>,
+    /// Key file for SDK authentication. Contains the private key and service account metadata. This is only returned once at key creation time.
+    #[serde(rename = "keyFile", skip_serializing_if = "Option::is_none")]
+    pub key_file: Option<std::collections::HashMap<String, serde_json::Value>>,
 }
 
 impl GenerateServiceAccountKey201Response {
@@ -34,7 +34,7 @@ impl GenerateServiceAccountKey201Response {
         GenerateServiceAccountKey201Response {
             key: None,
             private_key_data: None,
-            key_file_json: None,
+            key_file: None,
         }
     }
 }

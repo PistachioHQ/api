@@ -33510,13 +33510,22 @@ paths:
                                             Base64-encoded private key data in PKCS#8 format.
                                             This is only returned once at key creation time.
                                         example: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCi4uLgo=
-                                    keyFileJson:
-                                        type: string
+                                    keyFile:
+                                        type: object
+                                        additionalProperties: true
                                         description: |
-                                            JSON key file contents for SDK authentication.
+                                            Key file for SDK authentication.
                                             Contains the private key and service account metadata.
                                             This is only returned once at key creation time.
-                                        example: '{"type": "service_account", ...}'
+                                        example:
+                                            type: service_account
+                                            project_id: my-project
+                                            service_account_id: my-service-account
+                                            private_key_id: abc123
+                                            private_key: "-----BEGIN PRIVATE KEY-----\n..."
+                                            client_email: my-service-account@my-project.pistachiohq.iam.gserviceaccount.com
+                                            auth_uri: https://auth.pistachiohq.com/oauth2/authorize
+                                            token_uri: https://auth.pistachiohq.com/oauth2/token
                 '400':
                     description: Invalid projectId, service account ID, or key parameters
                     content:

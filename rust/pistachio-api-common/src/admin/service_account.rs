@@ -542,8 +542,9 @@ pub struct GenerateServiceAccountKeyResponse {
     /// Base64-encoded private key data in PKCS#8 format.
     /// IMPORTANT: This is only returned once at key creation time.
     pub private_key_data: Vec<u8>,
-    /// JSON key file contents for SDK authentication.
-    pub key_file_json: String,
+    /// Key file for SDK authentication.
+    /// This is a structured object that can be serialized to JSON and saved for SDK use.
+    pub key_file: serde_json::Value,
 }
 
 // =============================================================================

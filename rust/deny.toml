@@ -64,6 +64,10 @@ feature-depth = 1
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
+    # RUSTSEC-2023-0071: rsa crate Marvin Attack timing sidechannel - no fix available yet
+    # We use RSA for service account key generation where timing attacks are not a practical concern
+    # (keys are generated server-side, not used for decryption of attacker-controlled ciphertext)
+    "RUSTSEC-2023-0071",
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
@@ -163,9 +167,12 @@ allow = []
 # (as rand_core_06) for these APIs only.
 # See: https://github.com/RustCrypto/elliptic-curves/issues/1058
 # DO NOT REMOVE these skips until p256 supports rand_core 0.9.
+# Additionally, rsa crate depends on num-bigint-dig which uses rand 0.8.
 skip = [
     { crate = "getrandom@0.2", reason = "PERMANENT: follows rand_core version split for p256 compatibility" },
     { crate = "rand_core@0.6", reason = "PERMANENT: p256 requires rand_core 0.6 for CryptoRngCore trait" },
+    { crate = "rand@0.8", reason = "PERMANENT: num-bigint-dig (rsa dep) requires rand 0.8" },
+    { crate = "rand_chacha@0.3", reason = "PERMANENT: follows rand 0.8 version split" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
@@ -227,17 +234,22 @@ wrappers = ["libgn-crypto-internal", "aes", "aes-gcm", "cbc", "ctr"]
 [[bans.deny]]
 crate = "sha2"
 reason = "Use libgn-crypto for hashing operations."
-wrappers = ["libgn-crypto-internal", "p256"]
+wrappers = ["libgn-crypto-internal", "p256", "p384", "rsa", "ed25519-dalek"]
 
 [[bans.deny]]
 crate = "hmac"
 reason = "Use libgn-crypto for HMAC operations."
-wrappers = ["libgn-crypto-internal", "rfc6979"]
+wrappers = ["libgn-crypto-internal", "rfc6979", "hkdf"]
+
+[[bans.deny]]
+crate = "hkdf"
+reason = "Use libgn-crypto for key derivation."
+wrappers = ["elliptic-curve"]
 
 [[bans.deny]]
 crate = "digest"
 reason = "Use libgn-crypto for hashing operations."
-wrappers = ["sha2", "hmac", "ecdsa", "elliptic-curve", "signature"]
+wrappers = ["sha2", "hmac", "ecdsa", "elliptic-curve", "signature", "curve25519-dalek", "rsa"]
 
 # Elliptic curve cryptography
 [[bans.deny]]
@@ -246,25 +258,57 @@ reason = "Use libgn-crypto for ECDSA signing and verification."
 wrappers = ["libgn-crypto-internal"]
 
 [[bans.deny]]
+crate = "p384"
+reason = "Use libgn-crypto for ECDSA signing and verification."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
 crate = "ecdsa"
 reason = "Use libgn-crypto for ECDSA signing and verification."
-wrappers = ["libgn-crypto-internal", "p256"]
+wrappers = ["libgn-crypto-internal", "p256", "p384"]
 
 [[bans.deny]]
 crate = "elliptic-curve"
 reason = "Use libgn-crypto for elliptic curve operations."
-wrappers = ["p256", "ecdsa", "primeorder"]
+wrappers = ["p256", "p384", "ecdsa", "primeorder"]
+
+# RSA cryptography
+[[bans.deny]]
+crate = "rsa"
+reason = "Use libgn-crypto for RSA signing and verification."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "pkcs1"
+reason = "Use libgn-crypto for RSA key encoding."
+wrappers = ["rsa"]
+
+# Ed25519 cryptography
+[[bans.deny]]
+crate = "ed25519-dalek"
+reason = "Use libgn-crypto for Ed25519 signing and verification."
+wrappers = ["libgn-crypto-internal"]
+
+[[bans.deny]]
+crate = "ed25519"
+reason = "Use libgn-crypto for Ed25519 signing and verification."
+wrappers = ["ed25519-dalek"]
+
+[[bans.deny]]
+crate = "curve25519-dalek"
+reason = "Use libgn-crypto for Curve25519 operations."
+wrappers = ["ed25519-dalek"]
 
 # Randomness
 [[bans.deny]]
 crate = "rand"
 reason = "Use libgn-crypto for secure random generation."
-wrappers = ["libgn-crypto-internal"]
+wrappers = ["libgn-crypto-internal", "num-bigint-dig"]
 
 [[bans.deny]]
 crate = "rand_core"
 reason = "Use libgn-crypto for secure random generation."
-wrappers = ["libgn-crypto-internal", "rand", "rand_chacha", "signature", "group", "ff", "elliptic-curve", "crypto-common", "crypto-bigint"]
+wrappers = ["libgn-crypto-internal", "rand", "rand_chacha", "signature", "group", "ff", "elliptic-curve", "crypto-common", "crypto-bigint", "ed25519-dalek", "rsa"]
 
 [[bans.deny]]
 crate = "getrandom"
@@ -275,7 +319,12 @@ wrappers = ["rand_core", "ring", "tempfile"]
 [[bans.deny]]
 crate = "zeroize"
 reason = "Use libgn-crypto types which handle secure memory automatically."
-wrappers = ["libgn-crypto-internal", "crypto-bigint", "der", "elliptic-curve", "generic-array", "rustls", "rustls-pki-types", "sec1"]
+wrappers = ["libgn-crypto-internal", "crypto-bigint", "der", "elliptic-curve", "generic-array", "rustls", "rustls-pki-types", "sec1", "rsa", "ed25519-dalek", "curve25519-dalek", "num-bigint-dig"]
+
+[[bans.deny]]
+crate = "num-bigint-dig"
+reason = "Use libgn-crypto for big integer operations in crypto contexts."
+wrappers = ["rsa"]
 
 # Encoding (used in crypto contexts)
 [[bans.deny]]
@@ -307,7 +356,7 @@ wrappers = ["hyper-rustls", "reqwest", "rustls", "rustls-webpki", "webpki-roots"
 # Signature infrastructure
 [[bans.deny]]
 crate = "signature"
-wrappers = ["ecdsa"]
+wrappers = ["ecdsa", "ed25519", "rsa"]
 
 [[bans.deny]]
 crate = "rfc6979"
@@ -316,7 +365,7 @@ wrappers = ["ecdsa"]
 # Elliptic curve infrastructure
 [[bans.deny]]
 crate = "primeorder"
-wrappers = ["p256"]
+wrappers = ["p256", "p384"]
 
 [[bans.deny]]
 crate = "sec1"
@@ -337,15 +386,15 @@ wrappers = ["elliptic-curve"]
 # Key encoding (PKCS#8, SPKI, DER, PEM)
 [[bans.deny]]
 crate = "pkcs8"
-wrappers = ["elliptic-curve", "sec1"]
+wrappers = ["libgn-crypto-internal", "elliptic-curve", "sec1", "rsa", "ed25519", "pkcs1"]
 
 [[bans.deny]]
 crate = "spki"
-wrappers = ["ecdsa", "pkcs8"]
+wrappers = ["ecdsa", "pkcs8", "rsa", "pkcs1"]
 
 [[bans.deny]]
 crate = "der"
-wrappers = ["ecdsa", "pkcs8", "sec1", "spki"]
+wrappers = ["ecdsa", "pkcs8", "sec1", "spki", "pkcs1"]
 
 [[bans.deny]]
 crate = "pem-rfc7468"
@@ -355,6 +404,10 @@ wrappers = ["der", "elliptic-curve"]
 [[bans.deny]]
 crate = "crypto-common"
 wrappers = ["aead", "cipher", "digest", "universal-hash"]
+
+[[bans.deny]]
+crate = "subtle"
+wrappers = ["digest", "curve25519-dalek", "crypto-bigint", "ed25519-dalek", "elliptic-curve", "sec1", "rustls", "rsa", "rfc6979", "group", "aes-gcm", "ff", "universal-hash"]
 
 [[bans.deny]]
 crate = "generic-array"

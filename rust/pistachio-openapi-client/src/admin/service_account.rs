@@ -518,10 +518,16 @@ impl FromJson<GenerateServiceAccountKey201Response> for GenerateServiceAccountKe
         // Pass through the decoded private key bytes
         let private_key_data = json.private_key_data.unwrap_or_default();
 
+        // Convert HashMap to serde_json::Value::Object
+        let key_file = json
+            .key_file
+            .map(|map| serde_json::Value::Object(map.into_iter().collect()))
+            .unwrap_or(serde_json::Value::Null);
+
         Ok(Self {
             key,
             private_key_data,
-            key_file_json: json.key_file_json.unwrap_or_default(),
+            key_file,
         })
     }
 }
