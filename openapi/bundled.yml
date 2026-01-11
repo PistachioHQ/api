@@ -5900,10 +5900,13 @@ paths:
     /auth/oauth/{provider}/callback:
         post:
             operationId: oauthCallback
-            summary: Complete OAuth flow
+            summary: Complete OAuth flow (client-mediated)
             description: |
                 Completes an OAuth authentication flow by exchanging the authorization
                 code for tokens and creating/signing in the user.
+
+                Use this for mobile apps and SPAs where the client app intercepts the
+                OAuth redirect and extracts the authorization code.
             tags:
                 - Auth
             security:
@@ -6252,6 +6255,129 @@ paths:
                                 title: Service Unavailable
                                 status: 503
                                 detail: The service is temporarily unavailable. Please try again later.
+        get:
+            operationId: oauthCallbackRedirect
+            summary: Complete OAuth flow (browser redirect)
+            description: |
+                Handles direct browser redirect from OAuth provider.
+                This endpoint receives the authorization code via query parameters
+                and redirects the user back to the application with tokens (or to an error page).
+
+                Use this for traditional web applications where the OAuth provider
+                redirects directly to your backend.
+            tags:
+                - Auth
+            parameters:
+                - name: provider
+                  in: path
+                  description: OAuth provider
+                  required: true
+                  schema:
+                    type: string
+                    enum:
+                        - google
+                        - facebook
+                        - github
+                        - apple
+                        - microsoft
+                        - twitter
+                - name: code
+                  in: query
+                  description: Authorization code from OAuth provider
+                  required: false
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  description: State parameter for CSRF validation
+                  required: true
+                  schema:
+                    type: string
+                - name: error
+                  in: query
+                  description: Error code if authorization failed
+                  required: false
+                  schema:
+                    type: string
+                - name: error_description
+                  in: query
+                  description: Human-readable error description
+                  required: false
+                  schema:
+                    type: string
+            responses:
+                '302':
+                    description: Redirect to application with tokens or error
+                    headers:
+                        Location:
+                            description: Redirect URL with tokens in fragment or error in query
+                            schema:
+                                type: string
+                                format: uri
+                '400':
+                    description: Invalid callback parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
     /auth/oidc/{providerId}/authorize:
         get:
             operationId: oidcAuthorize
@@ -6638,10 +6764,13 @@ paths:
     /auth/oidc/{providerId}/callback:
         post:
             operationId: oidcCallback
-            summary: Complete OIDC flow
+            summary: Complete OIDC flow (client-mediated)
             description: |
                 Completes an OIDC authentication flow by exchanging the authorization
                 code for tokens and creating/signing in the user.
+
+                Use this for mobile apps and SPAs where the client app intercepts the
+                OIDC redirect and extracts the authorization code.
             tags:
                 - Auth
             security:
@@ -7047,6 +7176,186 @@ paths:
                                 title: Service Unavailable
                                 status: 503
                                 detail: The service is temporarily unavailable. Please try again later.
+        get:
+            operationId: oidcCallbackRedirect
+            summary: Complete OIDC flow (browser redirect)
+            description: |
+                Handles direct browser redirect from OIDC provider.
+                This endpoint receives the authorization code via query parameters
+                and redirects the user back to the application with tokens (or to an error page).
+
+                Use this for traditional web applications where the OIDC provider
+                redirects directly to your backend.
+            tags:
+                - Auth
+            parameters:
+                - name: providerId
+                  in: path
+                  description: Custom OIDC provider ID
+                  required: true
+                  schema:
+                    type: string
+                - name: code
+                  in: query
+                  description: Authorization code from OIDC provider
+                  required: false
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  description: State parameter for CSRF validation
+                  required: true
+                  schema:
+                    type: string
+                - name: error
+                  in: query
+                  description: Error code if authorization failed
+                  required: false
+                  schema:
+                    type: string
+                - name: error_description
+                  in: query
+                  description: Human-readable error description
+                  required: false
+                  schema:
+                    type: string
+            responses:
+                '302':
+                    description: Redirect to application with tokens or error
+                    headers:
+                        Location:
+                            description: Redirect URL with tokens in fragment or error in query
+                            schema:
+                                type: string
+                                format: uri
+                '400':
+                    description: Invalid callback parameters
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
+                '404':
+                    description: OIDC provider not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: RFC 7807 Problem Details error response
+                                properties:
+                                    type:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the problem type
+                                        example: https://docs.pistachiohq.com/errors/not_found
+                                    title:
+                                        type: string
+                                        description: A short, human-readable summary of the problem type
+                                        example: Project not found
+                                    status:
+                                        type: integer
+                                        description: The HTTP status code
+                                        example: 404
+                                    detail:
+                                        type: string
+                                        description: A human-readable explanation specific to this occurrence
+                                        example: Project 'my-project' not found
+                                    instance:
+                                        type: string
+                                        format: uri
+                                        description: A URI reference that identifies the specific occurrence
+                                        example: /admin/v1/projects/my-project
+                                    invalidParams:
+                                        type: array
+                                        description: |
+                                            Extension member for validation errors. Contains details about which
+                                            parameters failed validation and why.
+                                        items:
+                                            type: object
+                                            description: Details about an invalid parameter in a validation error
+                                            properties:
+                                                name:
+                                                    type: string
+                                                    description: The name of the invalid parameter
+                                                    example: sort
+                                                reason:
+                                                    type: string
+                                                    description: A human-readable explanation of why the parameter is invalid
+                                                    example: Invalid value
+                                                value:
+                                                    type: string
+                                                    description: The invalid value that was provided
+                                                    example: foo
+                                                expectedValues:
+                                                    type: array
+                                                    description: The list of valid/expected values for this parameter
+                                                    items:
+                                                        type: string
+                                                    example: ["project_id", "created_at", "display_name"]
+                                            required:
+                                                - name
+                                                - reason
+                                required:
+                                    - type
+                                    - title
+                                    - status
     /auth/providers:
         get:
             operationId: listAuthProviders

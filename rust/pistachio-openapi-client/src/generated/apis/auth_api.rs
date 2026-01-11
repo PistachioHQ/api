@@ -66,6 +66,14 @@ pub enum OauthCallbackError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`oauth_callback_redirect`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OauthCallbackRedirectError {
+    Status400(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`oidc_authorize`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -87,6 +95,15 @@ pub enum OidcCallbackError {
     Status404(models::CheckHealth400Response),
     Status500(models::CheckHealth400Response),
     Status503(models::CheckHealth400Response),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`oidc_callback_redirect`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OidcCallbackRedirectError {
+    Status400(models::CheckHealth400Response),
+    Status404(models::CheckHealth400Response),
     UnknownValue(serde_json::Value),
 }
 
@@ -414,7 +431,7 @@ pub async fn oauth_authorize(
     }
 }
 
-/// Completes an OAuth authentication flow by exchanging the authorization code for tokens and creating/signing in the user.
+/// Completes an OAuth authentication flow by exchanging the authorization code for tokens and creating/signing in the user.  Use this for mobile apps and SPAs where the client app intercepts the OAuth redirect and extracts the authorization code.
 pub async fn oauth_callback(
     configuration: &configuration::Configuration,
     provider: &str,
@@ -475,6 +492,61 @@ pub async fn oauth_callback(
     } else {
         let content = resp.text().await?;
         let entity: Option<OauthCallbackError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Handles direct browser redirect from OAuth provider. This endpoint receives the authorization code via query parameters and redirects the user back to the application with tokens (or to an error page).  Use this for traditional web applications where the OAuth provider redirects directly to your backend.
+pub async fn oauth_callback_redirect(
+    configuration: &configuration::Configuration,
+    provider: &str,
+    state: &str,
+    code: Option<&str>,
+    error: Option<&str>,
+    error_description: Option<&str>,
+) -> Result<(), Error<OauthCallbackRedirectError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider = provider;
+    let p_query_state = state;
+    let p_query_code = code;
+    let p_query_error = error;
+    let p_query_error_description = error_description;
+
+    let uri_str = format!(
+        "{}/auth/oauth/{provider}/callback",
+        configuration.base_path,
+        provider = crate::generated::apis::urlencode(p_path_provider)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_code {
+        req_builder = req_builder.query(&[("code", &param_value.to_string())]);
+    }
+    req_builder = req_builder.query(&[("state", &p_query_state.to_string())]);
+    if let Some(ref param_value) = p_query_error {
+        req_builder = req_builder.query(&[("error", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_error_description {
+        req_builder = req_builder.query(&[("error_description", &param_value.to_string())]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OauthCallbackRedirectError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,
@@ -544,7 +616,7 @@ pub async fn oidc_authorize(
     }
 }
 
-/// Completes an OIDC authentication flow by exchanging the authorization code for tokens and creating/signing in the user.
+/// Completes an OIDC authentication flow by exchanging the authorization code for tokens and creating/signing in the user.  Use this for mobile apps and SPAs where the client app intercepts the OIDC redirect and extracts the authorization code.
 pub async fn oidc_callback(
     configuration: &configuration::Configuration,
     provider_id: &str,
@@ -605,6 +677,61 @@ pub async fn oidc_callback(
     } else {
         let content = resp.text().await?;
         let entity: Option<OidcCallbackError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent {
+            status,
+            content,
+            entity,
+        }))
+    }
+}
+
+/// Handles direct browser redirect from OIDC provider. This endpoint receives the authorization code via query parameters and redirects the user back to the application with tokens (or to an error page).  Use this for traditional web applications where the OIDC provider redirects directly to your backend.
+pub async fn oidc_callback_redirect(
+    configuration: &configuration::Configuration,
+    provider_id: &str,
+    state: &str,
+    code: Option<&str>,
+    error: Option<&str>,
+    error_description: Option<&str>,
+) -> Result<(), Error<OidcCallbackRedirectError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_provider_id = provider_id;
+    let p_query_state = state;
+    let p_query_code = code;
+    let p_query_error = error;
+    let p_query_error_description = error_description;
+
+    let uri_str = format!(
+        "{}/auth/oidc/{providerId}/callback",
+        configuration.base_path,
+        providerId = crate::generated::apis::urlencode(p_path_provider_id)
+    );
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref param_value) = p_query_code {
+        req_builder = req_builder.query(&[("code", &param_value.to_string())]);
+    }
+    req_builder = req_builder.query(&[("state", &p_query_state.to_string())]);
+    if let Some(ref param_value) = p_query_error {
+        req_builder = req_builder.query(&[("error", &param_value.to_string())]);
+    }
+    if let Some(ref param_value) = p_query_error_description {
+        req_builder = req_builder.query(&[("error_description", &param_value.to_string())]);
+    }
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<OidcCallbackRedirectError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent {
             status,
             content,

@@ -443,10 +443,13 @@ oauth-authorize:
 oauth-callback:
   post:
     operationId: oauthCallback
-    summary: Complete OAuth flow
+    summary: Complete OAuth flow (client-mediated)
     description: |
       Completes an OAuth authentication flow by exchanging the authorization
       code for tokens and creating/signing in the user.
+
+      Use this for mobile apps and SPAs where the client app intercepts the
+      OAuth redirect and extracts the authorization code.
     tags:
       - Auth
     security:
@@ -495,6 +498,71 @@ oauth-callback:
         $ref: '../components/responses/errors.yml#/InternalServerError'
       '503':
         $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+  get:
+    operationId: oauthCallbackRedirect
+    summary: Complete OAuth flow (browser redirect)
+    description: |
+      Handles direct browser redirect from OAuth provider.
+      This endpoint receives the authorization code via query parameters
+      and redirects the user back to the application with tokens (or to an error page).
+
+      Use this for traditional web applications where the OAuth provider
+      redirects directly to your backend.
+    tags:
+      - Auth
+    parameters:
+      - name: provider
+        in: path
+        description: OAuth provider
+        required: true
+        schema:
+          type: string
+          enum:
+            - google
+            - facebook
+            - github
+            - apple
+            - microsoft
+            - twitter
+      - name: code
+        in: query
+        description: Authorization code from OAuth provider
+        required: false
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: State parameter for CSRF validation
+        required: true
+        schema:
+          type: string
+      - name: error
+        in: query
+        description: Error code if authorization failed
+        required: false
+        schema:
+          type: string
+      - name: error_description
+        in: query
+        description: Human-readable error description
+        required: false
+        schema:
+          type: string
+    responses:
+      '302':
+        description: Redirect to application with tokens or error
+        headers:
+          Location:
+            description: Redirect URL with tokens in fragment or error in query
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid callback parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
 
 # =============================================================================
 # OIDC
@@ -579,10 +647,13 @@ oidc-authorize:
 oidc-callback:
   post:
     operationId: oidcCallback
-    summary: Complete OIDC flow
+    summary: Complete OIDC flow (client-mediated)
     description: |
       Completes an OIDC authentication flow by exchanging the authorization
       code for tokens and creating/signing in the user.
+
+      Use this for mobile apps and SPAs where the client app intercepts the
+      OIDC redirect and extracts the authorization code.
     tags:
       - Auth
     security:
@@ -630,6 +701,70 @@ oidc-callback:
         $ref: '../components/responses/errors.yml#/InternalServerError'
       '503':
         $ref: '../components/responses/errors.yml#/ServiceUnavailable'
+  get:
+    operationId: oidcCallbackRedirect
+    summary: Complete OIDC flow (browser redirect)
+    description: |
+      Handles direct browser redirect from OIDC provider.
+      This endpoint receives the authorization code via query parameters
+      and redirects the user back to the application with tokens (or to an error page).
+
+      Use this for traditional web applications where the OIDC provider
+      redirects directly to your backend.
+    tags:
+      - Auth
+    parameters:
+      - name: providerId
+        in: path
+        description: Custom OIDC provider ID
+        required: true
+        schema:
+          type: string
+      - name: code
+        in: query
+        description: Authorization code from OIDC provider
+        required: false
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: State parameter for CSRF validation
+        required: true
+        schema:
+          type: string
+      - name: error
+        in: query
+        description: Error code if authorization failed
+        required: false
+        schema:
+          type: string
+      - name: error_description
+        in: query
+        description: Human-readable error description
+        required: false
+        schema:
+          type: string
+    responses:
+      '302':
+        description: Redirect to application with tokens or error
+        headers:
+          Location:
+            description: Redirect URL with tokens in fragment or error in query
+            schema:
+              type: string
+              format: uri
+      '400':
+        description: Invalid callback parameters
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
+      '404':
+        description: OIDC provider not found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/error.yml#/ProblemDetails'
 
 # =============================================================================
 # Auth Providers
