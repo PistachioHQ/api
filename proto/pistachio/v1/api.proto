@@ -2,37 +2,28 @@ syntax = "proto3";
 
 package pistachio.v1;
 
-import "pistachio/v1/auth.proto";
 import "pistachio/v1/auth_flow.proto";
 import "pistachio/v1/health.proto";
 import "pistachio/v1/mfa.proto";
 import "pistachio/v1/user.proto";
 
 // =============================================================================
-// Authentication Service
+// Pistachio Service
 // =============================================================================
 //
-// AuthService provides credential validation endpoints.
-// Used internally for validating API keys, tokens, and service accounts.
-service AuthService {
-  // ValidateApiKey validates that the provided API key is valid.
-  rpc ValidateApiKey(ValidateApiKeyRequest) returns (ValidateApiKeyResponse);
-
-  // ValidateToken validates that the provided bearer token is valid.
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
-
-  // ValidateServiceAccount validates that the provided service account credential is valid.
-  rpc ValidateServiceAccount(ValidateServiceAccountRequest) returns (ValidateServiceAccountResponse);
-}
-
-// =============================================================================
-// Authentication Flow Service
-// =============================================================================
+// Pistachio is the unified client-facing API for Pistachio authentication.
+// It provides authentication flows, user management, MFA, and health checks.
 //
-// AuthFlowService provides authentication flow operations for client applications.
-// Includes token management, OAuth flows, anonymous auth, and email verification.
-// Requires API key authentication.
-service AuthFlowService {
+// Authentication requirements vary by RPC:
+// - Auth flow RPCs (SignInAnonymously, RefreshToken, etc.): API key required
+// - User RPCs (GetCurrentUser, UpdateCurrentUser, etc.): ID token required
+// - MFA RPCs: ID token required (except challenge/complete which use pending auth)
+// - Health RPCs: No authentication required
+service Pistachio {
+  // ===========================================================================
+  // Authentication Flows
+  // ===========================================================================
+
   // RefreshToken exchanges a refresh token for new authentication tokens.
   //
   // Use this to obtain new tokens when the ID token is about to expire.
@@ -110,16 +101,11 @@ service AuthFlowService {
   // Errors:
   // - NOT_FOUND: Tenant does not exist
   rpc ListAuthProviders(ListAuthProvidersRequest) returns (ListAuthProvidersResponse);
-}
 
-// =============================================================================
-// User Self-Service
-// =============================================================================
-//
-// UserService provides self-service operations for authenticated users.
-// Allows users to manage their profile, sessions, and linked providers.
-// Requires user authentication (ID token).
-service UserService {
+  // ===========================================================================
+  // User Self-Service
+  // ===========================================================================
+
   // GetCurrentUser retrieves the authenticated user's profile.
   //
   // Returns the current user's profile data including email, display name,
@@ -192,16 +178,11 @@ service UserService {
   // - NOT_FOUND: Provider is not linked to this account
   // - FAILED_PRECONDITION: Cannot unlink the only sign-in method
   rpc UnlinkProvider(UnlinkProviderRequest) returns (UnlinkProviderResponse);
-}
 
-// =============================================================================
-// MFA Service
-// =============================================================================
-//
-// MfaService provides multi-factor authentication operations for users.
-// Allows users to enroll, manage, and use MFA factors.
-// Requires user authentication (ID token).
-service MfaService {
+  // ===========================================================================
+  // Multi-Factor Authentication
+  // ===========================================================================
+
   // ListMfaFactors lists the authenticated user's enrolled MFA factors.
   //
   // Errors:
@@ -280,14 +261,11 @@ service MfaService {
   // - INVALID_ARGUMENT: Invalid challenge_id or recovery_code format
   // - UNAUTHENTICATED: Recovery code is invalid or already used
   rpc VerifyRecoveryCode(VerifyRecoveryCodeRequest) returns (VerifyRecoveryCodeResponse);
-}
 
-// =============================================================================
-// Health Service
-// =============================================================================
-//
-// HealthService provides health check endpoints for the Pistachio API.
-service HealthService {
+  // ===========================================================================
+  // Health
+  // ===========================================================================
+
   // Check returns the health status of the service.
   rpc Check(CheckRequest) returns (CheckResponse);
 }
