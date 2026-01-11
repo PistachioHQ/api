@@ -23,6 +23,19 @@ message ListMfaFactorsResponse {
   repeated pistachio.types.v1.MfaFactor factors = 1;
 }
 
+// GetMfaFactorRequest retrieves a specific MFA factor by ID.
+message GetMfaFactorRequest {
+  // The factor ID to retrieve.
+  // Required.
+  string factor_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+// GetMfaFactorResponse contains the requested MFA factor.
+message GetMfaFactorResponse {
+  // The requested MFA factor.
+  pistachio.types.v1.MfaFactor factor = 1;
+}
+
 // EnrollMfaFactorRequest starts enrollment of a new MFA factor.
 message EnrollMfaFactorRequest {
   // The type of factor to enroll.

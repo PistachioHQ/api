@@ -189,6 +189,13 @@ service Pistachio {
   // - UNAUTHENTICATED: No valid authentication context
   rpc ListMfaFactors(ListMfaFactorsRequest) returns (ListMfaFactorsResponse);
 
+  // GetMfaFactor retrieves a specific MFA factor by ID.
+  //
+  // Errors:
+  // - UNAUTHENTICATED: No valid authentication context
+  // - NOT_FOUND: Factor does not exist or does not belong to user
+  rpc GetMfaFactor(GetMfaFactorRequest) returns (GetMfaFactorResponse);
+
   // EnrollMfaFactor starts enrollment of a new MFA factor.
   //
   // For TOTP: Returns a secret and URI for QR code display.
