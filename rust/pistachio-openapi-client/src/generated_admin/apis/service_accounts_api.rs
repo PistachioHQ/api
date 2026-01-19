@@ -351,7 +351,7 @@ pub async fn delete_service_account_key(
     }
 }
 
-/// Disables a service account key without deleting it. Disabled keys cannot be used for authentication.
+/// Disables a service account key without deleting it. Disabled keys cannot be used for authentication.  This operation is idempotent. Calling disable on an already-disabled key returns 200 OK with the current key state.
 pub async fn disable_service_account_key(
     configuration: &configuration::Configuration,
     project_id: &str,
