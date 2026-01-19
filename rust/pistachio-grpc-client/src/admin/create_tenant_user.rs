@@ -9,7 +9,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, error_details_from_status};
+use crate::types::{FromProto, IntoProto, custom_claims_to_struct, error_details_from_status};
 
 pub(crate) async fn handle_create_tenant_user<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -68,19 +68,9 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::CreateTenantUserRequest>
             display_name: self.display_name.unwrap_or_default(),
             photo_url: self.photo_url.unwrap_or_default(),
             disabled: self.disabled,
-            custom_claims: self.custom_claims.map(|claims| prost_types::Struct {
-                fields: claims
-                    .into_iter()
-                    .map(|(k, v)| {
-                        (
-                            k,
-                            prost_types::Value {
-                                kind: Some(prost_types::value::Kind::StringValue(v)),
-                            },
-                        )
-                    })
-                    .collect(),
-            }),
+            custom_claims: self
+                .custom_claims
+                .map(|claims| custom_claims_to_struct(&claims)),
         }
     }
 }

@@ -57,11 +57,9 @@ pub(crate) async fn handle_import_project_users(
             display_name: u.display_name.map(Some),
             photo_url: u.photo_url.map(Some),
             disabled: Some(u.disabled),
-            custom_claims: u.custom_claims.map(|c| {
-                c.into_iter()
-                    .map(|(k, v)| (k, serde_json::Value::String(v)))
-                    .collect()
-            }),
+            custom_claims: u
+                .custom_claims
+                .map(|c| c.into_iter().map(|(k, v)| (k, v.to_json())).collect()),
             password_hash: u.password_hash.map(Some),
             password_salt: u.password_salt.map(Some),
         })

@@ -54,11 +54,9 @@ pub(crate) async fn handle_update_tenant_user(
         display_name: req.display_name.map(|d| Some(d.to_string())),
         photo_url: req.photo_url.map(|p| Some(p.to_string())),
         disabled: req.disabled,
-        custom_claims: req.custom_claims.map(|c| {
-            c.into_iter()
-                .map(|(k, v)| (k, serde_json::Value::String(v)))
-                .collect()
-        }),
+        custom_claims: req
+            .custom_claims
+            .map(|c| c.into_iter().map(|(k, v)| (k, v.to_json())).collect()),
     };
 
     debug!(

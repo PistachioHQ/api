@@ -119,6 +119,7 @@ impl IntoProto<pistachio_api::pistachio::types::v1::SearchParams> for SearchPara
 // User conversions
 // =============================================================================
 
+use libgn::claims::ClaimValue;
 use libgn::email::Email;
 use libgn::pistachio_id::UserId;
 use libgn::tenant::TenantId;
@@ -142,21 +143,65 @@ pub(crate) fn optional_timestamp_to_datetime(
     }
 }
 
-/// Convert a prost Struct to CustomClaims (HashMap<String, String>).
+/// Convert a prost Value to a ClaimValue.
+fn prost_value_to_claim(value: &prost_types::Value) -> ClaimValue {
+    match &value.kind {
+        Some(prost_types::value::Kind::NullValue(_)) => ClaimValue::Null,
+        Some(prost_types::value::Kind::BoolValue(b)) => ClaimValue::Bool(*b),
+        Some(prost_types::value::Kind::NumberValue(n)) => ClaimValue::Number(*n),
+        Some(prost_types::value::Kind::StringValue(s)) => ClaimValue::String(s.clone()),
+        Some(prost_types::value::Kind::ListValue(list)) => {
+            ClaimValue::Array(list.values.iter().map(prost_value_to_claim).collect())
+        }
+        Some(prost_types::value::Kind::StructValue(s)) => ClaimValue::Object(
+            s.fields
+                .iter()
+                .map(|(k, v)| (k.clone(), prost_value_to_claim(v)))
+                .collect(),
+        ),
+        None => ClaimValue::Null,
+    }
+}
+
+/// Convert a prost Struct to CustomClaims (HashMap<String, ClaimValue>).
 fn struct_to_custom_claims(s: Option<prost_types::Struct>) -> Option<CustomClaims> {
     s.map(|s| {
         s.fields
-            .into_iter()
-            .filter_map(|(k, v)| {
-                v.kind.and_then(|kind| match kind {
-                    prost_types::value::Kind::StringValue(s) => Some((k, s)),
-                    prost_types::value::Kind::NumberValue(n) => Some((k, n.to_string())),
-                    prost_types::value::Kind::BoolValue(b) => Some((k, b.to_string())),
-                    _ => None,
-                })
-            })
+            .iter()
+            .map(|(k, v)| (k.clone(), prost_value_to_claim(v)))
             .collect()
     })
+}
+
+/// Convert a ClaimValue to a prost Value.
+fn claim_to_prost_value(value: &ClaimValue) -> prost_types::Value {
+    prost_types::Value {
+        kind: Some(match value {
+            ClaimValue::Null => prost_types::value::Kind::NullValue(0),
+            ClaimValue::Bool(b) => prost_types::value::Kind::BoolValue(*b),
+            ClaimValue::Number(n) => prost_types::value::Kind::NumberValue(*n),
+            ClaimValue::String(s) => prost_types::value::Kind::StringValue(s.clone()),
+            ClaimValue::Array(arr) => prost_types::value::Kind::ListValue(prost_types::ListValue {
+                values: arr.iter().map(claim_to_prost_value).collect(),
+            }),
+            ClaimValue::Object(map) => prost_types::value::Kind::StructValue(prost_types::Struct {
+                fields: map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), claim_to_prost_value(v)))
+                    .collect(),
+            }),
+        }),
+    }
+}
+
+/// Convert CustomClaims to a prost Struct.
+pub(crate) fn custom_claims_to_struct(claims: &CustomClaims) -> prost_types::Struct {
+    prost_types::Struct {
+        fields: claims
+            .iter()
+            .map(|(k, v)| (k.clone(), claim_to_prost_value(v)))
+            .collect(),
+    }
 }
 
 impl FromProto<pistachio_api::pistachio::types::v1::User> for User {
@@ -264,19 +309,9 @@ impl IntoProto<pistachio_api::pistachio::types::v1::ImportUserRecord> for Import
             display_name: self.display_name.unwrap_or_default(),
             photo_url: self.photo_url.unwrap_or_default(),
             disabled: self.disabled,
-            custom_claims: self.custom_claims.map(|claims| prost_types::Struct {
-                fields: claims
-                    .into_iter()
-                    .map(|(k, v)| {
-                        (
-                            k,
-                            prost_types::Value {
-                                kind: Some(prost_types::value::Kind::StringValue(v)),
-                            },
-                        )
-                    })
-                    .collect(),
-            }),
+            custom_claims: self
+                .custom_claims
+                .map(|claims| custom_claims_to_struct(&claims)),
             password_hash: self.password_hash.unwrap_or_default(),
             password_salt: self.password_salt.unwrap_or_default(),
         }

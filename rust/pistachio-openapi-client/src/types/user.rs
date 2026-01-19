@@ -1,5 +1,6 @@
 //! User type conversions for OpenAPI responses.
 
+use libgn::claims::ClaimValue;
 use libgn::email::Email;
 use libgn::pistachio_id::UserId;
 use libgn::tenant::TenantId as HumanTenantId;
@@ -118,14 +119,11 @@ fn user_from_json_inner(
         _ => None,
     };
 
-    // Convert HashMap<String, serde_json::Value> to HashMap<String, String>
+    // Convert HashMap<String, serde_json::Value> to HashMap<String, ClaimValue>
     let custom_claims = custom_claims.flatten().map(|claims| {
         claims
             .into_iter()
-            .map(|(k, v)| match v {
-                serde_json::Value::String(s) => (k, s),
-                _ => (k, v.to_string()),
-            })
+            .map(|(k, v)| (k, ClaimValue::from(v)))
             .collect::<CustomClaims>()
     });
 

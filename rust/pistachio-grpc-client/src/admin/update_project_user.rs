@@ -9,7 +9,7 @@ use tracing::{debug, error};
 
 use pistachio_api::pistachio::admin::v1::pistachio_admin_client::PistachioAdminClient;
 
-use crate::types::{FromProto, IntoProto, error_details_from_status};
+use crate::types::{FromProto, IntoProto, custom_claims_to_struct, error_details_from_status};
 
 pub(crate) async fn handle_update_project_user<I: Interceptor>(
     client: &mut PistachioAdminClient<InterceptedService<Channel, I>>,
@@ -72,19 +72,7 @@ impl IntoProto<pistachio_api::pistachio::admin::v1::UpdateProjectUserRequest>
             disabled: self.disabled,
             custom_claims: self.custom_claims.map(|claims| {
                 pistachio_api::pistachio::admin::v1::CustomClaimsUpdate {
-                    claims: Some(prost_types::Struct {
-                        fields: claims
-                            .into_iter()
-                            .map(|(k, v)| {
-                                (
-                                    k,
-                                    prost_types::Value {
-                                        kind: Some(prost_types::value::Kind::StringValue(v)),
-                                    },
-                                )
-                            })
-                            .collect(),
-                    }),
+                    claims: Some(custom_claims_to_struct(&claims)),
                 }
             }),
         }
