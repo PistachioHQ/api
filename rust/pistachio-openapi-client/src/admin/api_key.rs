@@ -391,30 +391,300 @@ impl From<GenRotateApiKeyError> for RotateApiKeyError {
 // Helper for error handling
 // =============================================================================
 
-fn handle_api_error<E, T>(
-    e: crate::generated_admin::apis::Error<E>,
-    convert_entity: impl Fn(E) -> T,
-    fallback_fn: impl Fn(u16, String) -> T,
-    reqwest_error_fn: impl Fn(String) -> T,
-    default_error_fn: impl Fn() -> T,
-) -> T
-where
-    T: std::fmt::Debug,
-{
+/// Extracts `ListTenants400Response` from `GenGetApiKeyError`.
+fn extract_get_api_key_error_response(
+    entity: GenGetApiKeyError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenGetApiKeyError::Status400(e)
+        | GenGetApiKeyError::Status401(e)
+        | GenGetApiKeyError::Status403(e)
+        | GenGetApiKeyError::Status404(e)
+        | GenGetApiKeyError::Status500(e)
+        | GenGetApiKeyError::Status503(e) => Some(e),
+        GenGetApiKeyError::UnknownValue(_) => None,
+    }
+}
+
+fn extract_create_api_key_error_response(
+    entity: GenCreateApiKeyError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenCreateApiKeyError::Status400(e)
+        | GenCreateApiKeyError::Status401(e)
+        | GenCreateApiKeyError::Status403(e)
+        | GenCreateApiKeyError::Status404(e)
+        | GenCreateApiKeyError::Status500(e)
+        | GenCreateApiKeyError::Status503(e) => Some(e),
+        GenCreateApiKeyError::UnknownValue(_) => None,
+    }
+}
+
+fn extract_update_api_key_error_response(
+    entity: GenUpdateApiKeyError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenUpdateApiKeyError::Status400(e)
+        | GenUpdateApiKeyError::Status401(e)
+        | GenUpdateApiKeyError::Status403(e)
+        | GenUpdateApiKeyError::Status404(e)
+        | GenUpdateApiKeyError::Status500(e)
+        | GenUpdateApiKeyError::Status503(e) => Some(e),
+        GenUpdateApiKeyError::UnknownValue(_) => None,
+    }
+}
+
+fn extract_delete_api_key_error_response(
+    entity: GenDeleteApiKeyError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenDeleteApiKeyError::Status400(e)
+        | GenDeleteApiKeyError::Status401(e)
+        | GenDeleteApiKeyError::Status403(e)
+        | GenDeleteApiKeyError::Status404(e)
+        | GenDeleteApiKeyError::Status500(e)
+        | GenDeleteApiKeyError::Status503(e) => Some(e),
+        GenDeleteApiKeyError::UnknownValue(_) => None,
+    }
+}
+
+fn extract_list_api_keys_error_response(
+    entity: GenListApiKeysError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenListApiKeysError::Status400(e)
+        | GenListApiKeysError::Status401(e)
+        | GenListApiKeysError::Status403(e)
+        | GenListApiKeysError::Status404(e)
+        | GenListApiKeysError::Status500(e)
+        | GenListApiKeysError::Status503(e) => Some(e),
+        GenListApiKeysError::UnknownValue(_) => None,
+    }
+}
+
+fn extract_rotate_api_key_error_response(
+    entity: GenRotateApiKeyError,
+) -> Option<crate::generated_admin::models::ListTenants400Response> {
+    match entity {
+        GenRotateApiKeyError::Status400(e)
+        | GenRotateApiKeyError::Status401(e)
+        | GenRotateApiKeyError::Status403(e)
+        | GenRotateApiKeyError::Status404(e)
+        | GenRotateApiKeyError::Status500(e)
+        | GenRotateApiKeyError::Status503(e) => Some(e),
+        GenRotateApiKeyError::UnknownValue(_) => None,
+    }
+}
+
+fn handle_get_api_key_error(
+    e: crate::generated_admin::apis::Error<GenGetApiKeyError>,
+) -> GetApiKeyError {
     match e {
         crate::generated_admin::apis::Error::ResponseError(resp) => {
             let status = resp.status.as_u16();
 
-            // Try entity parsing if available
-            if let Some(entity) = resp.entity {
-                return convert_entity(entity);
-            }
+            // Extract error details from parsed entity, if available
+            let error_details = resp
+                .entity
+                .and_then(extract_get_api_key_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
 
-            // Last resort: status code mapping with raw content
-            fallback_fn(status, resp.content)
+            // Use actual HTTP status code to determine error type
+            match status {
+                400 => GetApiKeyError::BadRequest(error_details),
+                401 => GetApiKeyError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => GetApiKeyError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => GetApiKeyError::NotFound(error_details),
+                500..=599 => GetApiKeyError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => GetApiKeyError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
         }
-        crate::generated_admin::apis::Error::Reqwest(e) => reqwest_error_fn(e.to_string()),
-        _ => default_error_fn(),
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            GetApiKeyError::ServiceUnavailable(e.to_string())
+        }
+        _ => GetApiKeyError::ServiceError("Unknown error occurred".into()),
+    }
+}
+
+fn handle_create_api_key_error(
+    e: crate::generated_admin::apis::Error<GenCreateApiKeyError>,
+) -> CreateApiKeyError {
+    match e {
+        crate::generated_admin::apis::Error::ResponseError(resp) => {
+            let status = resp.status.as_u16();
+
+            let error_details = resp
+                .entity
+                .and_then(extract_create_api_key_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
+
+            match status {
+                400 => CreateApiKeyError::BadRequest(error_details),
+                401 => CreateApiKeyError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => CreateApiKeyError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => CreateApiKeyError::NotFound(error_details),
+                500..=599 => CreateApiKeyError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => CreateApiKeyError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
+        }
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            CreateApiKeyError::ServiceUnavailable(e.to_string())
+        }
+        _ => CreateApiKeyError::ServiceError("Unknown error occurred".into()),
+    }
+}
+
+fn handle_update_api_key_error(
+    e: crate::generated_admin::apis::Error<GenUpdateApiKeyError>,
+) -> UpdateApiKeyError {
+    match e {
+        crate::generated_admin::apis::Error::ResponseError(resp) => {
+            let status = resp.status.as_u16();
+
+            let error_details = resp
+                .entity
+                .and_then(extract_update_api_key_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
+
+            match status {
+                400 => UpdateApiKeyError::BadRequest(error_details),
+                401 => UpdateApiKeyError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => UpdateApiKeyError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => UpdateApiKeyError::NotFound(error_details),
+                500..=599 => UpdateApiKeyError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => UpdateApiKeyError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
+        }
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            UpdateApiKeyError::ServiceUnavailable(e.to_string())
+        }
+        _ => UpdateApiKeyError::ServiceError("Unknown error occurred".into()),
+    }
+}
+
+fn handle_delete_api_key_error(
+    e: crate::generated_admin::apis::Error<GenDeleteApiKeyError>,
+) -> DeleteApiKeyError {
+    match e {
+        crate::generated_admin::apis::Error::ResponseError(resp) => {
+            let status = resp.status.as_u16();
+
+            let error_details = resp
+                .entity
+                .and_then(extract_delete_api_key_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
+
+            match status {
+                400 => DeleteApiKeyError::BadRequest(error_details),
+                401 => DeleteApiKeyError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => DeleteApiKeyError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => DeleteApiKeyError::NotFound(error_details),
+                500..=599 => DeleteApiKeyError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => DeleteApiKeyError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
+        }
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            DeleteApiKeyError::ServiceUnavailable(e.to_string())
+        }
+        _ => DeleteApiKeyError::ServiceError("Unknown error occurred".into()),
+    }
+}
+
+fn handle_list_api_keys_error(
+    e: crate::generated_admin::apis::Error<GenListApiKeysError>,
+) -> ListApiKeysError {
+    match e {
+        crate::generated_admin::apis::Error::ResponseError(resp) => {
+            let status = resp.status.as_u16();
+
+            let error_details = resp
+                .entity
+                .and_then(extract_list_api_keys_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
+
+            match status {
+                400 => ListApiKeysError::BadRequest(error_details),
+                401 => ListApiKeysError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => ListApiKeysError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => ListApiKeysError::NotFound(error_details),
+                500..=599 => ListApiKeysError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => ListApiKeysError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
+        }
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            ListApiKeysError::ServiceUnavailable(e.to_string())
+        }
+        _ => ListApiKeysError::ServiceError("Unknown error occurred".into()),
+    }
+}
+
+fn handle_rotate_api_key_error(
+    e: crate::generated_admin::apis::Error<GenRotateApiKeyError>,
+) -> RotateApiKeyError {
+    match e {
+        crate::generated_admin::apis::Error::ResponseError(resp) => {
+            let status = resp.status.as_u16();
+
+            let error_details = resp
+                .entity
+                .and_then(extract_rotate_api_key_error_response)
+                .map(convert_error_details)
+                .unwrap_or_else(|| fallback_error_details(resp.content.clone()));
+
+            match status {
+                400 => RotateApiKeyError::BadRequest(error_details),
+                401 => RotateApiKeyError::Unauthenticated(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                403 => RotateApiKeyError::PermissionDenied(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                404 => RotateApiKeyError::NotFound(error_details),
+                500..=599 => RotateApiKeyError::ServiceError(
+                    error_details.message.unwrap_or(error_details.title),
+                ),
+                _ => RotateApiKeyError::Unknown(format!("HTTP {}: {:?}", status, error_details)),
+            }
+        }
+        crate::generated_admin::apis::Error::Reqwest(e) => {
+            RotateApiKeyError::ServiceUnavailable(e.to_string())
+        }
+        _ => RotateApiKeyError::ServiceError("Unknown error occurred".into()),
     }
 }
 
@@ -442,20 +712,7 @@ pub(crate) async fn handle_create_api_key(
         .await
         .map_err(|e| {
             error!(?e, "Error in create_api_key response");
-            handle_api_error(
-                e,
-                CreateApiKeyError::from,
-                |status, content| match status {
-                    400 => CreateApiKeyError::BadRequest(fallback_error_details(content)),
-                    401 => CreateApiKeyError::Unauthenticated(content),
-                    403 => CreateApiKeyError::PermissionDenied(content),
-                    404 => CreateApiKeyError::NotFound(fallback_error_details(content)),
-                    500..=599 => CreateApiKeyError::ServiceError(content),
-                    _ => CreateApiKeyError::Unknown(format!("HTTP {}: {}", status, content)),
-                },
-                CreateApiKeyError::ServiceUnavailable,
-                || CreateApiKeyError::ServiceError("Unknown error occurred".into()),
-            )
+            handle_create_api_key_error(e)
         })?;
 
     CreateApiKeyResponse::from_json(response).map_err(CreateApiKeyError::ResponseValidationError)
@@ -474,20 +731,7 @@ pub(crate) async fn handle_get_api_key(
         .await
         .map_err(|e| {
             error!(?e, "Error in get_api_key response");
-            handle_api_error(
-                e,
-                GetApiKeyError::from,
-                |status, content| match status {
-                    400 => GetApiKeyError::BadRequest(fallback_error_details(content)),
-                    401 => GetApiKeyError::Unauthenticated(content),
-                    403 => GetApiKeyError::PermissionDenied(content),
-                    404 => GetApiKeyError::NotFound(fallback_error_details(content)),
-                    500..=599 => GetApiKeyError::ServiceError(content),
-                    _ => GetApiKeyError::Unknown(format!("HTTP {}: {}", status, content)),
-                },
-                GetApiKeyError::ServiceUnavailable,
-                || GetApiKeyError::ServiceError("Unknown error occurred".into()),
-            )
+            handle_get_api_key_error(e)
         })?;
 
     GetApiKeyResponse::from_json(response).map_err(GetApiKeyError::ResponseValidationError)
@@ -513,20 +757,7 @@ pub(crate) async fn handle_update_api_key(
         .await
         .map_err(|e| {
             error!(?e, "Error in update_api_key response");
-            handle_api_error(
-                e,
-                UpdateApiKeyError::from,
-                |status, content| match status {
-                    400 => UpdateApiKeyError::BadRequest(fallback_error_details(content)),
-                    401 => UpdateApiKeyError::Unauthenticated(content),
-                    403 => UpdateApiKeyError::PermissionDenied(content),
-                    404 => UpdateApiKeyError::NotFound(fallback_error_details(content)),
-                    500..=599 => UpdateApiKeyError::ServiceError(content),
-                    _ => UpdateApiKeyError::Unknown(format!("HTTP {}: {}", status, content)),
-                },
-                UpdateApiKeyError::ServiceUnavailable,
-                || UpdateApiKeyError::ServiceError("Unknown error occurred".into()),
-            )
+            handle_update_api_key_error(e)
         })?;
 
     UpdateApiKeyResponse::from_json(response).map_err(UpdateApiKeyError::ResponseValidationError)
@@ -545,20 +776,7 @@ pub(crate) async fn handle_delete_api_key(
         .await
         .map_err(|e| {
             error!(?e, "Error in delete_api_key response");
-            handle_api_error(
-                e,
-                DeleteApiKeyError::from,
-                |status, content| match status {
-                    400 => DeleteApiKeyError::BadRequest(fallback_error_details(content)),
-                    401 => DeleteApiKeyError::Unauthenticated(content),
-                    403 => DeleteApiKeyError::PermissionDenied(content),
-                    404 => DeleteApiKeyError::NotFound(fallback_error_details(content)),
-                    500..=599 => DeleteApiKeyError::ServiceError(content),
-                    _ => DeleteApiKeyError::Unknown(format!("HTTP {}: {}", status, content)),
-                },
-                DeleteApiKeyError::ServiceUnavailable,
-                || DeleteApiKeyError::ServiceError("Unknown error occurred".into()),
-            )
+            handle_delete_api_key_error(e)
         })?;
 
     Ok(DeleteApiKeyResponse {})
@@ -585,20 +803,7 @@ pub(crate) async fn handle_list_api_keys(
     .await
     .map_err(|e| {
         error!(?e, "Error in list_api_keys response");
-        handle_api_error(
-            e,
-            ListApiKeysError::from,
-            |status, content| match status {
-                400 => ListApiKeysError::BadRequest(fallback_error_details(content)),
-                401 => ListApiKeysError::Unauthenticated(content),
-                403 => ListApiKeysError::PermissionDenied(content),
-                404 => ListApiKeysError::NotFound(fallback_error_details(content)),
-                500..=599 => ListApiKeysError::ServiceError(content),
-                _ => ListApiKeysError::Unknown(format!("HTTP {}: {}", status, content)),
-            },
-            ListApiKeysError::ServiceUnavailable,
-            || ListApiKeysError::ServiceError("Unknown error occurred".into()),
-        )
+        handle_list_api_keys_error(e)
     })?;
 
     ListApiKeysResponse::from_json(response).map_err(ListApiKeysError::ResponseValidationError)
@@ -621,20 +826,7 @@ pub(crate) async fn handle_rotate_api_key(
         .await
         .map_err(|e| {
             error!(?e, "Error in rotate_api_key response");
-            handle_api_error(
-                e,
-                RotateApiKeyError::from,
-                |status, content| match status {
-                    400 => RotateApiKeyError::BadRequest(fallback_error_details(content)),
-                    401 => RotateApiKeyError::Unauthenticated(content),
-                    403 => RotateApiKeyError::PermissionDenied(content),
-                    404 => RotateApiKeyError::NotFound(fallback_error_details(content)),
-                    500..=599 => RotateApiKeyError::ServiceError(content),
-                    _ => RotateApiKeyError::Unknown(format!("HTTP {}: {}", status, content)),
-                },
-                RotateApiKeyError::ServiceUnavailable,
-                || RotateApiKeyError::ServiceError("Unknown error occurred".into()),
-            )
+            handle_rotate_api_key_error(e)
         })?;
 
     RotateApiKeyResponse::from_json(response).map_err(RotateApiKeyError::ResponseValidationError)
